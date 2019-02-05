@@ -1,0 +1,49 @@
+﻿@using System.Linq.Expressions
+@using System.Reflection
+@using BlazorQueryBuilder.Models
+@using BlazorQueryBuilder.Visitors
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <code>@Lambda.ToString()</code>
+    </div>
+</div>
+<div class="form-group">
+    <Predicate Expression="@GetBodyAsBinary()"
+               Parameter="@Parameter"
+               OnChange="@OnChangeBody">
+    </Predicate>
+</div>
+
+@functions {
+    LambdaExpression Lambda { get; set; }
+    ParameterExpression Parameter { get; set; }
+
+    [Parameter]
+    Action<Expression<Func<Worker, bool>>> OnChanged { get; set; }
+
+    protected override void OnInit()
+    {
+        Parameter = Expression.Parameter(typeof(Worker), nameof(Worker).ToLower());
+        Lambda = new PredicateFactory().CreateRelationalLambda<Worker>(
+            typeof(Worker).GetProperties().First().Name,
+            Parameter,
+            string.Empty,
+            ExpressionType.Equal);
+        OnChanged((Expression<Func<Worker, bool>>) Lambda);
+    }
+
+    private BinaryExpression GetBodyAsBinary()
+    {
+        return Lambda.Body as BinaryExpression;
+    }
+
+    private void OnChangeBody(Expression body)
+    {
+        LambdaExpression newLambda = new ReplaceLambdaBody(Lambda, body).Replace();
+        Lambda = newLambda;
+        OnChanged((Expression<Func<Worker, bool>>) Lambda);
+        StateHasChanged();
+    }
+
+}

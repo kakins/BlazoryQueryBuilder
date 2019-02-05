@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2041
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorQueryBuilder", "BlazorQueryBuilder\BlazorQueryBuilder.csproj", "{B97627D7-4107-4054-B2B1-0E869B5541EF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorQueryBuilder.Tests", "BlazorQueryBuilder.Tests\BlazorQueryBuilder.Tests.csproj", "{67F323B6-C107-490B-A298-872DE61BEFBD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B97627D7-4107-4054-B2B1-0E869B5541EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B97627D7-4107-4054-B2B1-0E869B5541EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B97627D7-4107-4054-B2B1-0E869B5541EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B97627D7-4107-4054-B2B1-0E869B5541EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67F323B6-C107-490B-A298-872DE61BEFBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67F323B6-C107-490B-A298-872DE61BEFBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67F323B6-C107-490B-A298-872DE61BEFBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67F323B6-C107-490B-A298-872DE61BEFBD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9F141EE6-0729-4552-9DA6-8CCF9F0D09C1}
+	EndGlobalSection
+EndGlobal

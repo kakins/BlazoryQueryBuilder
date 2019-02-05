@@ -1,0 +1,93 @@
+﻿@using System.Linq.Expressions
+@using BlazorQueryBuilder.Visitors
+<div class="row mb-4">
+    <div class="col-md-12">
+        <Predicate Expression="@GetLeft()"
+                   Parameter="@Parameter"
+                   OnChange="@ChangeLeft"
+                   OnRemove="@RemoveLeft">
+        </Predicate>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="form-group mb-2">
+            <select class="form-control">
+                @foreach (var item in Operators)
+                {
+                    <option value="@item.Key"
+                            selected="@Binary.NodeType.ToString().Equals(item.Key)">
+                        @item.Value
+                    </option>
+                }
+            </select>
+        </div>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-md-12">
+        <Predicate Expression="@GetRight()"
+                   Parameter="@Parameter"
+                   OnChange="@ChangeRight"
+                   OnRemove="@RemoveRight">
+        </Predicate>
+    </div>
+</div>
+
+
+@functions {
+
+    Dictionary<string, string> Operators = new Dictionary<string, string>
+    {
+        {"AndAlso", "And"},
+        {"OrElse", "Or"},
+    };
+
+    [Parameter]
+    Action<BinaryExpression> OnChange { get; set; }
+
+    [Parameter]
+    BinaryExpression Binary { get; set; }
+
+    [Parameter]
+    ParameterExpression Parameter { get; set; }
+
+    protected override void OnInit()
+    {
+    }
+
+    private BinaryExpression GetLeft()
+    {
+        return (BinaryExpression) Binary.Left;
+    }
+
+    private BinaryExpression GetRight()
+    {
+        return (BinaryExpression) Binary.Right;
+    }
+
+    private void ChangeLeft(Expression left)
+    {
+        Binary = Expression.MakeBinary(Binary.NodeType, left, Binary.Right);
+        OnChange(Binary);
+    }
+
+    private void ChangeRight(Expression right)
+    {
+        Binary = Expression.MakeBinary(Binary.NodeType, Binary.Left, right);
+        OnChange(Binary);
+    }
+
+    private void RemoveLeft()
+    {
+        var newBinary = new CopyExpression(Binary.Right).Copy();
+        OnChange((BinaryExpression) newBinary);
+    }
+
+    private void RemoveRight()
+    {
+        var newBinary = new CopyExpression(Binary.Left).Copy();
+        OnChange((BinaryExpression) newBinary);
+    }
+
+}

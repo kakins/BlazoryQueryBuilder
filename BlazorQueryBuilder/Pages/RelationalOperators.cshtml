@@ -1,0 +1,39 @@
+﻿@using System.Linq.Expressions
+<div class="form-group">
+    <select class="form-control" id="operatorList" onchange="@ChangeOperator">
+        @foreach (var item in Operators)
+        {
+            <option value="@item.Key" 
+                    selected="@ExpressionType.ToString().Equals(item.Key)">@item.Value</option>
+
+        }
+    </select>
+</div>
+
+@functions {
+
+    ExpressionType _selectedOperator = ExpressionType.Equal;
+
+    Dictionary<string, string> Operators = new Dictionary<string, string>
+    {
+        {"Equal", "Equals"},
+        {"NotEqual", "Does not equal"},
+        {"LessThan", "Less than"},
+        {"GreaterThan", "Greater than"},
+        {"InList", "In List"},
+        {"NotInList", "Not In List"},
+    };
+
+    [Parameter]
+    Action<ExpressionType> OnChange { get; set; }
+
+    [Parameter]
+    ExpressionType ExpressionType { get; set; }
+
+    private void ChangeOperator(UIChangeEventArgs args)
+    {
+        var expressionType = (ExpressionType) Enum.Parse(typeof(ExpressionType), args.Value.ToString());
+        ExpressionType = expressionType;
+        OnChange.Invoke(expressionType);
+    }
+}

@@ -1,0 +1,47 @@
+﻿@using System.Linq.Expressions
+@if (Expression is BinaryExpression)
+{
+    switch (Expression.NodeType)
+    {
+        @*case (ExpressionType.AndAlso):
+        case ExpressionType.And:
+        case ExpressionType.Or:
+        case ExpressionType.OrElse:
+            <LogicalComponent Expression="@GetBinary()"
+                              Parameter="@Parameter">
+
+            </LogicalComponent>
+            break;
+        case ExpressionType.Equal:
+        case ExpressionType.NotEqual:
+        case ExpressionType.GreaterThan:
+        case ExpressionType.LessThan:
+            <RelationalComponent Binary="@GetBinary()"
+                                 Parameter="@Parameter"
+                                 OnChange="@OnChangeBody">
+
+            </RelationalComponent>
+            break;*@
+    }
+}
+
+@functions {
+
+    [Parameter]
+    Expression Expression { get; set; }
+
+    [Parameter]
+    ParameterExpression Parameter { get; set; }
+
+    private BinaryExpression GetBinary()
+    {
+        return Expression as BinaryExpression;
+    }
+
+    private void OnChange(Expression expression)
+    {
+        Expression = expression;
+        StateHasChanged();
+    }
+
+}
