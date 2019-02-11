@@ -16,21 +16,18 @@
 </div>
 
 @functions {
+    [Parameter]
     LambdaExpression Lambda { get; set; }
+
+    [Parameter]
     ParameterExpression Parameter { get; set; }
 
     [Parameter]
-    Action<Expression<Func<Worker, bool>>> OnChanged { get; set; }
+    Action<Expression> OnChanged { get; set; }
 
     protected override void OnInit()
     {
-        Parameter = Expression.Parameter(typeof(Worker), nameof(Worker).ToLower());
-        Lambda = new PredicateFactory().CreateRelationalLambda<Worker>(
-            typeof(Worker).GetProperties().First().Name,
-            Parameter,
-            string.Empty,
-            ExpressionType.Equal);
-        OnChanged((Expression<Func<Worker, bool>>) Lambda);
+        OnChanged(Lambda.Body);
     }
 
     private BinaryExpression GetBodyAsBinary()
@@ -40,9 +37,7 @@
 
     private void OnChangeBody(Expression body)
     {
-        LambdaExpression newLambda = new ReplaceLambdaBody(Lambda, body).Replace();
-        Lambda = newLambda;
-        OnChanged((Expression<Func<Worker, bool>>) Lambda);
+        OnChanged(body);
         StateHasChanged();
     }
 

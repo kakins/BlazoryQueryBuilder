@@ -1,0 +1,111 @@
+﻿@page "/query-builder-main"
+@using System.Reflection
+@using BlazorQueryBuilder.Models
+@using System.Linq.Dynamic.Core
+@using System.Linq.Expressions
+
+
+<div class="row">
+    <div class="col-12">
+        @if (_queryLoaded || _newQuery)
+        {
+            <button class="btn btn-primary" onclick="@StartOver">Start Over</button>
+        }
+        else
+        {
+            <button class="btn btn-primary" onclick="@LoadQuery">Load Query</button>
+            <button class="btn btn-primary" onclick="@NewQuery">New Query</button>
+        }
+    </div>
+</div>
+
+
+
+@if (_newQuery)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="form-group">
+                <label for="exampleFormControlSelect1">Select entity</label>
+                <select class="form-control" id="exampleFormControlSelect1" onchange="@Select">
+                    @foreach (var entity in Entities)
+                    {
+                        <option>@entity</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+}
+
+
+@CreateQueryBuilder()
+
+
+
+@functions {
+
+    string[] Entities = new[] { "Worker", "TitleCode", "PinOccupant" };
+    Type SelectedEntityType;
+
+    private bool _newQuery = false;
+    private bool _queryLoaded = false;
+
+    RenderFragment CreateQueryBuilder() => builder =>
+    {
+        _state = _state.DisplayBuilder(() =>
+        {
+            builder.OpenComponent(0, typeof(QueryBuilder<>).MakeGenericType(SelectedEntityType));
+            builder.AddAttribute(1, "Expression", Expression);
+            builder.CloseComponent();
+        });
+
+    };
+
+    private string Expression { get; set; } = string.Empty;
+
+    private IQueryBuilderState _state = new None();
+
+    protected override void OnInit()
+    {
+    }
+
+    public void Select(UIChangeEventArgs entity)
+    {
+        Expression = string.Empty;
+        SelectEntity((string)entity.Value);
+    }
+
+    private void SelectEntity(string entityTypeName)
+    {
+        var typeName = $"BlazorQueryBuilder.Models.{(string)entityTypeName}";
+        Assembly assembly = typeof(Startup).Assembly;
+        SelectedEntityType = assembly.GetType(typeName);
+        StateHasChanged();
+    }
+
+    public void LoadQuery()
+    {
+        _state = new Loaded();
+        string entityType = "Worker";
+        Expression = @"worker => worker.Uin == ""123456789""";
+        SelectEntity(entityType);
+        _queryLoaded = true;
+    }
+
+    public void NewQuery()
+    {
+        _state = new New();
+        SelectEntity(Entities[0]);
+        Expression = string.Empty;
+        _newQuery = true;
+    }
+
+    public void StartOver()
+    {
+        _state = new None();
+        _newQuery = false;
+        _queryLoaded = false;
+        SelectedEntityType = null;
+    }
+}

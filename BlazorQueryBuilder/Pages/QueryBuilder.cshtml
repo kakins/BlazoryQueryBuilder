@@ -1,6 +1,10 @@
 ﻿@page "/query"
 @using System.Linq.Expressions
 @using BlazorQueryBuilder.Models
+@using System.Linq.Dynamic;
+@using System.Linq.Dynamic.Core
+@using System.Reflection
+@using BlazorQueryBuilder.Visitors
 @* Importing Microsoft.CodeAnalysis* will cause an error in the app, due to something having to do with the mono linker and long lists of assemblies
     The issues is documented here https://github.com/mono/linker/issues/379 
     Awaiting a fix *@
@@ -8,13 +12,16 @@
     @using Microsoft.CodeAnalysis.Scripting*@
 @inject List<Worker> Workers
 @inject PredicateFactory PredicateFactory
-@inject QueryBuilderService QueryBuilderService
+@*@inject QueryBuilderService QueryBuilderService*@
+@inject QueryBuilderService<TEntity> QueryBuilderService
+@typeparam TEntity
 
 <h1>Expression</h1>
-
 <div class="row">
     <div class="col-12">
-        <LambdaComponent OnChanged="@OnChanged"></LambdaComponent>
+        <LambdaComponent OnChanged="@OnChanged"
+                         Lambda="@QueryBuilderService.Lambda"
+                         Parameter="@QueryBuilderService.Parameter"></LambdaComponent>
     </div>
 </div>
 
@@ -22,12 +29,13 @@
     <div class="col-12">
         <button class="btn btn-primary" onclick="@RunQuery">Run Query</button>
     </div>
-    <div class="col-12">
-        <button class="btn btn-primary" onclick="@LoadQuery">Load Query</button>
-    </div>
 </div>
 <div class="row">
     <div class="col-12">
+        @if (!_workers.Any())
+        {
+            <div>No results.</div>
+        }
         @foreach (var worker in _workers)
         {
             <ul>
@@ -40,27 +48,36 @@
 @functions {
 
     List<Worker> _workers = new List<Worker>();
-    private Expression<Func<Worker, bool>> _predicate;
 
-    private async void RunQuery()
+    Expression<Func<TEntity, bool>> Predicate => (Expression<Func<TEntity, bool>>)QueryBuilderService.Lambda;
+
+    [Parameter]
+    string Expression { get; set; }
+
+    protected override void OnInit()
     {
-        Func<Worker, bool> predicate = _predicate.Compile();
-        _workers = Workers.Where(predicate).ToList();
+        Console.WriteLine("Selected entity: " + typeof(TEntity).Name);
+        Console.WriteLine(Expression);
+
+        if (string.IsNullOrWhiteSpace(Expression))
+        {
+            QueryBuilderService.LoadEntity();
+        }
+        else
+        {
+            QueryBuilderService.LoadQuery(Expression);
+        }
     }
 
-    private async void LoadQuery()
+    private void RunQuery()
     {
-    //todo: This *should* work whenever Microsoft.CodeAnalysis* (along with Roslyn) is updated to target .NET Standard 2.0 (https://github.com/dotnet/roslyn/issues/29601)
-    //string query = @"worker => worker.Uin == ""123456789""";
-    //var options = ScriptOptions.Default.AddReferences(typeof(Worker).Assembly);
-    //Expression<Func<Worker, bool>> dynamicPredicate = await CSharpScript.EvaluateAsync<Expression<Func<Worker, bool>>>(query, options);
-    //Console.WriteLine(dynamicPredicate);
+        Func<TEntity, bool> predicate = Predicate.Compile();
     }
 
-    private void OnChanged(Expression<Func<Worker, bool>> predicate)
+    private void OnChanged(Expression body)
     {
-        Console.WriteLine("Predicate: " + predicate);
-        _predicate = predicate;
+        LambdaExpression newLambda = new ReplaceLambdaBody(QueryBuilderService.Lambda, body).Replace();
+        QueryBuilderService.Lambda = newLambda;
         StateHasChanged();
     }
 

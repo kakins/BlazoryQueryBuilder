@@ -9,7 +9,7 @@ namespace BlazorQueryBuilder
         public Expression<Func<T, bool>> CreateRelationalLambda<T>(
             string propertyName, 
             ParameterExpression parameter, 
-            string comparisonValue,
+            object comparisonValue,
             ExpressionType expressionType)
         {
             PropertyInfo property = typeof(T).GetProperty(propertyName);

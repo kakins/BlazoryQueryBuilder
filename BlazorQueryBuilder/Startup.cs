@@ -16,7 +16,7 @@ namespace BlazorQueryBuilder
             });
 
             services.AddSingleton<PredicateFactory>();
-            services.AddSingleton<QueryBuilderService>();
+            services.AddTransient(typeof(QueryBuilderService<>));
         }
 
         public void Configure(IBlazorApplicationBuilder app)
