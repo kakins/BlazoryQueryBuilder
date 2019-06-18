@@ -1,16 +1,17 @@
 ﻿@page "/query"
 @using System.Linq.Expressions
 @using BlazorQueryBuilder.Models
-@using System.Linq.Dynamic;
+@using System.Linq.Dynamic
 @using System.Linq.Dynamic.Core
 @using System.Reflection
+@using Newtonsoft.Json
 @using BlazorQueryBuilder.Visitors
 @* Importing Microsoft.CodeAnalysis* will cause an error in the app, due to something having to do with the mono linker and long lists of assemblies
     The issues is documented here https://github.com/mono/linker/issues/379 
     Awaiting a fix *@
 @*@using Microsoft.CodeAnalysis.CSharp.Scripting;
     @using Microsoft.CodeAnalysis.Scripting*@
-@inject List<Worker> Workers
+@inject List<TEntity> Workers
 @inject PredicateFactory PredicateFactory
 @*@inject QueryBuilderService QueryBuilderService*@
 @inject QueryBuilderService<TEntity> QueryBuilderService
@@ -39,7 +40,7 @@
         @foreach (var worker in _workers)
         {
             <ul>
-                <li>@worker.Uin</li>
+                <li>@(JsonConvert.SerializeObject(worker))</li>
             </ul>
         }
     </div>
@@ -47,7 +48,7 @@
 
 @functions {
 
-    List<Worker> _workers = new List<Worker>();
+    List<TEntity> _workers = new List<TEntity>();
 
     Expression<Func<TEntity, bool>> Predicate => (Expression<Func<TEntity, bool>>)QueryBuilderService.Lambda;
 
@@ -72,6 +73,7 @@
     private void RunQuery()
     {
         Func<TEntity, bool> predicate = Predicate.Compile();
+        _workers = Workers.Where(predicate).ToList();
     }
 
     private void OnChanged(Expression body)

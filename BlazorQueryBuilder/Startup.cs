@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using BlazorQueryBuilder.Models;
-using Microsoft.AspNetCore.Blazor.Builder;
+using Microsoft.AspNetCore.Components.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BlazorQueryBuilder
@@ -19,7 +19,7 @@ namespace BlazorQueryBuilder
             services.AddTransient(typeof(QueryBuilderService<>));
         }
 
-        public void Configure(IBlazorApplicationBuilder app)
+        public void Configure(IComponentsApplicationBuilder app)
         {
             app.AddComponent<App>("app");
         }
