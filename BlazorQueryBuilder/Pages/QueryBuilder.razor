@@ -1,19 +1,19 @@
 ﻿@page "/query"
 @using System.Linq.Expressions
-@using BlazorQueryBuilder.Models
 @using System.Linq.Dynamic
 @using System.Linq.Dynamic.Core
 @using System.Reflection
 @using Newtonsoft.Json
 @using BlazorQueryBuilder.Visitors
+@using BlazoryQueryBuilder.Shared.Models
+@using BlazoryQueryBuilder.Shared.Services
 @* Importing Microsoft.CodeAnalysis* will cause an error in the app, due to something having to do with the mono linker and long lists of assemblies
     The issues is documented here https://github.com/mono/linker/issues/379 
     Awaiting a fix *@
-@*@using Microsoft.CodeAnalysis.CSharp.Scripting;
-    @using Microsoft.CodeAnalysis.Scripting*@
-@inject List<TEntity> Workers
+@*@using Microsoft.CodeAnalysis.CSharp.Scripting*@
+@*@using Microsoft.CodeAnalysis.Scripting*@
 @inject PredicateFactory PredicateFactory
-@*@inject QueryBuilderService QueryBuilderService*@
+@inject HttpClient HttpClient
 @inject QueryBuilderService<TEntity> QueryBuilderService
 @typeparam TEntity
 
@@ -33,14 +33,14 @@
 </div>
 <div class="row">
     <div class="col-12">
-        @if (!_workers.Any())
+        @if (!_data.Any())
         {
             <div>No results.</div>
         }
-        @foreach (var worker in _workers)
+        @foreach (var data in _data)
         {
             <ul>
-                <li>@(JsonConvert.SerializeObject(worker))</li>
+                <li>@(JsonConvert.SerializeObject(data))</li>
             </ul>
         }
     </div>
@@ -48,7 +48,7 @@
 
 @functions {
 
-    List<TEntity> _workers = new List<TEntity>();
+    List<TEntity> _data = new List<TEntity>();
 
     Expression<Func<TEntity, bool>> Predicate => (Expression<Func<TEntity, bool>>)QueryBuilderService.Lambda;
 
@@ -57,9 +57,6 @@
 
     protected override void OnInit()
     {
-        Console.WriteLine("Selected entity: " + typeof(TEntity).Name);
-        Console.WriteLine(Expression);
-
         if (string.IsNullOrWhiteSpace(Expression))
         {
             QueryBuilderService.LoadEntity();
@@ -70,10 +67,19 @@
         }
     }
 
-    private void RunQuery()
+    private async Task RunQuery()
     {
         Func<TEntity, bool> predicate = Predicate.Compile();
-        _workers = Workers.Where(predicate).ToList();
+        var data = await HttpClient.SendJsonAsync<IEnumerable<TEntity>>(
+            HttpMethod.Post, 
+            "https://localhost:44338/api/values", 
+            new BlazoryQueryBuilder.Shared.Models.Predicate 
+            { 
+                LambdaExpression = Predicate.ToString(), 
+                EntityType = typeof(TEntity).Name,
+            }); 
+
+        _data = data.ToList();
     }
 
     private void OnChanged(Expression body)

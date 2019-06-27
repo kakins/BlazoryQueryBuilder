@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using BlazorQueryBuilder.Models;
+using BlazoryQueryBuilder.Shared.Models;
 
 namespace BlazorQueryBuilder.Visitors
 {
@@ -15,7 +15,7 @@ namespace BlazorQueryBuilder.Visitors
 
         protected override Expression VisitLambda<T>(Expression<T> node)
         {
-            PropertyInfo property = typeof(Worker).GetProperty(typeof(Worker).GetProperties().First().Name);
+            PropertyInfo property = typeof(Person).GetProperty(typeof(Person).GetProperties().First().Name);
             Console.WriteLine("new constant prop: " + property.Name);
             Expression parameter = Visit(node.Parameters[0]);
             MemberExpression memberAccess = Expression.MakeMemberAccess(parameter, property);

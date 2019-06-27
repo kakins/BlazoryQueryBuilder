@@ -3,22 +3,23 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Metadata;
-using BlazorQueryBuilder;
-using BlazorQueryBuilder.Models;
 using BlazorQueryBuilder.Visitors;
+using BlazoryQueryBuilder.Shared.Services;
+using BlazoryQueryBuilder.Shared.Models;
+ 
 using Xunit;
 
 namespace BlazorTest.Tests
 {
-    public class UnitTest1
+    public class ExpressionVisitorTests
     {
         [Fact]
-        public void Test1()
+        public void AddLogicalBinary()
         {
-            var parameter = Expression.Parameter(typeof(Worker));
+            var parameter = Expression.Parameter(typeof(Person));
 
-            var lambda = new PredicateFactory().CreateRelationalLambda<Worker>(
-                typeof(Worker).GetProperties().First().Name,
+            var lambda = new PredicateFactory().CreateRelationalLambda<Person>(
+                typeof(Person).GetProperties().First().Name,
                 parameter,
                 string.Empty,
                 ExpressionType.Equal);
@@ -30,38 +31,39 @@ namespace BlazorTest.Tests
         [Fact]
         public void ChangeMemberAccess()
         {
-            MemberExpression workerUin = Expression.MakeMemberAccess(
-                Expression.Parameter(typeof(Worker)),
-                typeof(Worker).GetProperty(nameof(Worker.Uin)));
+            MemberExpression personId = Expression.MakeMemberAccess(
+                Expression.Parameter(typeof(Person)),
+                typeof(Person).GetProperty(nameof(Person.PersonId)));
 
-            Expression workerEmployeeId = new ChangeMemberProperty(typeof(Worker),
-                    workerUin, 
-                    nameof(Worker.EmployeeId))
+            Expression personLastName = new ChangeMemberProperty(typeof(Person),
+                    personId, 
+                    nameof(Person.LastName))
                 .Change();
 
-            Assert.IsAssignableFrom<MemberExpression>(workerEmployeeId);
-            Assert.Equal(nameof(Worker.EmployeeId), ((MemberExpression)workerEmployeeId).Member.Name);
+            Assert.IsAssignableFrom<MemberExpression>(personLastName);
+            Assert.Equal(nameof(Person.LastName), ((MemberExpression)personLastName).Member.Name);
         }
 
         [Fact]
         public void ChangeNestedMemberAccess()
         {
-            MemberExpression workerUin = Expression.MakeMemberAccess(
-                Expression.Parameter(typeof(Worker)),
-                typeof(Worker).GetProperty(nameof(Worker.Uin)));
+            MemberExpression personId = Expression.MakeMemberAccess(
+                Expression.Parameter(typeof(Person)),
+                typeof(Person).GetProperty(nameof(Person.PersonId)));
 
-            MemberExpression workerPinOccupant = new ChangeMemberProperty(
-                    typeof(Worker),
-                    workerUin,
-                    nameof(Worker.PinOccupant))
+            MemberExpression personAddresses = new ChangeMemberProperty(
+                    typeof(Person),
+                    personId,
+                    nameof(Person.Addresses))
                 .Change();
 
+            // todo: fix to work with collection property accessors
             MemberExpression newMember = Expression.MakeMemberAccess(
-                workerPinOccupant,
-                workerPinOccupant.Type.GetProperty(nameof(PinOccupant.PinOccupantId)));
+                personAddresses,
+                personAddresses.Type.GetProperty(nameof(Address.AddressId)));
 
             Assert.IsAssignableFrom<MemberExpression>(newMember);
-            Assert.Equal(nameof(PinOccupant.PinOccupantId), newMember.Member.Name);
+            Assert.Equal(nameof(Address.AddressId), newMember.Member.Name);
         }
 
         [Fact]
@@ -95,7 +97,7 @@ namespace BlazorTest.Tests
         [Fact]
         public void ReplaceLambdaBody()
         {
-            Expression<Func<Worker, bool>> originalLambda = worker => worker.Uin == "820009398";
+            Expression<Func<Person, bool>> originalLambda = person => person.PersonId == "1";
 
             BinaryExpression newBody = new ReplaceBinaryType((BinaryExpression) originalLambda.Body, ExpressionType.NotEqual).Replace();
 

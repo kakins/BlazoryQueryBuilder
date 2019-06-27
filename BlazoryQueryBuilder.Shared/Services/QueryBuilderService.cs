@@ -1,11 +1,10 @@
-﻿using BlazorQueryBuilder.Models;
-using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Reflection;
+using BlazoryQueryBuilder.Shared.Extensions;
 
-namespace BlazorQueryBuilder
+namespace BlazoryQueryBuilder.Shared.Services
 {
 
     public class QueryBuilderService<TEntity>
@@ -17,7 +16,7 @@ namespace BlazorQueryBuilder
         public void SelectEntity(string entityTypeName)
         {
             var typeName = $"BlazorQueryBuilder.Models.{(string)entityTypeName}";
-            Assembly assembly = typeof(Startup).Assembly;
+            Assembly assembly = typeof(QueryBuilderService<>).Assembly;
             //SelectedEntityType = assembly.GetType(typeName);
         }
 
@@ -50,5 +49,6 @@ namespace BlazorQueryBuilder
 
             //SelectedEntityType = typeof(TEntity);
         }
+
     }
 }

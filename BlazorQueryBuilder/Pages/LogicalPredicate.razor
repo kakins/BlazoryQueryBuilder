@@ -12,7 +12,7 @@
 <div class="row mb-4">
     <div class="col-md-3">
         <div class="form-group mb-2">
-            <select class="form-control">
+            <select class="form-control" onchange="@ChangeOperator">
                 @foreach (var item in Operators)
                 {
                     <option value="@item.Key"
@@ -75,6 +75,14 @@
     private void ChangeRight(Expression right)
     {
         Binary = Expression.MakeBinary(Binary.NodeType, Binary.Left, right);
+        OnChange(Binary);
+    }
+
+    private void ChangeOperator(UIChangeEventArgs args)
+    {
+        var expressionType = (ExpressionType) Enum.Parse(typeof(ExpressionType), args.Value.ToString());
+
+        Binary = Expression.MakeBinary(expressionType, Binary.Left, Binary.Right);
         OnChange(Binary);
     }
 

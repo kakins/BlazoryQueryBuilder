@@ -1,6 +1,8 @@
 ﻿@using System.Linq.Expressions
 @using System.Reflection
 @using BlazorQueryBuilder.Visitors
+@using BlazoryQueryBuilder.Shared.Extensions
+@using BlazoryQueryBuilder.Shared.Services
 @inject PredicateFactory PredicateFactory;
 
 <div class="row">
@@ -70,7 +72,7 @@
 
         MemberExpression newMember;
 
-        if (entityProperty.PropertyType.IsClass)
+        if (entityProperty.PropertyType.IsClass && entityProperty.PropertyType != typeof(string))
         {
             MemberExpression classMember = new ChangeMemberProperty(_entityType, Member, entityPropertyName).Change();
 
@@ -113,6 +115,7 @@
     private void OnOperatorChanged(ExpressionType expressionType)
     {
         var newRelational = new ReplaceBinaryType(Binary, expressionType).Replace();
+        Console.WriteLine(newRelational);
         UpdateExpression(newRelational);
     }
 
@@ -132,6 +135,8 @@
             expressionType,
             new CopyExpression(Binary).Copy(),
             newRight);
+
+        Console.WriteLine(newBinary);
 
         OnChange(newBinary);
     }

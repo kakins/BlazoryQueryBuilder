@@ -1,6 +1,6 @@
 ﻿@page "/query-builder-main"
 @using System.Reflection
-@using BlazorQueryBuilder.Models
+@using BlazoryQueryBuilder.Shared.Models
 @using System.Linq.Dynamic.Core
 @using System.Linq.Expressions
 
@@ -45,7 +45,7 @@
 
 @functions {
 
-    string[] Entities = new[] { "Worker", "TitleCode", "PinOccupant" };
+    string[] Entities = new[] { nameof(Person), nameof(Address) };
     Type SelectedEntityType;
 
     private bool _newQuery = false;
@@ -78,8 +78,8 @@
 
     private void SelectEntity(string entityTypeName)
     {
-        var typeName = $"BlazorQueryBuilder.Models.{(string)entityTypeName}";
-        Assembly assembly = typeof(Startup).Assembly;
+        var typeName = $"BlazoryQueryBuilder.Shared.Models.{(string)entityTypeName}";
+        Assembly assembly = typeof(Person).Assembly;
         SelectedEntityType = assembly.GetType(typeName);
         StateHasChanged();
     }
@@ -87,8 +87,9 @@
     public void LoadQuery()
     {
         _state = new Loaded();
-        string entityType = "Worker";
-        Expression = @"worker => worker.Uin == ""123456789""";
+        string entityType = nameof(Person);
+        Expression<Func<Person, bool>> expression = worker => worker.PersonId == "820009398";
+        Expression = expression.ToString();
         SelectEntity(entityType);
         _queryLoaded = true;
     }

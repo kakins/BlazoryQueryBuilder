@@ -32,7 +32,10 @@
 
     private void ChangeOperator(UIChangeEventArgs args)
     {
+                Console.WriteLine("changed");
+
         var expressionType = (ExpressionType) Enum.Parse(typeof(ExpressionType), args.Value.ToString());
+        Console.WriteLine(expressionType);
         ExpressionType = expressionType;
         OnChange.Invoke(expressionType);
     }
