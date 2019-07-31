@@ -4,7 +4,6 @@
 @using System.Linq.Dynamic.Core
 @using System.Linq.Expressions
 
-
 <div class="row">
     <div class="col-12">
         @if (_queryLoaded || _newQuery)
@@ -24,9 +23,9 @@
 @if (_newQuery)
 {
     <div class="row">
-        <div class="col-12">
+        <div class="col-6">
+            <h1>Entity</h1>
             <div class="form-group">
-                <label for="exampleFormControlSelect1">Select entity</label>
                 <select class="form-control" id="exampleFormControlSelect1" onchange="@Select">
                     @foreach (var entity in Entities)
                     {
@@ -46,6 +45,7 @@
 @functions {
 
     string[] Entities = new[] { nameof(Person), nameof(Address) };
+
     Type SelectedEntityType;
 
     private bool _newQuery = false;

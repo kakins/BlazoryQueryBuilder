@@ -1,12 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Metadata;
 using BlazorQueryBuilder.Visitors;
+using BlazoryQueryBuilder.Shared.Extensions;
 using BlazoryQueryBuilder.Shared.Services;
 using BlazoryQueryBuilder.Shared.Models;
- 
+using BlazoryQueryBuilder.Shared.Util;
 using Xunit;
 
 namespace BlazorTest.Tests
@@ -18,7 +20,7 @@ namespace BlazorTest.Tests
         {
             var parameter = Expression.Parameter(typeof(Person));
 
-            var lambda = new PredicateFactory().CreateRelationalLambda<Person>(
+            var lambda = new PredicateFactory().CreateRelationalPredicate<Person>(
                 typeof(Person).GetProperties().First().Name,
                 parameter,
                 string.Empty,
@@ -123,5 +125,60 @@ namespace BlazorTest.Tests
 
             Assert.Equal(newBinary, binary2);
         }
+
+        [Fact]
+        public void ChangeBinaryToMethodCall()
+        {
+            var addresses = Expression.MakeMemberAccess(
+                Expression.Parameter(typeof(Person), "person"),
+                typeof(Person).GetProperty(nameof(Person.Addresses)));
+
+            var count = Expression.MakeMemberAccess(addresses, typeof(Address).GetProperty("Count"));
+
+            // person.PersonId == "1"
+            BinaryExpression personIdEqualsOne =
+                Expression.MakeBinary(
+                    ExpressionType.Equal,
+                Expression.MakeMemberAccess(
+                        Expression.Parameter(typeof(Person), "person"), 
+                        typeof(Person).GetProperty(nameof(Person.PersonId))), 
+                    Expression.Constant("1"));
+
+
+            // person.PersonId
+            Expression personId = personIdEqualsOne.Left;
+
+            // person.Addresses
+            MemberExpression personAddresses = new ChangeMemberProperty(
+                    typeof(Person),
+                    personId,
+                    nameof(Person.Addresses))
+                .Change();
+
+            // Select method
+            MethodInfo selectMethod = EnumerableMethodInfo.Select<Address, int>();
+
+            // address
+            ParameterExpression addressParam = Expression.Parameter(typeof(Address), "address");
+
+            // address.AddressId
+            MemberExpression memberAccess = Expression.MakeMemberAccess(
+                addressParam, 
+                typeof(Address).GetProperty(nameof(Address.AddressId)));
+
+            // address => address.AddressId
+            LambdaExpression lambda = Expression.Lambda(
+                memberAccess,
+                addressParam
+            );
+
+            // person.Addresses.Select(address => address.AddressId)
+            MethodCallExpression selectAddresses = Expression.Call(selectMethod, new List<Expression> { personAddresses, lambda });
+
+            Assert.NotNull(selectAddresses);
+        }
+
+
+
     }
 }

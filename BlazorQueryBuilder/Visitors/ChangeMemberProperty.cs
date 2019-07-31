@@ -26,15 +26,36 @@ namespace BlazorQueryBuilder.Visitors
         {
             if (node == _expression)
             {
-                Console.WriteLine(node);
-                Console.WriteLine(_expression);
-                Console.WriteLine(node.Expression);
-
                 Expression expression = Visit(node.Expression);
                 PropertyInfo prop = _propertyType.GetProperty(_propertyName);
                 return Expression.MakeMemberAccess(expression, prop);
             }
             return base.VisitMember(node);
+        }
+    }
+
+    public class ChangeBinaryToMethodCall : ExpressionVisitor
+    {
+        private readonly Expression _expression;
+
+        public ChangeBinaryToMethodCall(Expression expression)
+        {
+            _expression = expression;
+        }
+
+        public MethodCallExpression Change()
+        {
+            return (MethodCallExpression) Visit(_expression);
+        }
+
+        protected override Expression VisitBinary(BinaryExpression node)
+        {
+            if (node == _expression)
+            {
+                var left = node.Left;
+            }
+
+            return base.VisitBinary(node);
         }
     }
 }

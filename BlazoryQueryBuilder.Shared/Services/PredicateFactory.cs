@@ -7,7 +7,7 @@ namespace BlazoryQueryBuilder.Shared.Services
 {
     public class PredicateFactory
     {
-        public Expression<Func<T, bool>> CreateRelationalLambda<T>(
+        public Expression<Func<T, bool>> CreateRelationalPredicate<T>(
             string propertyName, 
             ParameterExpression parameter, 
             object comparisonValue,
@@ -25,7 +25,7 @@ namespace BlazoryQueryBuilder.Shared.Services
             return expression;
         }
 
-        public static Expression<Func<T, bool>> GetLambda<T>(string expression, Type type)
+        public static Expression<Func<T, bool>> GetPredicate<T>(string expression, Type type)
         {
             var config = new ParsingConfig { RenameParameterExpression = true };
 

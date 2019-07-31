@@ -39,9 +39,8 @@ namespace BlazoryQueryBuilder.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<IEnumerable>> Post([FromBody] Predicate predicate)
         {
-
-            var queryService = _queryServiceFactory.Create(predicate.EntityType);
-            IEnumerable data = await queryService.QueryData(predicate.LambdaExpression);
+            IQueryService queryService = _queryServiceFactory.Create(predicate.EntityType);
+            IEnumerable data = await queryService.QueryData(predicate.LambdaExpression, predicate.SelectedProperties);
 
             return Ok(data);
         }

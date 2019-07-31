@@ -39,6 +39,7 @@ namespace BlazoryQueryBuilder.Api
             services.AddDbContext<MyDbContext>(options =>
             {
                 options.UseInMemoryDatabase("InMemoryDb");
+                options.UseLazyLoadingProxies();
             });
         }
 
@@ -74,29 +75,40 @@ namespace BlazoryQueryBuilder.Api
     public class MyDbContext : DbContext
     {
         public DbSet<Person> Persons { get; set; }
+        private DbContextOptions<MyDbContext> _options;
 
         public MyDbContext(DbContextOptions<MyDbContext> options) : base(options)
         {
+            _options = options;
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .Entity<Person>()
-                .ToTable(nameof(Person))
-                .HasData(
-                    new Person
-                    {
-                        FirstName = "Alice",
-                        LastName = "Jones",
-                        PersonId = "1"
-                    },
-                    new Person
-                    {
-                        FirstName = "Bob",
-                        LastName = "Smith",
-                        PersonId = "2"
-                    });
+                .ToTable(nameof(Person));
+
+            if (_options.Extensions.Select(e => e.GetType()).Contains(typeof(InMemoryDbContextOptionsExtensions)))
+            {
+                modelBuilder
+                    .Entity<Person>()
+                    .HasData(
+                        new Person
+                        {
+                            FirstName = "Alice",
+                            LastName = "Jones",
+                            PersonId = "1",
+                            Addresses = new List<Address>()
+                        },
+                        new Person
+                        {
+                            FirstName = "Bob",
+                            LastName = "Smith",
+                            PersonId = "2",
+                            Addresses = new List<Address>()
+                        });
+
+            }
 
             modelBuilder
                 .Entity<Person>()

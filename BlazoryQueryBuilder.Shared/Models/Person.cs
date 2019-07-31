@@ -11,6 +11,6 @@ namespace BlazoryQueryBuilder.Shared.Models
         public string LastName { get; set; }
         public string FirstName { get; set; }
         public DateTime Created { get; set; }
-        public List<Address> Addresses { get; set; }
+        public virtual List<Address> Addresses { get; set; }
     }
 }

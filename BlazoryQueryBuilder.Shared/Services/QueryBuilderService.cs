@@ -11,14 +11,6 @@ namespace BlazoryQueryBuilder.Shared.Services
     {
         public LambdaExpression Lambda { get; set; }
         public ParameterExpression Parameter { get; set; }
-        //public Type SelectedEntityType { get; set; }
-
-        public void SelectEntity(string entityTypeName)
-        {
-            var typeName = $"BlazorQueryBuilder.Models.{(string)entityTypeName}";
-            Assembly assembly = typeof(QueryBuilderService<>).Assembly;
-            //SelectedEntityType = assembly.GetType(typeName);
-        }
 
         public void LoadEntity()
         {
@@ -26,13 +18,11 @@ namespace BlazoryQueryBuilder.Shared.Services
                 typeof(TEntity),
                 typeof(TEntity).Name.ToLower());
 
-            Lambda = new PredicateFactory().CreateRelationalLambda<TEntity>(
+            Lambda = new PredicateFactory().CreateRelationalPredicate<TEntity>(
                 typeof(TEntity).GetProperties().First().Name,
                 Parameter,
                 typeof(TEntity).GetProperties().First().PropertyType.GetDefaultValue(),
                 ExpressionType.Equal);
-
-            //SelectedEntityType = typeof(TEntity);
         }
 
         public void LoadQuery(string expression)
@@ -46,8 +36,6 @@ namespace BlazoryQueryBuilder.Shared.Services
                 expression);
 
             Parameter = Lambda.Parameters[0];
-
-            //SelectedEntityType = typeof(TEntity);
         }
 
     }
