@@ -18,7 +18,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Blazor" Version="3.0.0-preview4-19216-03" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.Build" Version="3.0.0-preview4-19216-03" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.DevServer" Version="3.0.0-preview4-19216-03" PrivateAssets="all" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.16" />
   </ItemGroup>
 
