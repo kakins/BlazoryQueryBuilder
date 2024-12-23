@@ -34,31 +34,21 @@
         <MudButton Color="Color.Primary" OnClick="RunQuery">Run Query</MudButton>
     </div>
 
-    <div class="row">
-        <div class="col-12">
-            @if (!_data.Any())
+    <MudTable Items="_data" Bordered="true" Striped="true">
+        <HeaderContent>
+            @foreach (var property in SelectedProperties)
             {
-                <div>No results.</div>
+                <MudTh>@property.Name</MudTh>
             }
-            else
+        </HeaderContent>
+        <RowTemplate>
+            @foreach (var property in SelectedProperties)
             {
-                <MudTable Items="_data" Bordered="true" Striped="true">
-                    <HeaderContent>
-                        @foreach (var property in SelectedProperties)
-                        {
-                            <MudTh>@property.Name</MudTh>
-                        }
-                    </HeaderContent>
-                    <RowTemplate>
-                        @foreach (var property in SelectedProperties)
-                        {
-                            <MudTd>@context.GetType().GetProperty(property.Name).GetValue(context, null)</MudTd>
-                        }
-                    </RowTemplate>
-                </MudTable>
+                <MudTd>@context.GetType().GetProperty(property.Name).GetValue(context, null)</MudTd>
             }
-        </div>
-    </div>
+        </RowTemplate>
+    </MudTable>
+    
 
 </MudStack>
 
