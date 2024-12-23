@@ -22,27 +22,36 @@ namespace BlazoryQueryBuilder.Shared.Services
 
         public async Task<IEnumerable> QueryData(string predicateExpression, IEnumerable<string> selectedProperties)
         {
-            predicateExpression = predicateExpression
-                .Replace("AndAlso", "&&")
-                .Replace("OrElse", "||");
+            try
+            {
+                predicateExpression = predicateExpression
+                    .Replace("AndAlso", "&&")
+                    .Replace("OrElse", "||");
 
-            var options = ScriptOptions
-                .Default
-                .AddReferences(typeof(T).Assembly)
-                .AddImports("BlazoryQueryBuilder.Shared.Models");
+                var options = ScriptOptions
+                    .Default
+                    .AddReferences(typeof(T).Assembly)
+                    .AddImports("BlazoryQueryBuilder.Shared.Models");
 
-            Expression<Func<T, bool>> predicate = await CSharpScript.EvaluateAsync<Expression<Func<T, bool>>>(predicateExpression, options);
+                Expression<Func<T, bool>> predicate = await CSharpScript.EvaluateAsync<Expression<Func<T, bool>>>(predicateExpression, options);
 
-            Expression<Func<T, T>> select = new SelectBuilderService<T>().BuildSelect(selectedProperties);
+                Expression<Func<T, T>> select = new SelectBuilderService<T>().BuildSelect(selectedProperties);
 
-            // create 
-            IEnumerable<T> results = _dbContext
-                .Set<T>()
-                .Where(predicate)
-                .Select(select)
-                .ToList();
+                // create 
+                IEnumerable<T> results = _dbContext
+                    .Set<T>()
+                    .Where(predicate)
+                    .Select(select)
+                    .ToList();
 
-            return results.AsEnumerable();
+                return results.AsEnumerable();
+
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
         }
     }
 }

@@ -5,7 +5,7 @@ using BlazoryQueryBuilder.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.InMemory.Infrastructure.Internal;
 
-namespace BlazoryQueryBuilder.Api
+namespace BlazorQueryBuilder
 {
     public class MyDbContext : DbContext
     {
@@ -47,6 +47,34 @@ namespace BlazoryQueryBuilder.Api
                         });
 
             }
+        }
+    }
+
+    public static class MyDbContextExtensions
+    {
+        public static async Task SeedDatabase(this MyDbContext context)
+        {
+            if (!context.Persons.Any())
+            {
+                context.Persons
+                    .AddRange(
+                        new Person
+                        {
+                            FirstName = "Alice",
+                            LastName = "Jones",
+                            PersonId = "1",
+                            Addresses = new List<Address>()
+                        },
+                        new Person
+                        {
+                            FirstName = "Bob",
+                            LastName = "Smith",
+                            PersonId = "2",
+                            Addresses = new List<Address>()
+                        });
+            }
+
+            await context.SaveChangesAsync();
         }
     }
 }
