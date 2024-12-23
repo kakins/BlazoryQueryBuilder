@@ -5,37 +5,33 @@
 @using BlazoryQueryBuilder.Shared.Services
 @inject PredicateFactory PredicateFactory;
 
-<div class="row">
-    <div class="col-12">
-        <code>@Binary.Left.ToString()</code>
-        <div class="form-inline">
-            <div class="form-group mb-2">
-                <select class="form-control" @onchange="@OnMemberAccessChange">
-                    @foreach (PropertyInfo property in _entityType.GetProperties())
-                    {
-                        <option value="@property.Name"
-                                selected="@Member.Member.Name.Equals(property.Name)"
-                                style="@(@property.PropertyType.IsClass ? "font-weight: bold" : "")">
-                            @property.Name
-                        </option>
-                    }
-                </select>
-            </div>
-            <div class="form-group mx-sm-3 mb-2">
-                <RelationalOperators OnChange="@OnOperatorChanged" ExpressionType="@Binary.NodeType"></RelationalOperators>
-            </div>
-            <div class="form-group mx-sm-3 mb-2">
-                <input class="form-control" id="right" value="@Constant.Value" @onchange="@OnConstantChange" />
-            </div>
-            <div class="form-group">
-                <button class="btn btn-primary" @onclick="@(() => Add(ExpressionType.AndAlso))">And</button>
-                <button class="btn btn-primary" @onclick="@(() => Add(ExpressionType.OrElse))">Or</button>
-                <button class="btn btn-primary" @onclick="@Remove">Remove</button>
-            </div>
-        </div>
-        <code>@Binary.ToString()</code>
+<code>@Binary.Left.ToString()</code>
+<MudStack Row>
+    <div class="form-group mb-2">
+        <select class="form-control" @onchange="@OnMemberAccessChange">
+            @foreach (PropertyInfo property in _entityType.GetProperties())
+            {
+                <option value="@property.Name"
+                        selected="@Member.Member.Name.Equals(property.Name)"
+                        style="@(@property.PropertyType.IsClass ? "font-weight: bold" : "")">
+                    @property.Name
+                </option>
+            }
+        </select>
     </div>
-</div>
+    <div class="form-group mx-sm-3 mb-2">
+        <RelationalOperators OnChange="@OnOperatorChanged" ExpressionType="@Binary.NodeType"></RelationalOperators>
+    </div>
+    <div class="form-group mx-sm-3 mb-2">
+        <input class="form-control" id="right" value="@Constant.Value" @onchange="@OnConstantChange" />
+    </div>
+    <div class="form-group">
+        <button class="btn btn-primary" @onclick="@(() => Add(ExpressionType.AndAlso))">And</button>
+        <button class="btn btn-primary" @onclick="@(() => Add(ExpressionType.OrElse))">Or</button>
+        <button class="btn btn-primary" @onclick="@Remove">Remove</button>
+    </div>
+</MudStack>
+<code>@Binary.ToString()</code>
 
 @code {
 
