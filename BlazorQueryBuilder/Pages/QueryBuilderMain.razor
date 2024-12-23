@@ -6,21 +6,19 @@
 @using System.Linq.Expressions
 @using MudBlazor
 
-<div class="row">
-    <div class="col-12">
-        @if (_queryLoaded || _newQuery)
-        {
-            <MudButton Color="Color.Primary" OnClick="@StartOver">Start Over</MudButton>
-        }
-        else
-        {
-            <MudButton Color="Color.Primary" OnClick="@LoadQuery">Load Query</MudButton>
-            <MudButton Color="Color.Primary" OnClick="NewQuery">New Query</MudButton>
-        }
-    </div>
-</div>
+<MudStack Row Spacing="2"> 
+    @if (_queryLoaded || _newQuery)
+    {
+        <MudButton Color="Color.Primary" OnClick="@StartOver">Start Over</MudButton>
+    }
+    else
+    {
+        <MudButton Color="Color.Primary" OnClick="@LoadQuery">Load Query</MudButton>
+        <MudButton Color="Color.Primary" OnClick="NewQuery">New Query</MudButton>
+    }
+</MudStack>
 
-<MudStack Spacing="3">
+<MudStack Spacing="5">
     @if (_newQuery)
     {
         <MudStack Spacing="2">
@@ -36,7 +34,9 @@
         </MudStack>
     }
 
-    @CreateQueryBuilder()
+    <div>
+        @CreateQueryBuilder()
+    </div>
 </MudStack>
 
 @code {
