@@ -25,31 +25,37 @@
     </div>
 
     <MudText Typo="Typo.h4">Query</MudText>
-    <div class="row">
-        <div class="col-12">
-            <LambdaComponent OnChanged="@OnChanged"
-                             Lambda="@QueryBuilderService.Lambda"
-                             Parameter="@QueryBuilderService.Parameter">
-            </LambdaComponent>
-        </div>
+    <LambdaComponent OnChanged="@OnChanged"
+                     Lambda="@QueryBuilderService.Lambda"
+                     Parameter="@QueryBuilderService.Parameter">
+    </LambdaComponent>
+
+    <div>
+        <MudButton Color="Color.Primary" OnClick="RunQuery">Run Query</MudButton>
     </div>
 
-    <div class="row">
-        <div class="col-12">
-            <button class="btn btn-primary" @onclick="@RunQuery">Run Query</button>
-        </div>
-    </div>
     <div class="row">
         <div class="col-12">
             @if (!_data.Any())
             {
                 <div>No results.</div>
             }
-            @foreach (var data in _data)
+            else
             {
-                <ul>
-                    <li>@(JsonConvert.SerializeObject(data))</li>
-                </ul>
+                <MudTable Items="_data" Bordered="true" Striped="true">
+                    <HeaderContent>
+                        @foreach (var property in SelectedProperties)
+                        {
+                            <MudTh>@property.Name</MudTh>
+                        }
+                    </HeaderContent>
+                    <RowTemplate>
+                        @foreach (var property in SelectedProperties)
+                        {
+                            <MudTd>@context.GetType().GetProperty(property.Name).GetValue(context, null)</MudTd>
+                        }
+                    </RowTemplate>
+                </MudTable>
             }
         </div>
     </div>
