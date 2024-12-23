@@ -8,12 +8,12 @@
     <div class="col-12">
         @if (_queryLoaded || _newQuery)
         {
-            <button class="btn btn-primary" onclick="@StartOver">Start Over</button>
+            <button class="btn btn-primary" @onclick="@StartOver">Start Over</button>
         }
         else
         {
-            <button class="btn btn-primary" onclick="@LoadQuery">Load Query</button>
-            <button class="btn btn-primary" onclick="@NewQuery">New Query</button>
+            <button class="btn btn-primary" @onclick="@LoadQuery">Load Query</button>
+            <button class="btn btn-primary" @onclick="@NewQuery">New Query</button>
         }
     </div>
 </div>
@@ -26,7 +26,7 @@
         <div class="col-6">
             <h1>Entity</h1>
             <div class="form-group">
-                <select class="form-control" id="exampleFormControlSelect1" onchange="@Select">
+                <select class="form-control" id="exampleFormControlSelect1" @onchange="@Select">
                     @foreach (var entity in Entities)
                     {
                         <option>@entity</option>
@@ -42,7 +42,7 @@
 
 
 
-@functions {
+@code {
 
     string[] Entities = new[] { nameof(Person), nameof(Address) };
 
@@ -66,11 +66,11 @@
 
     private IQueryBuilderState _state = new None();
 
-    protected override void OnInit()
+    protected override void OnInitialized()
     {
     }
 
-    public void Select(UIChangeEventArgs entity)
+    public void Select(ChangeEventArgs entity)
     {
         Expression = string.Empty;
         SelectEntity((string)entity.Value);

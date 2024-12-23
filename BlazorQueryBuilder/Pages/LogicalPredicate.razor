@@ -12,7 +12,7 @@
 <div class="row mb-4">
     <div class="col-md-3">
         <div class="form-group mb-2">
-            <select class="form-control" onchange="@ChangeOperator">
+            <select class="form-control" @onchange="@ChangeOperator">
                 @foreach (var item in Operators)
                 {
                     <option value="@item.Key"
@@ -35,7 +35,7 @@
 </div>
 
 
-@functions {
+@code {
 
     Dictionary<string, string> Operators = new Dictionary<string, string>
     {
@@ -44,15 +44,15 @@
     };
 
     [Parameter]
-    Action<BinaryExpression> OnChange { get; set; }
+    public Action<BinaryExpression> OnChange { get; set; }
 
     [Parameter]
-    BinaryExpression Binary { get; set; }
+    public BinaryExpression Binary { get; set; }
 
     [Parameter]
-    ParameterExpression Parameter { get; set; }
+    public ParameterExpression Parameter { get; set; }
 
-    protected override void OnInit()
+    protected override void OnInitialized()
     {
     }
 
@@ -78,7 +78,7 @@
         OnChange(Binary);
     }
 
-    private void ChangeOperator(UIChangeEventArgs args)
+    private void ChangeOperator(ChangeEventArgs args)
     {
         var expressionType = (ExpressionType) Enum.Parse(typeof(ExpressionType), args.Value.ToString());
 
@@ -97,5 +97,4 @@
         var newBinary = new CopyExpression(Binary.Left).Copy();
         OnChange((BinaryExpression) newBinary);
     }
-
 }

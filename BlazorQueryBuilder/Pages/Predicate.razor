@@ -22,19 +22,19 @@
         break;
 }
 
-@functions {
+@code {
 
     [Parameter]
-    Expression Expression { get; set; }
+    public Expression Expression { get; set; }
 
     [Parameter]
-    ParameterExpression Parameter { get; set; }
+    public ParameterExpression Parameter { get; set; }
 
     [Parameter]
-    Action<BinaryExpression> OnChange { get; set; }
+    public Action<BinaryExpression> OnChange { get; set; }
 
     [Parameter]
-    Action OnRemove { get; set; }
+    public Action OnRemove { get; set; }
 
     private BinaryExpression GetBinaryExpression()
     {
@@ -52,5 +52,4 @@
         OnRemove();
         StateHasChanged();
     }
-
 }

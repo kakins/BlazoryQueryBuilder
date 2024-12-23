@@ -2,7 +2,6 @@
 @using System.Linq.Expressions
 @using System.Linq.Dynamic
 @using System.Linq.Dynamic.Core
-@using System.Reflection
 @using Newtonsoft.Json
 @using BlazorQueryBuilder.Visitors
 @using BlazoryQueryBuilder.Shared.Models
@@ -17,7 +16,7 @@
     <h3>Properties</h3>
     @foreach (var property in typeof(TEntity).GetProperties())
     {
-        <input class="form-check-input" type="checkbox" onchange=@(eventArgs => { SelectProperty(@property, eventArgs.Value); })>
+        <input class="form-check-input" type="checkbox" @onchange=@(eventArgs => SelectProperty(@property, eventArgs.Value))>
         <div>@property.Name</div>
     }
 </div>
@@ -34,7 +33,7 @@
 
 <div class="row">
     <div class="col-12">
-        <button class="btn btn-primary" onclick="@RunQuery">Run Query</button>
+        <button class="btn btn-primary" @onclick="@RunQuery">Run Query</button>
     </div>
 </div>
 <div class="row">
@@ -52,7 +51,9 @@
     </div>
 </div>
 
-@functions {
+@code {
+
+
 
     List<TEntity> _data = new List<TEntity>();
 
@@ -60,9 +61,9 @@
     List<PropertyInfo> SelectedProperties = new List<PropertyInfo>();
 
     [Parameter]
-    string Expression { get; set; }
+    public string Expression { get; set; }
 
-    protected override void OnInit()
+    protected override void OnInitialized()
     {
         if (string.IsNullOrWhiteSpace(Expression))
         {
@@ -74,7 +75,7 @@
         }
     }
 
-    
+
     public void SelectProperty(System.Reflection.PropertyInfo property, object value)
     {
         if (!SelectedProperties.Contains(property))
@@ -91,17 +92,15 @@
     private async Task RunQuery()
     {
         Func<TEntity, bool> predicate = Predicate.Compile();
-        var data = await HttpClient.SendJsonAsync<IEnumerable<TEntity>>(
-            HttpMethod.Post, 
-            "https://localhost:44338/api/values", 
-            new BlazoryQueryBuilder.Shared.Models.Predicate 
-            { 
-                LambdaExpression = Predicate.ToString(), 
+        var content = JsonContent.Create(new BlazoryQueryBuilder.Shared.Models.Predicate
+            {
+                LambdaExpression = Predicate.ToString(),
                 EntityType = typeof(TEntity).Name,
                 SelectedProperties = SelectedProperties.Select(prop => prop.Name).ToList()
-            }); 
+            });
+        var data = await HttpClient.PostAsync("https://localhost:44338/api/values", content);
 
-        _data = data.ToList();
+        _data = (await data.Content.ReadFromJsonAsync<IEnumerable<TEntity>>()).ToList();
     }
 
     private void OnChanged(Expression body)
