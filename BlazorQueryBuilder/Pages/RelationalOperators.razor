@@ -1,18 +1,18 @@
 ﻿@using System.Linq.Expressions
 <div class="form-group">
-    <select class="form-control" id="operatorList" onchange="@ChangeOperator">
+    <select class="form-control" id="operatorList" @onchange="@ChangeOperator">
         @foreach (var item in Operators)
         {
-            <option value="@item.Key" 
+            <option value="@item.Key"
                     selected="@ExpressionType.ToString().Equals(item.Key)">@item.Value</option>
 
         }
     </select>
 </div>
 
-@functions {
+@code {
 
-    ExpressionType _selectedOperator = ExpressionType.Equal;
+    // ExpressionType _selectedOperator = ExpressionType.Equal;
 
     Dictionary<string, string> Operators = new Dictionary<string, string>
     {
@@ -25,16 +25,16 @@
     };
 
     [Parameter]
-    Action<ExpressionType> OnChange { get; set; }
+    public Action<ExpressionType> OnChange { get; set; }
 
     [Parameter]
-    ExpressionType ExpressionType { get; set; }
+    public ExpressionType ExpressionType { get; set; }
 
-    private void ChangeOperator(UIChangeEventArgs args)
+    private void ChangeOperator(ChangeEventArgs args)
     {
-                Console.WriteLine("changed");
+        Console.WriteLine("changed");
 
-        var expressionType = (ExpressionType) Enum.Parse(typeof(ExpressionType), args.Value.ToString());
+        var expressionType = (ExpressionType)Enum.Parse(typeof(ExpressionType), args.Value.ToString());
         Console.WriteLine(expressionType);
         ExpressionType = expressionType;
         OnChange.Invoke(expressionType);

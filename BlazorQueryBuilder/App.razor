@@ -2,4 +2,9 @@
     Configuring this here is temporary. Later we'll move the app config
     into Program.cs, and it won't be necessary to specify AppAssembly.
 -->
-<Router AppAssembly=typeof(Program).Assembly />
+<Router AppAssembly="@typeof(Program).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(Shared.MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+</Router>

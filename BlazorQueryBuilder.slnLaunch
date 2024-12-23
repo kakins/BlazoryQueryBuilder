@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "BlazoryQueryBuilder.Api\\BlazoryQueryBuilder.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "BlazorQueryBuilder\\BlazorQueryBuilder.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

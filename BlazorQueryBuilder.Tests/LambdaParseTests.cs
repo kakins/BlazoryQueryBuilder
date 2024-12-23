@@ -29,7 +29,7 @@ namespace BlazorQueryBuilder.Tests
         }
 
         [Fact]
-        public async void ParseLambdaAndReturnData()
+        public async System.Threading.Tasks.Task ParseLambdaAndReturnData()
         {
             Expression<Func<Person, bool>> expression = person => person.PersonId == "1" && person.LastName == "Jones";
             var properties = new List<string>{ nameof(Person.PersonId), nameof(Person.FirstName) };

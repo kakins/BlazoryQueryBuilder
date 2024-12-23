@@ -10,7 +10,7 @@
         <code>@Binary.Left.ToString()</code>
         <div class="form-inline">
             <div class="form-group mb-2">
-                <select class="form-control" onchange="@OnMemberAccessChange">
+                <select class="form-control" @onchange="@OnMemberAccessChange">
                     @foreach (PropertyInfo property in _entityType.GetProperties())
                     {
                         <option value="@property.Name"
@@ -25,46 +25,46 @@
                 <RelationalOperators OnChange="@OnOperatorChanged" ExpressionType="@Binary.NodeType"></RelationalOperators>
             </div>
             <div class="form-group mx-sm-3 mb-2">
-                <input class="form-control" id="right" value="@Constant.Value" onchange="@OnConstantChange"/>
+                <input class="form-control" id="right" value="@Constant.Value" @onchange="@OnConstantChange" />
             </div>
             <div class="form-group">
-                <button class="btn btn-primary" onclick="@(() => Add(ExpressionType.AndAlso))">And</button>
-                <button class="btn btn-primary" onclick="@(() => Add(ExpressionType.OrElse))">Or</button>
-                <button class="btn btn-primary" onclick="@Remove">Remove</button>
+                <button class="btn btn-primary" @onclick="@(() => Add(ExpressionType.AndAlso))">And</button>
+                <button class="btn btn-primary" @onclick="@(() => Add(ExpressionType.OrElse))">Or</button>
+                <button class="btn btn-primary" @onclick="@Remove">Remove</button>
             </div>
         </div>
         <code>@Binary.ToString()</code>
     </div>
 </div>
 
-@functions {
+@code {
 
-    MemberExpression Member => (MemberExpression) Binary.Left;
-    ConstantExpression Constant => (ConstantExpression) Binary.Right;
+    MemberExpression Member => (MemberExpression)Binary.Left;
+    ConstantExpression Constant => (ConstantExpression)Binary.Right;
     private Type _entityType;
 
     [Parameter]
-    Action<BinaryExpression> OnChange { get; set; }
+    public Action<BinaryExpression> OnChange { get; set; }
 
     [Parameter]
-    Action OnRemove { get; set; }
+    public Action OnRemove { get; set; }
 
     [Parameter]
-    ParameterExpression Parameter { get; set; }
+    public ParameterExpression Parameter { get; set; }
 
     [Parameter]
-    BinaryExpression Binary { get; set; }
+    public BinaryExpression Binary { get; set; }
 
-    protected override void OnInit()
+    protected override void OnInitialized()
     {
         Console.WriteLine(Member.Member.DeclaringType);
         //if (_entityType == null)
         //    _entityType = Parameter.Type;
         _entityType = Member.Member.DeclaringType;
-        base.OnInit();
+        base.OnInitialized();
     }
 
-    private void OnMemberAccessChange(UIChangeEventArgs changedMember)
+    private void OnMemberAccessChange(ChangeEventArgs changedMember)
     {
         string entityPropertyName = changedMember.Value.ToString();
 
@@ -95,7 +95,7 @@
         UpdateExpression(newRelational);
     }
 
-    private void OnConstantChange(UIChangeEventArgs constant)
+    private void OnConstantChange(ChangeEventArgs constant)
     {
         if (Binary.Left.Type.IsAssignableFrom(typeof(Int32)))
         {
@@ -107,7 +107,7 @@
 
         if (Binary.Left.Type.IsAssignableFrom(typeof(string)))
         {
-            BinaryExpression newRelational = new ReplaceBinaryRight(Binary, Expression.Constant((string) constant.Value)).Replace();
+            BinaryExpression newRelational = new ReplaceBinaryRight(Binary, Expression.Constant((string)constant.Value)).Replace();
             UpdateExpression(newRelational);
         }
     }

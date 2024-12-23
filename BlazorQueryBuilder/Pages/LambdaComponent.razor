@@ -15,17 +15,17 @@
     </Predicate>
 </div>
 
-@functions {
+@code {
     [Parameter]
-    LambdaExpression Lambda { get; set; }
+    public LambdaExpression Lambda { get; set; }
 
     [Parameter]
-    ParameterExpression Parameter { get; set; }
+    public ParameterExpression Parameter { get; set; }
 
     [Parameter]
-    Action<Expression> OnChanged { get; set; }
+    public Action<Expression> OnChanged { get; set; }
 
-    protected override void OnInit()
+    protected override void OnInitialized()
     {
         OnChanged(Lambda.Body);
     }

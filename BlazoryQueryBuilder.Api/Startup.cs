@@ -4,15 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using BlazoryQueryBuilder.Shared.Models;
 using BlazoryQueryBuilder.Shared.Services;
+using Castle.Core.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace BlazoryQueryBuilder.Api
 {
@@ -28,7 +26,8 @@ namespace BlazoryQueryBuilder.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers();//.AddJsonOptions(options => { options.JsonSerializerOptions.PropertyNamingPolicy = null; });
+
             services.AddCors(options =>
             {
                 options.AddPolicy("MyPolicy",
@@ -70,52 +69,79 @@ namespace BlazoryQueryBuilder.Api
                 endpoints.MapControllers();
             });
         }
-    }
 
-    public class MyDbContext : DbContext
-    {
-        public DbSet<Person> Persons { get; set; }
-        private DbContextOptions<MyDbContext> _options;
-
-        public MyDbContext(DbContextOptions<MyDbContext> options) : base(options)
+        public static void SeedDatabase(IServiceProvider services)
         {
-            _options = options;
-        }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder
-                .Entity<Person>()
-                .ToTable(nameof(Person));
-
-            if (_options.Extensions.Select(e => e.GetType()).Contains(typeof(InMemoryDbContextOptionsExtensions)))
+            using (var scope = services.CreateScope())
             {
-                modelBuilder
-                    .Entity<Person>()
-                    .HasData(
-                        new Person
-                        {
-                            FirstName = "Alice",
-                            LastName = "Jones",
-                            PersonId = "1",
-                            Addresses = new List<Address>()
-                        },
-                        new Person
-                        {
-                            FirstName = "Bob",
-                            LastName = "Smith",
-                            PersonId = "2",
-                            Addresses = new List<Address>()
-                        });
+                var provider = scope.ServiceProvider;
+                //var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
 
+                try
+                {
+                    var aspnetRunContext = provider.GetRequiredService<MyDbContext>();
+                    MyDbContextSeed.SeedAsync(aspnetRunContext/*, loggerFactory*/).Wait();
+                }
+                catch (Exception exception)
+                {
+                    //var logger = loggerFactory.Create("Main");
+                    //logger.Error("An error occurred seeding the DB.", exception);
+                }
             }
+        }
+    }
+    public class MyDbContextSeed
+    {
+        public static async Task SeedAsync(MyDbContext context/*, ILoggerFactory loggerFactory*/, int? retry = 0)
+        {
+            int retryForAvailability = retry.Value;
 
-            modelBuilder
-                .Entity<Person>()
-                .HasMany(person => person.Addresses)
-                .WithOne(address => address.Person)
-                .HasForeignKey(address => address.PersonId);
+            try
+            {
+                // TODO: Only run this if using a real database
+                // aspnetrunContext.Database.Migrate();
+                // aspnetrunContext.Database.EnsureCreated();
 
+                if (!context.Persons.Any())
+                {
+                    context.Persons
+                        .AddRange(
+                            new Person
+                            {
+                                FirstName = "Alice",
+                                LastName = "Jones",
+                                PersonId = "1",
+                                Addresses = new List<Address>()
+                            },
+                            new Person
+                            {
+                                FirstName = "Bob",
+                                LastName = "Smith",
+                                PersonId = "2",
+                                Addresses = new List<Address>()
+                            },
+                            new Person
+                            {
+                                FirstName = "Celal",
+                                LastName = "Ak",
+                                PersonId = "3",
+                                Addresses = new List<Address>()
+                            }
+                        );
+                    await context.SaveChangesAsync();
+                }
+            }
+            catch (Exception exception)
+            {
+                if (retryForAvailability < 10)
+                {
+                    retryForAvailability++;
+                    //var log = loggerFactory.Create("AspnetRunContextSeed");
+                    //log.Error(exception.Message);
+                    await SeedAsync(context/*, loggerFactory*/, retryForAvailability);
+                }
+                throw;
+            }
         }
     }
 }

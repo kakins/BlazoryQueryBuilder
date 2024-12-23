@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29009.5
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorQueryBuilder", "BlazorQueryBuilder\BlazorQueryBuilder.csproj", "{B97627D7-4107-4054-B2B1-0E869B5541EF}"
 EndProject
@@ -10,6 +10,17 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazoryQueryBuilder.Api", "BlazoryQueryBuilder.Api\BlazoryQueryBuilder.Api.csproj", "{75D42172-3014-4402-9047-D9CC943BAFB4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazoryQueryBuilder.Shared", "BlazoryQueryBuilder.Shared\BlazoryQueryBuilder.Shared.csproj", "{84C05D84-80D6-43A1-82B4-56F9AEA662D7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "modules", "modules", "{14DF9DE2-1769-4795-8B4F-E6849387B844}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "host", "host", "{BE42D5D0-82A1-429E-ADB1-A1998CBE3C43}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{250C8F6C-55CD-4C68-8906-34D83A4C9A2B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".Solution Items", ".Solution Items", "{02734CD4-1208-4E69-AC53-F9AE2107A822}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,6 +47,12 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B97627D7-4107-4054-B2B1-0E869B5541EF} = {BE42D5D0-82A1-429E-ADB1-A1998CBE3C43}
+		{67F323B6-C107-490B-A298-872DE61BEFBD} = {250C8F6C-55CD-4C68-8906-34D83A4C9A2B}
+		{75D42172-3014-4402-9047-D9CC943BAFB4} = {BE42D5D0-82A1-429E-ADB1-A1998CBE3C43}
+		{84C05D84-80D6-43A1-82B4-56F9AEA662D7} = {14DF9DE2-1769-4795-8B4F-E6849387B844}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9F141EE6-0729-4552-9DA6-8CCF9F0D09C1}
