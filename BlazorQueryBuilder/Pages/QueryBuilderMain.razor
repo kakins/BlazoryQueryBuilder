@@ -20,30 +20,31 @@
     </div>
 </div>
 
-@if (_newQuery)
-{
-    <MudStack Spacing="2">
-        <MudItem xs="12">
-            <MudText Typo="Typo.h4">Entity</MudText>
-            <div class="form-group">
-                <select class="form-control" id="exampleFormControlSelect1" @onchange="@Select">
+<MudStack Spacing="3">
+    @if (_newQuery)
+    {
+        <MudStack Spacing="2">
+            <MudItem xs="12">
+                <MudText Typo="Typo.h4">Entity</MudText>
+                <MudSelect T="string" Label="Select Entity" ValueChanged="Select">
                     @foreach (var entity in Entities)
                     {
-                        <option>@entity</option>
+                        <MudSelectItem Value="@entity">@entity</MudSelectItem>
                     }
-                </select>
-            </div>
-        </MudItem>
-    </MudStack>
-}
+                </MudSelect>
+            </MudItem>
+        </MudStack>
+    }
 
-@CreateQueryBuilder()
+    @CreateQueryBuilder()
+</MudStack>
 
 @code {
 
     string[] Entities = new[] { nameof(Person), nameof(Address) };
 
     Type SelectedEntityType;
+    string SelectedEntityTypeName;
 
     private bool _newQuery = false;
     private bool _queryLoaded = false;
@@ -67,10 +68,10 @@
     {
     }
 
-    public void Select(ChangeEventArgs entity)
+    public void Select(string value)
     {
         Expression = string.Empty;
-        SelectEntity((string)entity.Value);
+        SelectEntity(value);
     }
 
     private void SelectEntity(string entityTypeName)
