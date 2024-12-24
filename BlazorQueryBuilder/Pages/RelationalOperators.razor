@@ -1,7 +1,7 @@
 ﻿@using System.Linq.Expressions
 @using MudBlazor
 
-<MudSelect T="string" Label="Select Operator" @bind-Value="SelectedOperator">
+<MudSelect T="string" Label="Operator" @bind-Value="SelectedOperator">
     @foreach (var item in Operators)
     {
         <MudSelectItem Value="@item.Key">@item.Value</MudSelectItem>
