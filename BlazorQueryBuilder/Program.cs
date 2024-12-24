@@ -17,6 +17,7 @@ try
 
     builder.Services.AddTransient<QueryServiceFactory<MyDbContext>>();
     builder.Services.AddTransient<QueryService<Person, MyDbContext>>();
+    builder.Services.AddTransient<QueryService<Address, MyDbContext>>();
     builder.Services.AddDbContext<MyDbContext>(options =>
     {
         options.UseInMemoryDatabase("InMemoryDb");
@@ -53,12 +54,4 @@ catch (Exception ex)
 {
 
     throw;
-}
-
-static async Task SeedDatabase(IServiceProvider services)
-{
-    using var scope = services.CreateScope();
-    var provider = scope.ServiceProvider;
-    var dbContext = provider.GetRequiredService<MyDbContext>();
-    await dbContext.SeedDatabase();
 }

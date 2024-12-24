@@ -63,14 +63,14 @@ namespace BlazorQueryBuilder
                             FirstName = "Alice",
                             LastName = "Jones",
                             PersonId = "1",
-                            Addresses = new List<Address>()
+                            Addresses = [ new() { AddressId = 1 } ]
                         },
                         new Person
                         {
                             FirstName = "Bob",
                             LastName = "Smith",
                             PersonId = "2",
-                            Addresses = new List<Address>()
+                            Addresses = [ new() { AddressId = 2 } ]
                         });
             }
 
