@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using BlazoryQueryBuilder.Shared.Extensions;
+using System;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using BlazoryQueryBuilder.Shared.Extensions;
-using BlazoryQueryBuilder.Shared.Models;
 
 namespace BlazoryQueryBuilder.Shared.Util
 {

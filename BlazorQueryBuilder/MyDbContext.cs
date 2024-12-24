@@ -1,6 +1,5 @@
 ﻿using BlazoryQueryBuilder.Shared.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.InMemory.Infrastructure.Internal;
 
 namespace BlazorQueryBuilder
 {
