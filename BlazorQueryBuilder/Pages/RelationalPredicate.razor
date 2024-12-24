@@ -6,7 +6,7 @@
 @inject PredicateFactory PredicateFactory;
 
 <MudStack Row>
-    <MudSelect T="string" ValueChanged="OnMemberAccessChange" Value="_selectedPropertyName">
+    <MudSelect Label="Field" T="string" ValueChanged="OnMemberAccessChange" Value="_selectedPropertyName">
         @foreach (PropertyInfo property in _entityType.GetProperties())
         {
             <MudSelectItem Value="@property.Name" style="@(@property.PropertyType.IsClass ? "font-weight: bold" : "")">
@@ -15,7 +15,7 @@
         }
     </MudSelect>
     <RelationalOperators OnChange="@OnOperatorChanged" ExpressionType="@Binary.NodeType"></RelationalOperators>
-    <MudTextField T="string" Value="@(Constant.Value?.ToString())" ValueChanged="@OnConstantChange" />
+    <MudTextField Label="Value" T="string" Value="@(Constant.Value?.ToString())" ValueChanged="@OnConstantChange" />
     <MudStack Row Spacing="2">
         <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.AndAlso))">And</MudButton>
         <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.OrElse))">Or</MudButton>
