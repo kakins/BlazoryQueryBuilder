@@ -1,7 +1,4 @@
 ﻿using BlazorQueryBuilder;
-using BlazoryQueryBuilder.Shared.Models;
-using BlazoryQueryBuilder.Shared.Services;
-using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 
 try
@@ -15,16 +12,7 @@ try
 
     builder.Services.AddMudServices();
 
-    builder.Services.AddTransient<QueryServiceFactory<MyDbContext>>();
-    builder.Services.AddTransient<QueryService<Person, MyDbContext>>();
-    builder.Services.AddTransient<QueryService<Address, MyDbContext>>();
-    builder.Services.AddDbContext<MyDbContext>(options =>
-    {
-        options.UseInMemoryDatabase("InMemoryDb");
-        options.UseLazyLoadingProxies();
-    });
-    builder.Services.AddSingleton<PredicateFactory>();
-    builder.Services.AddTransient(typeof(QueryBuilderService<>));
+    builder.Services.AddQueryBuilderServices<MyDbContext>();
 
     var app = builder.Build();
 

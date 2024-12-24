@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using BlazoryQueryBuilder.Shared.Models;
+﻿using BlazoryQueryBuilder.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.InMemory.Infrastructure.Internal;
 
@@ -10,6 +7,8 @@ namespace BlazorQueryBuilder
     public class MyDbContext : DbContext
     {
         public DbSet<Person> Persons { get; set; }
+        public DbSet<Address> Addresses { get; set; }
+
         private DbContextOptions<MyDbContext> _options;
 
         public MyDbContext(DbContextOptions<MyDbContext> options) : base(options)
