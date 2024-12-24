@@ -7,6 +7,4 @@ Work in progress.  I haven't put much time into this very recently, but all of t
 - Read the database entities
 - Be able to dynamically build an EF query expression in the UI using Blazor and the EF API.
 
-## Sample Screen
-
-![Sample](docs/images/Sample.png)
+![image](https://github.com/user-attachments/assets/4f85d27c-9cd2-43ca-897a-42944afad528)
