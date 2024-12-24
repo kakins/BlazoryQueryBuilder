@@ -84,7 +84,8 @@
         var predicateModel = new BlazoryQueryBuilder.Shared.Models.Predicate
         {
                 LambdaExpression = Predicate.ToString(),
-                EntityType = typeof(TEntity).Name,
+                EntityName = typeof(TEntity).Name,
+                EntityType = typeof(TEntity).FullName,
                 SelectedProperties = SelectedProperties.Select(prop => prop.Name).ToList()
         };
         var data = await ExecuteQuery(predicateModel) as IEnumerable<TEntity>;

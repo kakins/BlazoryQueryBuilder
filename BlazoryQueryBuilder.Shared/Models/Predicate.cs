@@ -7,6 +7,7 @@ namespace BlazoryQueryBuilder.Shared.Models
     {
         public string LambdaExpression { get; set; }
         public List<string> SelectedProperties { get; set; }
+        public string EntityName { get; set; }
         public string EntityType { get; set; }
         public Expression Expression { get; set; }
     }
