@@ -18,9 +18,10 @@
     </MudMainContent>
 </MudLayout>
 
-<MudThemeProvider @ref="@_mudThemeProvider"  DefaultScrollbar="false" />
+<MudThemeProvider @ref="@_mudThemeProvider" IsDarkMode="true" DefaultScrollbar="false" />
 <MudDialogProvider />
 <MudSnackbarProvider />
+<MudPopoverProvider />
 
 @code {
     private MudThemeProvider _mudThemeProvider = default!;
