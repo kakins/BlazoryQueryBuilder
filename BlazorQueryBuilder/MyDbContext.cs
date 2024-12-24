@@ -24,28 +24,6 @@ namespace BlazorQueryBuilder
                 .HasMany(person => person.Addresses)
                 .WithOne(address => address.Person)
                 .HasForeignKey(address => address.PersonId);
-
-            if (_options.Extensions.Select(e => e.GetType()).Contains(typeof(InMemoryOptionsExtension)))
-            {
-                modelBuilder
-                    .Entity<Person>()
-                    .HasData(
-                        new Person
-                        {
-                            FirstName = "Alice",
-                            LastName = "Jones",
-                            PersonId = "1",
-                            Addresses = new List<Address>()
-                        },
-                        new Person
-                        {
-                            FirstName = "Bob",
-                            LastName = "Smith",
-                            PersonId = "2",
-                            Addresses = new List<Address>()
-                        });
-
-            }
         }
     }
 
@@ -55,25 +33,46 @@ namespace BlazorQueryBuilder
         {
             if (!context.Persons.Any())
             {
-                context.Persons
-                    .AddRange(
-                        new Person
-                        {
-                            FirstName = "Alice",
-                            LastName = "Jones",
-                            PersonId = "1",
-                            Addresses = [ new() { AddressId = 1 } ]
-                        },
-                        new Person
-                        {
-                            FirstName = "Bob",
-                            LastName = "Smith",
-                            PersonId = "2",
-                            Addresses = [ new() { AddressId = 2 } ]
-                        });
-            }
+                var persons = new List<Person>
+                {
+                    new Person
+                    {
+                        FirstName = "Alice",
+                        LastName = "Jones",
+                        PersonId = "1",
+                        Created = DateTime.Now
+                    },
+                    new Person
+                    {
+                        FirstName = "Bob",
+                        LastName = "Smith",
+                        PersonId = "2",
+                        Created = DateTime.Parse("2021-01-01")
+                    }
+                };
 
-            await context.SaveChangesAsync();
+                context.Persons.AddRange(persons);
+                await context.SaveChangesAsync();
+
+                var addresses = new List<Address>
+                {
+                    new Address
+                    {
+                        AddressId = 1,
+                        PersonId = "1",
+                        IsPrimary = true
+                    },
+                    new Address
+                    {
+                        AddressId = 2,
+                        PersonId = "2",
+                        IsPrimary = false
+                    }
+                };
+
+                context.Addresses.AddRange(addresses);
+                await context.SaveChangesAsync();
+            }
         }
     }
 }

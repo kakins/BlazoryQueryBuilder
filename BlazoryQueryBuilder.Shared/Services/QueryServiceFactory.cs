@@ -13,14 +13,11 @@ namespace BlazoryQueryBuilder.Shared.Services
             _serviceProvider = serviceProvider;
         }
 
-        public IQueryService Create(string typeName)
+        public IQueryService<T> Create<T>() where T : class
         {
-            var assembly = typeof(QueryBuilderService<>).Assembly;
-            var type = assembly.GetType(typeName);
+            var service = _serviceProvider.GetRequiredService(typeof(QueryService<,>).MakeGenericType(typeof(T), typeof(TDbContext)));
 
-            var service = _serviceProvider.GetRequiredService(typeof(QueryService<,>).MakeGenericType(type, typeof(TDbContext)));
-
-            return service as IQueryService;
+            return service as IQueryService<T>;
         }
     }
 }

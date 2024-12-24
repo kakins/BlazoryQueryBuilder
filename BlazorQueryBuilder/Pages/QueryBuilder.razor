@@ -11,7 +11,7 @@
 @inject PredicateFactory PredicateFactory
 @inject QueryBuilderService<TEntity> QueryBuilderService
 @inject QueryServiceFactory<MyDbContext> QueryServiceFactory
-@typeparam TEntity
+@typeparam TEntity where TEntity : class
 
 <MudStack Spacing="5">
     <div>
@@ -20,7 +20,6 @@
             @foreach (var property in typeof(TEntity).GetProperties())
             {
                 <MudSelectItem T="PropertyInfo" Value="property">
-
                     @property.Name
                 </MudSelectItem>
             }
@@ -85,10 +84,10 @@
         Func<TEntity, bool> predicate = Predicate.Compile();
         var predicateModel = new BlazoryQueryBuilder.Shared.Models.Predicate
         {
-                LambdaExpression = Predicate.ToString(),
-                EntityName = typeof(TEntity).Name,
-                EntityType = typeof(TEntity).FullName,
-                SelectedProperties = SelectedProperties.Select(prop => prop.Name).ToList()
+            LambdaExpression = Predicate.ToString(),
+            EntityName = typeof(TEntity).Name,
+            EntityType = typeof(TEntity).FullName,
+            SelectedProperties = SelectedProperties.Select(prop => prop.Name).ToList()
         };
         var data = await ExecuteQuery(predicateModel) as IEnumerable<TEntity>;
 
@@ -104,8 +103,9 @@
 
     public async Task<IEnumerable> ExecuteQuery(BlazoryQueryBuilder.Shared.Models.Predicate predicate)
     {
-        IQueryService queryService = QueryServiceFactory.Create(predicate.EntityType);
-        IEnumerable data = await queryService.QueryData(predicate.LambdaExpression, predicate.SelectedProperties);
+        IQueryService<TEntity> queryService = QueryServiceFactory.Create<TEntity>();
+
+        IEnumerable data = await queryService.QueryData(Predicate, predicate.SelectedProperties);
         return data;
     }
 }
