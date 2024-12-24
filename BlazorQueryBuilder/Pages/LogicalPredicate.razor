@@ -1,39 +1,24 @@
 ﻿@using System.Linq.Expressions
 @using BlazorQueryBuilder.Visitors
-<div class="row mb-4">
-    <div class="col-md-12">
-        <Predicate Expression="@GetLeft()"
-                   Parameter="@Parameter"
-                   OnChange="@ChangeLeft"
-                   OnRemove="@RemoveLeft">
-        </Predicate>
-    </div>
-</div>
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="form-group mb-2">
-            <select class="form-control" @onchange="@ChangeOperator">
-                @foreach (var item in Operators)
-                {
-                    <option value="@item.Key"
-                            selected="@Binary.NodeType.ToString().Equals(item.Key)">
-                        @item.Value
-                    </option>
-                }
-            </select>
-        </div>
-    </div>
-</div>
-<div class="row mb-4">
-    <div class="col-md-12">
-        <Predicate Expression="@GetRight()"
-                   Parameter="@Parameter"
-                   OnChange="@ChangeRight"
-                   OnRemove="@RemoveRight">
-        </Predicate>
-    </div>
-</div>
+<MudStack>
+    <Predicate Expression="@GetLeft()"
+               Parameter="@Parameter"
+               OnChange="@ChangeLeft"
+               OnRemove="@RemoveLeft">
+    </Predicate>
+    <MudSelect T="string" Label="Operator" OnChange="ChangeOperator">
+        @foreach (var item in Operators)
+        {
+            <MudSelectItem T="string" Value="@item.Key">@item.Value</MudSelectItem>
+        }
+    </MudSelect>
+    <Predicate Expression="@GetRight()"
+               Parameter="@Parameter"
+               OnChange="@ChangeRight"
+               OnRemove="@RemoveRight">
+    </Predicate>
 
+</MudStack>
 
 @code {
 
@@ -78,9 +63,9 @@
         OnChange(Binary);
     }
 
-    private void ChangeOperator(ChangeEventArgs args)
+    private void ChangeOperator(string op)
     {
-        var expressionType = (ExpressionType) Enum.Parse(typeof(ExpressionType), args.Value.ToString());
+        var expressionType = (ExpressionType)Enum.Parse(typeof(ExpressionType), op);
 
         Binary = Expression.MakeBinary(expressionType, Binary.Left, Binary.Right);
         OnChange(Binary);
