@@ -5,13 +5,13 @@
 @using MudBlazor
 
 <MudStack Row Spacing="4">
-    <MudItem xs="6">
+    <MudItem xs="8" lg="8">
         <Predicate Expression="@GetBodyAsBinary()"
                    Parameter="@Parameter"
                    OnChange="@OnChangeBody">
         </Predicate>
     </MudItem>
-    <MudItem xs="6">
+    <MudItem xs="4" lg="4">
         <MudExpansionPanels>
             <MudExpansionPanel Text="View Lambda Expression" Expanded="false">
                 <code>@Lambda.ToString()</code>

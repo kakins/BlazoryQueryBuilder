@@ -18,7 +18,7 @@
     <div class="form-group mx-sm-3 mb-2">
         <RelationalOperators OnChange="@OnOperatorChanged" ExpressionType="@Binary.NodeType"></RelationalOperators>
     </div>
-    <input class="form-control" id="right" value="@Constant.Value" @onchange="@OnConstantChange" />
+    <MudTextField T="string" Value="@((string)Constant.Value)" ValueChanged="@OnConstantChange" />
     <MudStack Row Spacing="2">
         <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.AndAlso))">And</MudButton>
         <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.OrElse))">Or</MudButton>
@@ -82,11 +82,11 @@
         UpdateExpression(newRelational);
     }
 
-    private void OnConstantChange(ChangeEventArgs constant)
+    private void OnConstantChange(object constant)
     {
         if (Binary.Left.Type.IsAssignableFrom(typeof(Int32)))
         {
-            int value = Int32.Parse(constant.Value.ToString());
+            int value = Int32.Parse(constant.ToString());
             BinaryExpression newRelational = new ReplaceBinaryRight(Binary, Expression.Constant(value)).Replace();
             UpdateExpression(newRelational);
             return;
@@ -94,7 +94,7 @@
 
         if (Binary.Left.Type.IsAssignableFrom(typeof(string)))
         {
-            BinaryExpression newRelational = new ReplaceBinaryRight(Binary, Expression.Constant((string)constant.Value)).Replace();
+            BinaryExpression newRelational = new ReplaceBinaryRight(Binary, Expression.Constant((string)constant)).Replace();
             UpdateExpression(newRelational);
         }
     }
