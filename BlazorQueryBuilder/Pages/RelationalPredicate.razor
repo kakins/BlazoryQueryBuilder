@@ -18,14 +18,12 @@
     <div class="form-group mx-sm-3 mb-2">
         <RelationalOperators OnChange="@OnOperatorChanged" ExpressionType="@Binary.NodeType"></RelationalOperators>
     </div>
-    <div class="form-group mx-sm-3 mb-2">
-        <input class="form-control" id="right" value="@Constant.Value" @onchange="@OnConstantChange" />
-    </div>
-    <div class="form-group">
-        <button class="btn btn-primary" @onclick="@(() => Add(ExpressionType.AndAlso))">And</button>
-        <button class="btn btn-primary" @onclick="@(() => Add(ExpressionType.OrElse))">Or</button>
-        <button class="btn btn-primary" @onclick="@Remove">Remove</button>
-    </div>
+    <input class="form-control" id="right" value="@Constant.Value" @onchange="@OnConstantChange" />
+    <MudStack Row Spacing="2">
+        <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.AndAlso))">And</MudButton>
+        <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.OrElse))">Or</MudButton>
+        <MudButton Variant="Variant.Filled" OnClick="Remove">Remove</MudButton>
+    </MudStack>
 </MudStack>
 <code>@Binary.ToString()</code>
 
