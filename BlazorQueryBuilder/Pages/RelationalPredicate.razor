@@ -5,9 +5,8 @@
 @using BlazoryQueryBuilder.Shared.Services
 @inject PredicateFactory PredicateFactory;
 
-<code>@Binary.Left.ToString()</code>
 <MudStack Row>
-    <MudSelect T="string" ValueChanged="OnMemberAccessChange">
+    <MudSelect T="string" ValueChanged="OnMemberAccessChange" Value="selectedPropertyName">
         @foreach (PropertyInfo property in _entityType.GetProperties())
         {
             <MudSelectItem Value="@property.Name" style="@(@property.PropertyType.IsClass ? "font-weight: bold" : "")">
@@ -23,12 +22,12 @@
         <MudButton Variant="Variant.Filled" OnClick="Remove">Remove</MudButton>
     </MudStack>
 </MudStack>
-<code>@Binary.ToString()</code>
 
 @code {
     MemberExpression Member => (MemberExpression)Binary.Left;
     ConstantExpression Constant => (ConstantExpression)Binary.Right;
     private Type _entityType;
+    private string selectedPropertyName;
 
     [Parameter]
     public Action<BinaryExpression> OnChange { get; set; }
@@ -44,15 +43,14 @@
 
     protected override void OnInitialized()
     {
-        Console.WriteLine(Member.Member.DeclaringType);
-        //if (_entityType == null)
-        //    _entityType = Parameter.Type;
         _entityType = Member.Member.DeclaringType;
+        OnMemberAccessChange(_entityType.GetProperties().First().Name);
         base.OnInitialized();
     }
 
     private void OnMemberAccessChange(string entityPropertyName)
     {
+        selectedPropertyName = entityPropertyName;
         PropertyInfo entityProperty = _entityType.GetProperty(entityPropertyName);
 
         MemberExpression newMember;

@@ -1,23 +1,24 @@
 ﻿@using System.Linq.Expressions
 @using BlazorQueryBuilder.Visitors
-<MudStack>
+<MudStack Spacing="5">
     <Predicate Expression="@GetLeft()"
                Parameter="@Parameter"
                OnChange="@ChangeLeft"
                OnRemove="@RemoveLeft">
     </Predicate>
-    <MudSelect T="string" Label="Operator" OnChange="ChangeOperator">
-        @foreach (var item in Operators)
-        {
-            <MudSelectItem T="string" Value="@item.Key">@item.Value</MudSelectItem>
-        }
-    </MudSelect>
+    <div>
+        <MudSelect T="string" Label="Operator" Value="@Binary.NodeType.ToString()" ValueChanged="ChangeOperator">
+            @foreach (var item in Operators)
+            {
+                <MudSelectItem T="string" Value="@item.Key">@item.Value</MudSelectItem>
+            }
+        </MudSelect>
+    </div>
     <Predicate Expression="@GetRight()"
                Parameter="@Parameter"
                OnChange="@ChangeRight"
                OnRemove="@RemoveRight">
     </Predicate>
-
 </MudStack>
 
 @code {
@@ -43,12 +44,12 @@
 
     private BinaryExpression GetLeft()
     {
-        return (BinaryExpression) Binary.Left;
+        return (BinaryExpression)Binary.Left;
     }
 
     private BinaryExpression GetRight()
     {
-        return (BinaryExpression) Binary.Right;
+        return (BinaryExpression)Binary.Right;
     }
 
     private void ChangeLeft(Expression left)
@@ -74,12 +75,12 @@
     private void RemoveLeft()
     {
         var newBinary = new CopyExpression(Binary.Right).Copy();
-        OnChange((BinaryExpression) newBinary);
+        OnChange((BinaryExpression)newBinary);
     }
 
     private void RemoveRight()
     {
         var newBinary = new CopyExpression(Binary.Left).Copy();
-        OnChange((BinaryExpression) newBinary);
+        OnChange((BinaryExpression)newBinary);
     }
 }
