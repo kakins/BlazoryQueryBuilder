@@ -10,12 +10,12 @@
         @foreach (PropertyInfo property in _entityType.GetProperties())
         {
             <MudSelectItem Value="@property.Name" style="@(@property.PropertyType.IsClass ? "font-weight: bold" : "")">
-                @property.Name
+                @property.Name.ToString()
             </MudSelectItem>
         }
     </MudSelect>
     <RelationalOperators OnChange="@OnOperatorChanged" ExpressionType="@Binary.NodeType"></RelationalOperators>
-    <MudTextField T="string" Value="@((string)Constant.Value)" ValueChanged="@OnConstantChange" />
+    <MudTextField T="string" Value="@(Constant.Value?.ToString())" ValueChanged="@OnConstantChange" />
     <MudStack Row Spacing="2">
         <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.AndAlso))">And</MudButton>
         <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.OrElse))">Or</MudButton>
