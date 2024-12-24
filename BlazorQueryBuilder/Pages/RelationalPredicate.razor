@@ -7,18 +7,14 @@
 
 <code>@Binary.Left.ToString()</code>
 <MudStack Row>
-    <div class="form-group mb-2">
-        <select class="form-control" @onchange="@OnMemberAccessChange">
-            @foreach (PropertyInfo property in _entityType.GetProperties())
-            {
-                <option value="@property.Name"
-                        selected="@Member.Member.Name.Equals(property.Name)"
-                        style="@(@property.PropertyType.IsClass ? "font-weight: bold" : "")">
-                    @property.Name
-                </option>
-            }
-        </select>
-    </div>
+    <MudSelect T="string" ValueChanged="OnMemberAccessChange">
+        @foreach (PropertyInfo property in _entityType.GetProperties())
+        {
+            <MudSelectItem Value="@property.Name" style="@(@property.PropertyType.IsClass ? "font-weight: bold" : "")">
+                @property.Name
+            </MudSelectItem>
+        }
+    </MudSelect>
     <div class="form-group mx-sm-3 mb-2">
         <RelationalOperators OnChange="@OnOperatorChanged" ExpressionType="@Binary.NodeType"></RelationalOperators>
     </div>
@@ -34,7 +30,6 @@
 <code>@Binary.ToString()</code>
 
 @code {
-
     MemberExpression Member => (MemberExpression)Binary.Left;
     ConstantExpression Constant => (ConstantExpression)Binary.Right;
     private Type _entityType;
@@ -60,10 +55,8 @@
         base.OnInitialized();
     }
 
-    private void OnMemberAccessChange(ChangeEventArgs changedMember)
+    private void OnMemberAccessChange(string entityPropertyName)
     {
-        string entityPropertyName = changedMember.Value.ToString();
-
         PropertyInfo entityProperty = _entityType.GetProperty(entityPropertyName);
 
         MemberExpression newMember;
