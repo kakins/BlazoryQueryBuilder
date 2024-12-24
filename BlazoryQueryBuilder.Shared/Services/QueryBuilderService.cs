@@ -1,8 +1,7 @@
-﻿using System.Linq;
+﻿using BlazoryQueryBuilder.Shared.Extensions;
+using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
-using System.Reflection;
-using BlazoryQueryBuilder.Shared.Extensions;
 
 namespace BlazoryQueryBuilder.Shared.Services
 {

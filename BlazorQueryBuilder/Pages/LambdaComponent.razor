@@ -2,18 +2,23 @@
 @using System.Reflection
 @using BlazoryQueryBuilder.Shared.Models
 @using BlazorQueryBuilder.Visitors
+@using MudBlazor
 
-<div class="row mb-4">
-    <div class="col-md-12">
-        <code>@Lambda.ToString()</code>
-    </div>
-</div>
-<div class="form-group">
-    <Predicate Expression="@GetBodyAsBinary()"
-               Parameter="@Parameter"
-               OnChange="@OnChangeBody">
-    </Predicate>
-</div>
+<MudStack Row Spacing="4">
+    <MudItem xs="8" lg="8">
+        <Predicate Expression="@GetBodyAsBinary()"
+                   Parameter="@Parameter"
+                   OnChange="@OnChangeBody">
+        </Predicate>
+    </MudItem>
+    <MudItem xs="4" lg="4">
+        <MudExpansionPanels>
+            <MudExpansionPanel Text="View Lambda Expression" Expanded="false">
+                <code>@Lambda.ToString()</code>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    </MudItem>
+</MudStack>
 
 @code {
     [Parameter]
@@ -40,5 +45,4 @@
         OnChanged(body);
         StateHasChanged();
     }
-
 }

@@ -36,13 +36,13 @@ namespace BlazorQueryBuilder.Tests
 
             var predicate = new Predicate
             {
-                EntityType = nameof(Person),
+                EntityName = nameof(Person),
                 LambdaExpression = expression.ToString(),
                 SelectedProperties = properties
             };
 
             IQueryService service = new QueryServiceFactory<TestContext>(_serviceProvider.Object)
-                .Create(predicate.EntityType);
+                .Create(predicate.EntityName);
 
             IEnumerable data = await service.QueryData(predicate.LambdaExpression, properties);
         }

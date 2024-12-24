@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlazoryQueryBuilder.Shared.Services
 {
-    public class QueryService<T, TDbContext> : IQueryService where T : class where TDbContext : DbContext
+    public class QueryService<T, TDbContext> : IQueryService<T> where T : class where TDbContext : DbContext
     {
         private readonly TDbContext _dbContext;
 
@@ -22,27 +22,45 @@ namespace BlazoryQueryBuilder.Shared.Services
 
         public async Task<IEnumerable> QueryData(string predicateExpression, IEnumerable<string> selectedProperties)
         {
-            predicateExpression = predicateExpression
-                .Replace("AndAlso", "&&")
-                .Replace("OrElse", "||");
+            try
+            {
+                predicateExpression = predicateExpression
+                    .Replace("AndAlso", "&&")
+                    .Replace("OrElse", "||");
 
-            var options = ScriptOptions
-                .Default
-                .AddReferences(typeof(T).Assembly)
-                .AddImports("BlazoryQueryBuilder.Shared.Models");
+                var options = ScriptOptions
+                    .Default
+                    .AddReferences(typeof(T).Assembly)
+                    .AddImports("BlazoryQueryBuilder.Shared.Models", "System");
 
-            Expression<Func<T, bool>> predicate = await CSharpScript.EvaluateAsync<Expression<Func<T, bool>>>(predicateExpression, options);
+                Expression<Func<T, bool>> predicate = await CSharpScript.EvaluateAsync<Expression<Func<T, bool>>>(predicateExpression, options);
 
-            Expression<Func<T, T>> select = new SelectBuilderService<T>().BuildSelect(selectedProperties);
+                return await QueryData(predicate, selectedProperties);
 
-            // create 
-            IEnumerable<T> results = _dbContext
-                .Set<T>()
-                .Where(predicate)
-                .Select(select)
-                .ToList();
+            }
+            catch (Exception ex)
+            {
 
-            return results.AsEnumerable();
+                throw;
+            }
+        }
+
+        public async Task<IEnumerable> QueryData(Expression<Func<T, bool>> predicate, IEnumerable<string> selectedProperties)
+        {
+            try
+            {
+                Expression<Func<T, T>> select = new SelectBuilderService<T>().BuildSelect(selectedProperties);
+                IEnumerable<T> results = _dbContext
+                    .Set<T>()
+                    .Where(predicate)
+                    .Select(select)
+                    .ToList();
+                return results.AsEnumerable();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
     }
 }

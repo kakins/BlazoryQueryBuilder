@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace BlazorQueryBuilder
+﻿namespace BlazorQueryBuilder
 {
     public interface IQueryBuilderState
     {

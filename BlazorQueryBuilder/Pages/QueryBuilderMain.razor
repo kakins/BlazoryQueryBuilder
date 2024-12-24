@@ -1,52 +1,50 @@
 ﻿@page "/query-builder-main"
+@page "/"
 @using System.Reflection
 @using BlazoryQueryBuilder.Shared.Models
 @using System.Linq.Dynamic.Core
 @using System.Linq.Expressions
+@using MudBlazor
 
-<div class="row">
-    <div class="col-12">
-        @if (_queryLoaded || _newQuery)
-        {
-            <button class="btn btn-primary" @onclick="@StartOver">Start Over</button>
-        }
-        else
-        {
-            <button class="btn btn-primary" @onclick="@LoadQuery">Load Query</button>
-            <button class="btn btn-primary" @onclick="@NewQuery">New Query</button>
-        }
-    </div>
-</div>
+<MudStack Row Spacing="2"> 
+    @if (_queryLoaded || _newQuery)
+    {
+        <MudButton Color="Color.Primary" OnClick="@StartOver">Start Over</MudButton>
+    }
+    else
+    {
+        <MudButton Color="Color.Primary" OnClick="@LoadQuery">Load Query</MudButton>
+        <MudButton Color="Color.Primary" OnClick="NewQuery">New Query</MudButton>
+    }
+</MudStack>
 
-
-
-@if (_newQuery)
-{
-    <div class="row">
-        <div class="col-6">
-            <h1>Entity</h1>
-            <div class="form-group">
-                <select class="form-control" id="exampleFormControlSelect1" @onchange="@Select">
+<MudStack Spacing="5">
+    @if (_newQuery)
+    {
+        <MudStack Spacing="2">
+            <MudItem xs="12">
+                <MudText Typo="Typo.h5">FROM</MudText>
+                <MudSelect T="string" Label="Entity" ValueChanged="Select">
                     @foreach (var entity in Entities)
                     {
-                        <option>@entity</option>
+                        <MudSelectItem Value="@entity">@entity</MudSelectItem>
                     }
-                </select>
-            </div>
-        </div>
+                </MudSelect>
+            </MudItem>
+        </MudStack>
+    }
+
+    <div>
+        @CreateQueryBuilder()
     </div>
-}
-
-
-@CreateQueryBuilder()
-
-
+</MudStack>
 
 @code {
 
     string[] Entities = new[] { nameof(Person), nameof(Address) };
 
     Type SelectedEntityType;
+    string SelectedEntityTypeName;
 
     private bool _newQuery = false;
     private bool _queryLoaded = false;
@@ -70,10 +68,10 @@
     {
     }
 
-    public void Select(ChangeEventArgs entity)
+    public void Select(string value)
     {
         Expression = string.Empty;
-        SelectEntity((string)entity.Value);
+        SelectEntity(value);
     }
 
     private void SelectEntity(string entityTypeName)

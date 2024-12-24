@@ -9,6 +9,8 @@ namespace BlazoryQueryBuilder.Shared.Models
         public int AddressId { get; set; }
         public string PersonId { get; set; }
 
+        public bool IsPrimary { get; set; }
+
         [ForeignKey(nameof(PersonId))]
         public virtual Person Person { get; set; }
     }

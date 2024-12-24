@@ -1,0 +1,39 @@
+@inherits LayoutComponentBase
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Justify="Justify.Center">
+            <MudText Typo="Typo.h5" Class="ml-3">Blazory Query Builder</MudText>
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" OnClick="@((e) => DrawerToggle())" />
+        </MudStack>
+        <MudSpacer />
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+        <NavMenu />
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-2 pt-2">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+<MudThemeProvider @ref="@_mudThemeProvider" IsDarkMode="true" DefaultScrollbar="false" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPopoverProvider />
+
+@code {
+    private MudThemeProvider _mudThemeProvider = default!;
+    private bool _drawerOpen = true;
+
+    protected async override Task OnInitializedAsync()
+    {
+        _drawerOpen = true;
+    }
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+}

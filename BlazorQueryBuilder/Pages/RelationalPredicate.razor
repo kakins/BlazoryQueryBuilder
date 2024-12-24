@@ -5,43 +5,52 @@
 @using BlazoryQueryBuilder.Shared.Services
 @inject PredicateFactory PredicateFactory;
 
-<div class="row">
-    <div class="col-12">
-        <code>@Binary.Left.ToString()</code>
-        <div class="form-inline">
-            <div class="form-group mb-2">
-                <select class="form-control" @onchange="@OnMemberAccessChange">
-                    @foreach (PropertyInfo property in _entityType.GetProperties())
-                    {
-                        <option value="@property.Name"
-                                selected="@Member.Member.Name.Equals(property.Name)"
-                                style="@(@property.PropertyType.IsClass ? "font-weight: bold" : "")">
-                            @property.Name
-                        </option>
-                    }
-                </select>
-            </div>
-            <div class="form-group mx-sm-3 mb-2">
-                <RelationalOperators OnChange="@OnOperatorChanged" ExpressionType="@Binary.NodeType"></RelationalOperators>
-            </div>
-            <div class="form-group mx-sm-3 mb-2">
-                <input class="form-control" id="right" value="@Constant.Value" @onchange="@OnConstantChange" />
-            </div>
-            <div class="form-group">
-                <button class="btn btn-primary" @onclick="@(() => Add(ExpressionType.AndAlso))">And</button>
-                <button class="btn btn-primary" @onclick="@(() => Add(ExpressionType.OrElse))">Or</button>
-                <button class="btn btn-primary" @onclick="@Remove">Remove</button>
-            </div>
-        </div>
-        <code>@Binary.ToString()</code>
-    </div>
-</div>
+<MudStack Row>
+    <MudSelect Label="Field" T="string" ValueChanged="OnMemberAccessChange" Value="_selectedPropertyName">
+        @foreach (PropertyInfo property in _entityType.GetProperties())
+        {
+            <MudSelectItem Value="@property.Name" style="@(@property.PropertyType.IsClass ? "font-weight: bold" : "")">
+                @property.Name.ToString()
+            </MudSelectItem>
+        }
+    </MudSelect>
+    <RelationalOperators OnChange="@OnOperatorChanged" ExpressionType="@Binary.NodeType"></RelationalOperators>
+    @if (Binary.Right is ConstantExpression constant)
+    {
+        @switch (Type.GetTypeCode(Binary.Left.Type))
+        {
+            case TypeCode.Int32:
+                <MudTextField Label="Value" T="int" Value="@((int)constant.Value)" ValueChanged="@OnConstantChange" />
+                break;
+            case TypeCode.String:
+                <MudTextField Label="Value" T="string" Value="@(constant.Value?.ToString())" ValueChanged="@OnConstantChange" />
+                break;
+            case TypeCode.Boolean:
+                <MudCheckBox Label="Value" T="bool" Value="@(bool.Parse(constant.Value?.ToString()))" ValueChanged="@OnConstantChange" />
+                break;
+        }
+    }
+    @if (Binary.Right is NewExpression newExpression)
+    {
+        @switch (Type.GetTypeCode(Binary.Left.Type))
+        {
+            case TypeCode.DateTime:
+                <MudDatePicker Label="Value" Date="@(new DateTime((long)((ConstantExpression)newExpression.Arguments[0]).Value))" DateChanged="@OnConstantChange" />
+                break;
+        }           
+    }
+    <MudStack Row Spacing="2">
+        <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.AndAlso))">And</MudButton>
+        <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.OrElse))">Or</MudButton>
+        <MudButton Variant="Variant.Filled" OnClick="Remove">Remove</MudButton>
+    </MudStack>
+</MudStack>
 
 @code {
-
     MemberExpression Member => (MemberExpression)Binary.Left;
     ConstantExpression Constant => (ConstantExpression)Binary.Right;
     private Type _entityType;
+    private string _selectedPropertyName;
 
     [Parameter]
     public Action<BinaryExpression> OnChange { get; set; }
@@ -57,17 +66,14 @@
 
     protected override void OnInitialized()
     {
-        Console.WriteLine(Member.Member.DeclaringType);
-        //if (_entityType == null)
-        //    _entityType = Parameter.Type;
         _entityType = Member.Member.DeclaringType;
+        _selectedPropertyName = Member.Member.Name;
         base.OnInitialized();
     }
 
-    private void OnMemberAccessChange(ChangeEventArgs changedMember)
+    private void OnMemberAccessChange(string entityPropertyName)
     {
-        string entityPropertyName = changedMember.Value.ToString();
-
+        _selectedPropertyName = entityPropertyName;
         PropertyInfo entityProperty = _entityType.GetProperty(entityPropertyName);
 
         MemberExpression newMember;
@@ -90,25 +96,60 @@
             newMember = new ChangeMemberProperty(_entityType, Member, entityPropertyName).Change();
         }
 
-        ConstantExpression newConstant = Expression.Constant(entityProperty.PropertyType.GetDefaultValue(), entityProperty.PropertyType);
-        BinaryExpression newRelational = Expression.MakeBinary(Binary.NodeType, newMember, newConstant);
-        UpdateExpression(newRelational);
+        switch (Type.GetTypeCode(entityProperty.PropertyType))
+        {
+            case TypeCode.Int32:
+                ConstantExpression newIntConstant = Expression.Constant(entityProperty.PropertyType.GetDefaultValue(), entityProperty.PropertyType);
+                BinaryExpression newIntRelational = Expression.MakeBinary(Binary.NodeType, newMember, newIntConstant);
+                UpdateExpression(newIntRelational);
+                break;
+            case TypeCode.String:
+                ConstantExpression newStringConstant = Expression.Constant(entityProperty.PropertyType.GetDefaultValue(), entityProperty.PropertyType);
+                BinaryExpression newStringRelational = Expression.MakeBinary(Binary.NodeType, newMember, newStringConstant);
+                UpdateExpression(newStringRelational);
+                break;
+            case TypeCode.Boolean:
+                ConstantExpression newBoolConstant = Expression.Constant(entityProperty.PropertyType.GetDefaultValue(), entityProperty.PropertyType);
+                BinaryExpression newBoolRelational = Expression.MakeBinary(Binary.NodeType, newMember, newBoolConstant);
+                UpdateExpression(newBoolRelational);
+                break;
+            case TypeCode.DateTime:
+                var dateTimeConstructor = typeof(DateTime).GetConstructor(new[] { typeof(long) });
+                var ticksExpression = Expression.Constant(DateTime.UtcNow.Ticks, typeof(long));
+                var newDateTimeExpression = Expression.New(dateTimeConstructor, ticksExpression);
+                BinaryExpression newDateTimeRelational = Expression.MakeBinary(Binary.NodeType, newMember, newDateTimeExpression);
+                UpdateExpression(newDateTimeRelational);
+                break;
+        }
     }
 
-    private void OnConstantChange(ChangeEventArgs constant)
+    private void OnConstantChange(int constant)
     {
-        if (Binary.Left.Type.IsAssignableFrom(typeof(Int32)))
-        {
-            int value = Int32.Parse(constant.Value.ToString());
-            BinaryExpression newRelational = new ReplaceBinaryRight(Binary, Expression.Constant(value)).Replace();
-            UpdateExpression(newRelational);
-            return;
-        }
+        BinaryExpression newIntRelational = new ReplaceBinaryRight(Binary, Expression.Constant(constant)).Replace();
+        UpdateExpression(newIntRelational);
+    }
 
-        if (Binary.Left.Type.IsAssignableFrom(typeof(string)))
+    private void OnConstantChange(string constant)
+    {
+        BinaryExpression newStringRelational = new ReplaceBinaryRight(Binary, Expression.Constant((string)constant)).Replace();
+        UpdateExpression(newStringRelational);
+    }
+
+    private void OnConstantChange(bool constant)
+    {
+        BinaryExpression newBoolRelational = new ReplaceBinaryRight(Binary, Expression.Constant(constant, typeof(bool))).Replace();
+        UpdateExpression(newBoolRelational);
+    }
+
+    private void OnConstantChange(DateTime? constant)
+    {
+        if (constant.HasValue)
         {
-            BinaryExpression newRelational = new ReplaceBinaryRight(Binary, Expression.Constant((string)constant.Value)).Replace();
-            UpdateExpression(newRelational);
+            var dateTimeConstructor = typeof(DateTime).GetConstructor(new[] { typeof(long) });
+            var ticksExpression = Expression.Constant(constant.Value.Ticks, typeof(long));
+            var newDateTimeExpression = Expression.New(dateTimeConstructor, ticksExpression);
+            BinaryExpression newDateTimeRelational = new ReplaceBinaryRight(Binary, newDateTimeExpression).Replace();
+            UpdateExpression(newDateTimeRelational);
         }
     }
 

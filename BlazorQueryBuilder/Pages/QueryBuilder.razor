@@ -7,61 +7,65 @@
 @using BlazoryQueryBuilder.Shared.Models
 @using BlazoryQueryBuilder.Shared.Services
 @using System.Reflection
+@using System.Collections
 @inject PredicateFactory PredicateFactory
-@inject HttpClient HttpClient
 @inject QueryBuilderService<TEntity> QueryBuilderService
-@typeparam TEntity
+@inject QueryServiceFactory<MyDbContext> QueryServiceFactory
+@typeparam TEntity where TEntity : class
 
-<div class="form-group">
-    <h3>Properties</h3>
-    @foreach (var property in typeof(TEntity).GetProperties())
-    {
-        <input class="form-check-input" type="checkbox" @onchange=@(eventArgs => SelectProperty(@property, eventArgs.Value))>
-        <div>@property.Name</div>
-    }
-</div>
+<MudStack Spacing="5">
+    <div>
+        <MudText Typo="Typo.h5">SELECT</MudText>
+        <MudSelect Label="Fields" T="PropertyInfo" @bind-SelectedValues="SelectedProperties" MultiSelection="true">
+            @foreach (var property in typeof(TEntity).GetProperties())
+            {
+                <MudSelectItem T="PropertyInfo" Value="property">
+                    @property.Name
+                </MudSelectItem>
+            }
+        </MudSelect>
+    </div>
 
-<h1>Expression</h1>
-<div class="row">
-    <div class="col-12">
-        <LambdaComponent OnChanged="@OnChanged"
-                         Lambda="@QueryBuilderService.Lambda"
-                         Parameter="@QueryBuilderService.Parameter">
-        </LambdaComponent>
-    </div>
-</div>
+    <MudText Typo="Typo.h5">WHERE</MudText>
+    <LambdaComponent OnChanged="@OnChanged"
+                     Lambda="@QueryBuilderService.Lambda"
+                     Parameter="@QueryBuilderService.Parameter">
+    </LambdaComponent>
 
-<div class="row">
-    <div class="col-12">
-        <button class="btn btn-primary" @onclick="@RunQuery">Run Query</button>
+    <div>
+        <MudButton Color="Color.Primary" OnClick="RunQuery">Run Query</MudButton>
     </div>
-</div>
-<div class="row">
-    <div class="col-12">
-        @if (!_data.Any())
-        {
-            <div>No results.</div>
-        }
-        @foreach (var data in _data)
-        {
-            <ul>
-                <li>@(JsonConvert.SerializeObject(data))</li>
-            </ul>
-        }
-    </div>
-</div>
+
+    <MudTable Items="_data" Bordered="true" Striped="true">
+        <HeaderContent>
+            @foreach (var property in SelectedProperties)
+            {
+                <MudTh>@property.Name</MudTh>
+            }
+        </HeaderContent>
+        <RowTemplate>
+            @foreach (var property in SelectedProperties)
+            {
+                <MudTd>@context.GetType().GetProperty(property.Name).GetValue(context, null)</MudTd>
+            }
+        </RowTemplate>
+    </MudTable>
+
+</MudStack>
 
 @code {
-
-
-
     List<TEntity> _data = new List<TEntity>();
 
     Expression<Func<TEntity, bool>> Predicate => (Expression<Func<TEntity, bool>>)QueryBuilderService.Lambda;
-    List<PropertyInfo> SelectedProperties = new List<PropertyInfo>();
+    IEnumerable<PropertyInfo> SelectedProperties = new List<PropertyInfo>();
 
     [Parameter]
     public string Expression { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        return base.OnInitializedAsync();
+    }
 
     protected override void OnInitialized()
     {
@@ -75,32 +79,19 @@
         }
     }
 
-
-    public void SelectProperty(System.Reflection.PropertyInfo property, object value)
-    {
-        if (!SelectedProperties.Contains(property))
-        {
-            SelectedProperties.Add(property);
-        }
-        else
-        {
-            SelectedProperties.Remove(property);
-        }
-        Console.WriteLine(SelectedProperties.Count);
-    }
-
     private async Task RunQuery()
     {
         Func<TEntity, bool> predicate = Predicate.Compile();
-        var content = JsonContent.Create(new BlazoryQueryBuilder.Shared.Models.Predicate
-            {
-                LambdaExpression = Predicate.ToString(),
-                EntityType = typeof(TEntity).Name,
-                SelectedProperties = SelectedProperties.Select(prop => prop.Name).ToList()
-            });
-        var data = await HttpClient.PostAsync("https://localhost:44338/api/values", content);
+        var predicateModel = new BlazoryQueryBuilder.Shared.Models.Predicate
+        {
+            LambdaExpression = Predicate.ToString(),
+            EntityName = typeof(TEntity).Name,
+            EntityType = typeof(TEntity).FullName,
+            SelectedProperties = SelectedProperties.Select(prop => prop.Name).ToList()
+        };
+        var data = await ExecuteQuery(predicateModel) as IEnumerable<TEntity>;
 
-        _data = (await data.Content.ReadFromJsonAsync<IEnumerable<TEntity>>()).ToList();
+        _data = data.ToList();
     }
 
     private void OnChanged(Expression body)
@@ -110,4 +101,11 @@
         StateHasChanged();
     }
 
+    public async Task<IEnumerable> ExecuteQuery(BlazoryQueryBuilder.Shared.Models.Predicate predicate)
+    {
+        IQueryService<TEntity> queryService = QueryServiceFactory.Create<TEntity>();
+
+        IEnumerable data = await queryService.QueryData(Predicate, predicate.SelectedProperties);
+        return data;
+    }
 }

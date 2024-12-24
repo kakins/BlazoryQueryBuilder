@@ -1,31 +1,45 @@
 ﻿using BlazorQueryBuilder;
-using BlazoryQueryBuilder.Shared.Services;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
-using System;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
+using MudBlazor.Services;
 
-internal class Program
+try
 {
-    private static async Task Main(string[] args)
+    Console.WriteLine("Hello World!");
+    var builder = WebApplication.CreateBuilder(args);
+
+    builder.Services
+        .AddRazorComponents()
+        .AddInteractiveServerComponents();
+
+    builder.Services.AddMudServices();
+
+    builder.Services.AddQueryBuilderServices<MyDbContext>();
+
+    var app = builder.Build();
+
+    // Configure the HTTP request pipeline.
+    if (!app.Environment.IsDevelopment())
     {
-        var builder = WebAssemblyHostBuilder.CreateDefault(args);
-        builder.RootComponents.Add<App>("#app");
-        builder.RootComponents.Add<HeadOutlet>("head::after");
-
-        builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-        builder.Services.AddSingleton<PredicateFactory>();
-        builder.Services.AddTransient(typeof(QueryBuilderService<>));
-
-        //builder.Services.AddMsalAuthentication(options =>
-        //{
-        //    builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
-        //});
-
-        await builder.Build().RunAsync();
+        app.UseExceptionHandler("/Error", createScopeForErrors: true);
+        // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+        app.UseHsts();
     }
+
+    app.UseHttpsRedirection();
+    app.UseAntiforgery();
+
+    app.MapStaticAssets();
+    app.MapRazorComponents<App>()
+        .AddInteractiveServerRenderMode();
+
+    using var scope = app.Services.CreateScope();
+    var provider = scope.ServiceProvider;
+    var dbContext = provider.GetRequiredService<MyDbContext>();
+    await dbContext.SeedDatabase();
+
+    app.Run();
+}
+catch (Exception ex)
+{
+
+    throw;
 }

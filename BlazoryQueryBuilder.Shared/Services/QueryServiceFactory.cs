@@ -1,7 +1,6 @@
-﻿using System;
-using System.Reflection;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace BlazoryQueryBuilder.Shared.Services
 {
@@ -14,15 +13,11 @@ namespace BlazoryQueryBuilder.Shared.Services
             _serviceProvider = serviceProvider;
         }
 
-        public IQueryService Create(string typeName)
+        public IQueryService<T> Create<T>() where T : class
         {
-            typeName = $"{nameof(BlazoryQueryBuilder)}.Shared.Models.{typeName}";
-            Assembly assembly = typeof(QueryBuilderService<>).Assembly;
-            Type type = assembly.GetType(typeName);
+            var service = _serviceProvider.GetRequiredService(typeof(QueryService<,>).MakeGenericType(typeof(T), typeof(TDbContext)));
 
-            var service = _serviceProvider.GetRequiredService(typeof(QueryService<,>).MakeGenericType(type, typeof(TDbContext)));
-
-            return service as IQueryService;
+            return service as IQueryService<T>;
         }
     }
 }
