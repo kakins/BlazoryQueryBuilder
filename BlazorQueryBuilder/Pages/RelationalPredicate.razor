@@ -15,9 +15,7 @@
             </MudSelectItem>
         }
     </MudSelect>
-    <div class="form-group mx-sm-3 mb-2">
-        <RelationalOperators OnChange="@OnOperatorChanged" ExpressionType="@Binary.NodeType"></RelationalOperators>
-    </div>
+    <RelationalOperators OnChange="@OnOperatorChanged" ExpressionType="@Binary.NodeType"></RelationalOperators>
     <MudTextField T="string" Value="@((string)Constant.Value)" ValueChanged="@OnConstantChange" />
     <MudStack Row Spacing="2">
         <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.AndAlso))">And</MudButton>

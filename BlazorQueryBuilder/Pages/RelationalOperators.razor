@@ -1,19 +1,14 @@
 ﻿@using System.Linq.Expressions
-<div class="form-group">
-    <select class="form-control" id="operatorList" @onchange="@ChangeOperator">
-        @foreach (var item in Operators)
-        {
-            <option value="@item.Key"
-                    selected="@ExpressionType.ToString().Equals(item.Key)">@item.Value</option>
+@using MudBlazor
 
-        }
-    </select>
-</div>
+<MudSelect T="string" Label="Select Operator" @bind-Value="SelectedOperator">
+    @foreach (var item in Operators)
+    {
+        <MudSelectItem Value="@item.Key">@item.Value</MudSelectItem>
+    }
+</MudSelect>
 
 @code {
-
-    // ExpressionType _selectedOperator = ExpressionType.Equal;
-
     Dictionary<string, string> Operators = new Dictionary<string, string>
     {
         {"Equal", "Equals"},
@@ -30,13 +25,14 @@
     [Parameter]
     public ExpressionType ExpressionType { get; set; }
 
-    private void ChangeOperator(ChangeEventArgs args)
+    private string SelectedOperator
     {
-        Console.WriteLine("changed");
-
-        var expressionType = (ExpressionType)Enum.Parse(typeof(ExpressionType), args.Value.ToString());
-        Console.WriteLine(expressionType);
-        ExpressionType = expressionType;
-        OnChange.Invoke(expressionType);
+        get => ExpressionType.ToString();
+        set
+        {
+            var expressionType = (ExpressionType)Enum.Parse(typeof(ExpressionType), value);
+            ExpressionType = expressionType;
+            OnChange.Invoke(expressionType);
+        }
     }
 }
