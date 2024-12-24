@@ -15,16 +15,19 @@
 
 <MudStack Spacing="5">
     <div>
-        <MudText Typo="Typo.h5">Properties</MudText>
-        <MudSelect Label="Select Properties" T="PropertyInfo" @bind-SelectedValues="SelectedProperties" MultiSelection="true">
+        <MudText Typo="Typo.h5">SELECT</MudText>
+        <MudSelect Label="Fields" T="PropertyInfo" @bind-SelectedValues="SelectedProperties" MultiSelection="true">
             @foreach (var property in typeof(TEntity).GetProperties())
             {
-                <MudSelectItem T="PropertyInfo" Value="property">@property.Name</MudSelectItem>
+                <MudSelectItem T="PropertyInfo" Value="property">
+
+                    @property.Name
+                </MudSelectItem>
             }
         </MudSelect>
     </div>
 
-    <MudText Typo="Typo.h4">Query</MudText>
+    <MudText Typo="Typo.h5">WHERE</MudText>
     <LambdaComponent OnChanged="@OnChanged"
                      Lambda="@QueryBuilderService.Lambda"
                      Parameter="@QueryBuilderService.Parameter">
@@ -48,7 +51,6 @@
             }
         </RowTemplate>
     </MudTable>
-    
 
 </MudStack>
 

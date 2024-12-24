@@ -23,8 +23,8 @@
     {
         <MudStack Spacing="2">
             <MudItem xs="12">
-                <MudText Typo="Typo.h4">Entity</MudText>
-                <MudSelect T="string" Label="Select Entity" ValueChanged="Select">
+                <MudText Typo="Typo.h5">FROM</MudText>
+                <MudSelect T="string" Label="Entity" ValueChanged="Select">
                     @foreach (var entity in Entities)
                     {
                         <MudSelectItem Value="@entity">@entity</MudSelectItem>
