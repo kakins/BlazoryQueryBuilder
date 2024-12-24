@@ -6,7 +6,7 @@
 @inject PredicateFactory PredicateFactory;
 
 <MudStack Row>
-    <MudSelect T="string" ValueChanged="OnMemberAccessChange" Value="selectedPropertyName">
+    <MudSelect T="string" ValueChanged="OnMemberAccessChange" Value="_selectedPropertyName">
         @foreach (PropertyInfo property in _entityType.GetProperties())
         {
             <MudSelectItem Value="@property.Name" style="@(@property.PropertyType.IsClass ? "font-weight: bold" : "")">
@@ -27,7 +27,7 @@
     MemberExpression Member => (MemberExpression)Binary.Left;
     ConstantExpression Constant => (ConstantExpression)Binary.Right;
     private Type _entityType;
-    private string selectedPropertyName;
+    private string _selectedPropertyName;
 
     [Parameter]
     public Action<BinaryExpression> OnChange { get; set; }
@@ -44,13 +44,13 @@
     protected override void OnInitialized()
     {
         _entityType = Member.Member.DeclaringType;
-        OnMemberAccessChange(_entityType.GetProperties().First().Name);
+        _selectedPropertyName = Member.Member.Name;
         base.OnInitialized();
     }
 
     private void OnMemberAccessChange(string entityPropertyName)
     {
-        selectedPropertyName = entityPropertyName;
+        _selectedPropertyName = entityPropertyName;
         PropertyInfo entityProperty = _entityType.GetProperty(entityPropertyName);
 
         MemberExpression newMember;
