@@ -4,10 +4,10 @@ namespace BlazorQueryBuilder.Visitors
 {
     public class ReplaceBinaryLeft : ExpressionVisitor
     {
-        private readonly Expression _expression;
+        private readonly BinaryExpression _expression;
         private readonly Expression _newLeft;
 
-        public ReplaceBinaryLeft(Expression expression, Expression newLeft)
+        public ReplaceBinaryLeft(BinaryExpression expression, Expression newLeft)
         {
             _expression = expression;
             _newLeft = newLeft;
@@ -25,6 +25,7 @@ namespace BlazorQueryBuilder.Visitors
                 return Expression.MakeBinary(node.NodeType, _newLeft, Visit(node.Right));
             }
 
+            // TODO: Consider using base.VisitBinary(node) instead of Visit(node)
             return Visit(node);
         }
     }
