@@ -26,7 +26,7 @@ namespace BlazorQueryBuilder.Tests.ExpressionVisitors
 
             // Act
             // p => p.PersonId == "" && p.LastName == "Jones";
-            var newLambda = (LambdaExpression)new AddLogicalBinaryLambda().Add(originalLambda);
+            var newLambda = (LambdaExpression)new AddLogicalBinaryLambda(originalLambda).Add();
 
             // Assert
             newLambda.Should().NotBeNull();
