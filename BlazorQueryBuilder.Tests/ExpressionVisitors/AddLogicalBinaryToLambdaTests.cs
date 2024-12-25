@@ -7,7 +7,7 @@ using Xunit;
 
 namespace BlazorQueryBuilder.Tests.ExpressionVisitors
 {
-    public class AddLogicalBinaryLambdaTests
+    public class AddLogicalBinaryToLambdaTests
     {
         [Theory]
         [InlineData("LastName", "Jones", ExpressionType.Equal)]
@@ -26,7 +26,7 @@ namespace BlazorQueryBuilder.Tests.ExpressionVisitors
 
             // Act
             // p => p.PersonId == "" && p.LastName == "Jones";
-            var newLambda = (LambdaExpression)new AddLogicalBinaryLambda(originalLambda).Add();
+            var newLambda = (LambdaExpression)new AddLogicalBinaryLambda(originalLambda).Execute();
 
             // Assert
             newLambda.Should().NotBeNull();

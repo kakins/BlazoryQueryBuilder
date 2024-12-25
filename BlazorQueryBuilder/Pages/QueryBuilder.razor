@@ -96,7 +96,7 @@
 
     private void OnChanged(Expression body)
     {
-        LambdaExpression newLambda = new ReplaceLambdaBody(QueryBuilderService.Lambda, body).Replace();
+        LambdaExpression newLambda = ExpressionVisitorFactory.ReplaceLambdaBody(QueryBuilderService.Lambda, body).Execute();
         QueryBuilderService.Lambda = newLambda;
         StateHasChanged();
     }

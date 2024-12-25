@@ -2,18 +2,18 @@
 
 namespace BlazorQueryBuilder.ExpressionVisitors
 {
-    public class ReplaceBinaryRight : ExpressionVisitor
+    public class ReplaceBinaryRight : ExpressionVisitor, IExpressionVisitor<BinaryExpression>
     {
         private readonly BinaryExpression _expression;
         private readonly Expression _newRight;
 
-        public ReplaceBinaryRight(BinaryExpression expression, Expression newRight)
+        internal ReplaceBinaryRight(BinaryExpression expression, Expression newRight)
         {
             _expression = expression;
             _newRight = newRight;
         }
 
-        public BinaryExpression Replace()
+        public BinaryExpression Execute()
         {
             return (BinaryExpression)Visit(_expression);
         }

@@ -4,20 +4,20 @@ using System.Reflection;
 
 namespace BlazorQueryBuilder.ExpressionVisitors
 {
-    public class ChangePropertyAccess : ExpressionVisitor
+    public class ChangePropertyAccess : ExpressionVisitor, IExpressionVisitor<MemberExpression>
     {
         private readonly Expression _expression;
         private readonly Type _propertyType;
         private readonly string _propertyName;
 
-        public ChangePropertyAccess(Type type, Expression expression, string propertyName)
+        internal ChangePropertyAccess(Type type, Expression expression, string propertyName)
         {
             _expression = expression;
             _propertyName = propertyName;
             _propertyType = type;
         }
 
-        public MemberExpression Change()
+        public MemberExpression Execute()
         {
             return (MemberExpression)Visit(_expression);
         }

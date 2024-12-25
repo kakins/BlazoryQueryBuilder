@@ -2,18 +2,18 @@
 
 namespace BlazorQueryBuilder.ExpressionVisitors
 {
-    public class ReplaceBinary : ExpressionVisitor
+    public class ReplaceBinary : ExpressionVisitor, IExpressionVisitor<BinaryExpression>
     {
         private readonly BinaryExpression _original;
         private readonly BinaryExpression _replacement;
 
-        public ReplaceBinary(BinaryExpression original, BinaryExpression replacement)
+        internal ReplaceBinary(BinaryExpression original, BinaryExpression replacement)
         {
             _original = original;
             _replacement = replacement;
         }
 
-        public BinaryExpression Replace()
+        public BinaryExpression Execute()
         {
             return (BinaryExpression)Visit(_original);
         }
@@ -27,6 +27,5 @@ namespace BlazorQueryBuilder.ExpressionVisitors
 
             return base.VisitBinary(node);
         }
-
     }
 }

@@ -80,7 +80,7 @@
 
         if (entityProperty.PropertyType.IsClass && entityProperty.PropertyType != typeof(string))
         {
-            MemberExpression classMember = new ChangePropertyAccess(_entityType, Member, entityPropertyName).Change();
+            MemberExpression classMember = ExpressionVisitorFactory.ChangePropertyAccess(_entityType, Member, entityPropertyName).Execute();
 
             // set the new entity type as the class member
             _entityType = classMember.Type;
@@ -93,7 +93,7 @@
         }
         else
         {
-            newMember = new ChangePropertyAccess(_entityType, Member, entityPropertyName).Change();
+            newMember = ExpressionVisitorFactory.ChangePropertyAccess(_entityType, Member, entityPropertyName).Execute();
         }
 
         switch (Type.GetTypeCode(entityProperty.PropertyType))
@@ -125,19 +125,19 @@
 
     private void OnConstantChange(int constant)
     {
-        BinaryExpression newIntRelational = new ReplaceBinaryRight(Binary, Expression.Constant(constant)).Replace();
+        BinaryExpression newIntRelational = ExpressionVisitorFactory.ReplaceBinaryRight(Binary, Expression.Constant(constant)).Execute();
         UpdateExpression(newIntRelational);
     }
 
     private void OnConstantChange(string constant)
     {
-        BinaryExpression newStringRelational = new ReplaceBinaryRight(Binary, Expression.Constant((string)constant)).Replace();
+        BinaryExpression newStringRelational = ExpressionVisitorFactory.ReplaceBinaryRight(Binary, Expression.Constant((string)constant)).Execute();
         UpdateExpression(newStringRelational);
     }
 
     private void OnConstantChange(bool constant)
     {
-        BinaryExpression newBoolRelational = new ReplaceBinaryRight(Binary, Expression.Constant(constant, typeof(bool))).Replace();
+        BinaryExpression newBoolRelational = ExpressionVisitorFactory.ReplaceBinaryRight(Binary, Expression.Constant(constant, typeof(bool))).Execute();
         UpdateExpression(newBoolRelational);
     }
 
@@ -148,14 +148,14 @@
             var dateTimeConstructor = typeof(DateTime).GetConstructor(new[] { typeof(long) });
             var ticksExpression = Expression.Constant(constant.Value.Ticks, typeof(long));
             var newDateTimeExpression = Expression.New(dateTimeConstructor, ticksExpression);
-            BinaryExpression newDateTimeRelational = new ReplaceBinaryRight(Binary, newDateTimeExpression).Replace();
+            BinaryExpression newDateTimeRelational = ExpressionVisitorFactory.ReplaceBinaryRight(Binary, newDateTimeExpression).Execute();
             UpdateExpression(newDateTimeRelational);
         }
     }
 
     private void OnOperatorChanged(ExpressionType expressionType)
     {
-        var newRelational = new ReplaceBinaryType(Binary, expressionType).Replace();
+        var newRelational = new ReplaceBinaryType(Binary, expressionType).Execute();
         Console.WriteLine(newRelational);
         UpdateExpression(newRelational);
     }

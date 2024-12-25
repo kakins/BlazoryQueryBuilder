@@ -9,7 +9,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Xunit;
 
-namespace BlazorQueryBuilder.Tests
+namespace BlazorQueryBuilder.Tests.ExpressionVisitors
 {
     public class LambdaParseTests
     {
@@ -19,7 +19,7 @@ namespace BlazorQueryBuilder.Tests
         public LambdaParseTests()
         {
             _textContext = new TestContext(EfHelpers.CreateEfInMemoryContextOptions<TestContext>("TestContext"));
-            _textContext.Persons.Add(new Person {PersonId = "1", LastName = "Jones"});
+            _textContext.Persons.Add(new Person { PersonId = "1", LastName = "Jones" });
             _textContext.SaveChanges();
             _serviceProvider = new Mock<IServiceProvider>();
             _serviceProvider
@@ -31,7 +31,7 @@ namespace BlazorQueryBuilder.Tests
         public async System.Threading.Tasks.Task ParseLambdaAndReturnData()
         {
             Expression<Func<Person, bool>> expression = person => person.PersonId == "1" && person.LastName == "Jones";
-            var properties = new List<string>{ nameof(Person.PersonId), nameof(Person.FirstName) };
+            var properties = new List<string> { nameof(Person.PersonId), nameof(Person.FirstName) };
 
             var predicate = new Predicate
             {
@@ -49,7 +49,7 @@ namespace BlazorQueryBuilder.Tests
         [Fact]
         public void ParseSelectLambdaFromProperties()
         {
-            string[] properties = {nameof(Person.PersonId), nameof(Person.FirstName)};
+            string[] properties = { nameof(Person.PersonId), nameof(Person.FirstName) };
 
             var builder = new SelectBuilderService<Person>()
                 .BuildSelect(properties);

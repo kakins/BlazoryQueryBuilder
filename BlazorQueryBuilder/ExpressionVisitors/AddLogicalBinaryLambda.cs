@@ -4,7 +4,10 @@ using System.Reflection;
 
 namespace BlazorQueryBuilder.ExpressionVisitors
 {
-    public class AddLogicalBinaryLambda : ExpressionVisitor
+    // This class is not really used yet and not fully implemented
+    // The idea is to append a logical binary expression to an existing lambda expression
+    // Unsure if this expression should be constrainted to a predicate or more open ended
+    public class AddLogicalBinaryLambda : ExpressionVisitor, IExpressionVisitor<Expression>
     {
         private readonly Expression _originalExpression;
         private readonly ExpressionType _binaryExpressionType;
@@ -15,7 +18,7 @@ namespace BlazorQueryBuilder.ExpressionVisitors
             _binaryExpressionType = binaryExpressionType;
         }
 
-        public Expression Add()
+        public Expression Execute()
         {
             return Visit(_originalExpression);
         }
