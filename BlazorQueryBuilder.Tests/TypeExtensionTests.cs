@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using BlazoryQueryBuilder.Shared.Util;
 using System.Reflection;
-using System.Text;
-using BlazoryQueryBuilder.Shared.Extensions;
-using BlazoryQueryBuilder.Shared.Models;
-using BlazoryQueryBuilder.Shared.Util;
 using Xunit;
 
 namespace BlazorQueryBuilder.Tests

@@ -72,8 +72,6 @@ namespace BlazorQueryBuilder.Tests
             MemberInitExpression memberInit = Expression.MemberInit(ctor, memberBindings);
 
             Expression<Func<Person, Person>> lambda = Expression.Lambda<Func<Person, Person>>(memberInit, personParm);
-
-
         }
     }
 }

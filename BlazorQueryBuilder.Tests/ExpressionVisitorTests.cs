@@ -1,17 +1,15 @@
+using BlazorQueryBuilder.Visitors;
+using BlazoryQueryBuilder.Shared.Models;
+using BlazoryQueryBuilder.Shared.Services;
+using BlazoryQueryBuilder.Shared.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Reflection.Metadata;
-using BlazorQueryBuilder.Visitors;
-using BlazoryQueryBuilder.Shared.Extensions;
-using BlazoryQueryBuilder.Shared.Services;
-using BlazoryQueryBuilder.Shared.Models;
-using BlazoryQueryBuilder.Shared.Util;
 using Xunit;
 
-namespace BlazorTest.Tests
+namespace BlazorQueryBuilder.Tests
 {
     public class ExpressionVisitorTests
     {
@@ -27,7 +25,7 @@ namespace BlazorTest.Tests
                 ExpressionType.Equal);
 
             var addLogicalBinary = new AddLogicalBinaryVisitor();
-            var newLambda = (LambdaExpression)addLogicalBinary.Add(lambda);           
+            var newLambda = (LambdaExpression)addLogicalBinary.Add(lambda);
         }
 
         [Fact]
@@ -38,7 +36,7 @@ namespace BlazorTest.Tests
                 typeof(Person).GetProperty(nameof(Person.PersonId)));
 
             Expression personLastName = new ChangeMemberProperty(typeof(Person),
-                    personId, 
+                    personId,
                     nameof(Person.LastName))
                 .Change();
 
@@ -79,7 +77,7 @@ namespace BlazorTest.Tests
             BinaryExpression newBinary = new ReplaceBinaryRight(binary, Expression.Constant(false)).Replace();
 
             Assert.IsAssignableFrom<BinaryExpression>(newBinary);
-            Assert.True(((ConstantExpression) newBinary.Right).Value.Equals(false));
+            Assert.True(((ConstantExpression)newBinary.Right).Value.Equals(false));
         }
 
         [Fact]
@@ -101,7 +99,7 @@ namespace BlazorTest.Tests
         {
             Expression<Func<Person, bool>> originalLambda = person => person.PersonId == "1";
 
-            BinaryExpression newBody = new ReplaceBinaryType((BinaryExpression) originalLambda.Body, ExpressionType.NotEqual).Replace();
+            BinaryExpression newBody = new ReplaceBinaryType((BinaryExpression)originalLambda.Body, ExpressionType.NotEqual).Replace();
 
             LambdaExpression newLambda = new ReplaceLambdaBody(originalLambda, newBody).Replace();
 
@@ -112,8 +110,8 @@ namespace BlazorTest.Tests
         public void ChangeBinary()
         {
             BinaryExpression binary1 = Expression.MakeBinary(
-                ExpressionType.Equal, 
-                Expression.Constant(1), 
+                ExpressionType.Equal,
+                Expression.Constant(1),
                 Expression.Constant(1));
 
             BinaryExpression binary2 = Expression.MakeBinary(
@@ -140,8 +138,8 @@ namespace BlazorTest.Tests
                 Expression.MakeBinary(
                     ExpressionType.Equal,
                 Expression.MakeMemberAccess(
-                        Expression.Parameter(typeof(Person), "person"), 
-                        typeof(Person).GetProperty(nameof(Person.PersonId))), 
+                        Expression.Parameter(typeof(Person), "person"),
+                        typeof(Person).GetProperty(nameof(Person.PersonId))),
                     Expression.Constant("1"));
 
 
@@ -163,7 +161,7 @@ namespace BlazorTest.Tests
 
             // address.AddressId
             MemberExpression memberAccess = Expression.MakeMemberAccess(
-                addressParam, 
+                addressParam,
                 typeof(Address).GetProperty(nameof(Address.AddressId)));
 
             // address => address.AddressId
