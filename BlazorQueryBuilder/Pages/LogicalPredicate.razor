@@ -74,13 +74,13 @@
 
     private void RemoveLeft()
     {
-        var newBinary = Binary.Right.CopyExpression();
+        var newBinary = Binary.Right.Copy();
         OnChange((BinaryExpression)newBinary);
     }
 
     private void RemoveRight()
     {
-        var newBinary = Binary.Left.CopyExpression();
+        var newBinary = Binary.Left.Copy();
         OnChange((BinaryExpression)newBinary);
     }
 }

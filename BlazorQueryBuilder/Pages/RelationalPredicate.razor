@@ -125,19 +125,19 @@
 
     private void OnConstantChange(int constant)
     {
-        var newIntRelational = Binary.ReplaceBinaryRight(Expression.Constant(constant));
+        var newIntRelational = Binary.ReplaceRight(Expression.Constant(constant));
         UpdateExpression(newIntRelational);
     }
 
     private void OnConstantChange(string constant)
     {
-        var newStringRelational = Binary.ReplaceBinaryRight(Expression.Constant((string)constant));
+        var newStringRelational = Binary.ReplaceRight(Expression.Constant((string)constant));
         UpdateExpression(newStringRelational);
     }
 
     private void OnConstantChange(bool constant)
     {
-        var newBoolRelational = Binary.ReplaceBinaryRight(Expression.Constant(constant, typeof(bool)));
+        var newBoolRelational = Binary.ReplaceRight(Expression.Constant(constant, typeof(bool)));
         UpdateExpression(newBoolRelational);
     }
 
@@ -148,7 +148,7 @@
             var dateTimeConstructor = typeof(DateTime).GetConstructor(new[] { typeof(long) });
             var ticksExpression = Expression.Constant(constant.Value.Ticks, typeof(long));
             var newDateTimeExpression = Expression.New(dateTimeConstructor, ticksExpression);
-            var newDateTimeRelational = Binary.ReplaceBinaryRight(newDateTimeExpression);
+            var newDateTimeRelational = Binary.ReplaceRight(newDateTimeExpression);
             UpdateExpression(newDateTimeRelational);
         }
     }
@@ -174,7 +174,7 @@
 
         BinaryExpression newBinary = Expression.MakeBinary(
             expressionType,
-            Binary.CopyExpression(),
+            Binary.Copy(),
             newRight);
 
         Console.WriteLine(newBinary);

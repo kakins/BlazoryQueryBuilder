@@ -15,10 +15,10 @@ namespace BlazorQueryBuilder.Tests.ExpressionVisitors
             // Arrange
             Expression<Func<Person, bool>> originalLambda = person => person.PersonId == "1";
             var lambdaBodyBinary = (BinaryExpression)originalLambda.Body;
-            var newBody = lambdaBodyBinary.ReplaceBinaryType(ExpressionType.NotEqual);
+            var newBody = lambdaBodyBinary.ReplaceType(ExpressionType.NotEqual);
 
             // Act
-            var newLambda = originalLambda.ReplaceLambdaBody(newBody);
+            var newLambda = originalLambda.ReplaceBody(newBody);
 
             // Assert
             newLambda.Body.Should().Be(newBody);

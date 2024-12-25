@@ -96,7 +96,7 @@
 
     private void OnChanged(Expression body)
     {
-        var newLambda = QueryBuilderService.Lambda.ReplaceLambdaBody(body);
+        var newLambda = QueryBuilderService.Lambda.ReplaceBody(body);
         QueryBuilderService.Lambda = newLambda;
         StateHasChanged();
     }
