@@ -1,4 +1,4 @@
-using BlazorQueryBuilder.Visitors;
+using BlazorQueryBuilder.ExpressionVisitors;
 using BlazoryQueryBuilder.Shared.Models;
 using BlazoryQueryBuilder.Shared.Util;
 using System;
@@ -30,12 +30,12 @@ namespace BlazorQueryBuilder.Tests
         [Fact]
         public void ChangeBinaryLeft()
         {
-            ConstantExpression left = Expression.Constant(true);
-            ConstantExpression right = Expression.Constant(true);
+            var left = Expression.Constant(true);
+            var right = Expression.Constant(true);
 
-            BinaryExpression binary = Expression.MakeBinary(ExpressionType.Equal, left, right);
+            var binary = Expression.MakeBinary(ExpressionType.Equal, left, right);
 
-            BinaryExpression newBinary = new ReplaceBinaryLeft(binary, Expression.Constant(false)).Replace();
+            var newBinary = new ReplaceBinaryLeft(binary, Expression.Constant(false)).Replace();
 
             Assert.IsAssignableFrom<BinaryExpression>(newBinary);
             Assert.True(((ConstantExpression)newBinary.Left).Value.Equals(false));
