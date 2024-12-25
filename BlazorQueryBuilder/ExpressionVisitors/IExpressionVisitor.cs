@@ -9,9 +9,9 @@ namespace BlazorQueryBuilder.ExpressionVisitors
 
     public class ExpressionVisitorFactory 
     {
-        public static IExpressionVisitor<MemberExpression> ChangePropertyAccess(Type type, Expression expression, string propertyName)
+        public static IExpressionVisitor<MemberExpression> ChangePropertyAccess(MemberExpression expression, Type propertyType, string propertyName)
         {
-            return new ChangePropertyAccess(type, expression, propertyName);
+            return new ChangePropertyAccess(expression, propertyType, propertyName);
         }
 
         public static IExpressionVisitor<BinaryExpression> ReplaceBinaryLeft(BinaryExpression expression, Expression newLeft)

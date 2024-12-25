@@ -10,11 +10,11 @@ namespace BlazorQueryBuilder.ExpressionVisitors
         private readonly Type _propertyType;
         private readonly string _propertyName;
 
-        internal ChangePropertyAccess(Type type, Expression expression, string propertyName)
+        internal ChangePropertyAccess(Expression expression, Type propertyType, string propertyName)
         {
             _expression = expression;
             _propertyName = propertyName;
-            _propertyType = type;
+            _propertyType = propertyType;
         }
 
         public MemberExpression Execute()

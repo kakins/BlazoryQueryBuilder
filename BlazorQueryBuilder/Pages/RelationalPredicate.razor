@@ -80,7 +80,7 @@
 
         if (entityProperty.PropertyType.IsClass && entityProperty.PropertyType != typeof(string))
         {
-            MemberExpression classMember = ExpressionVisitorFactory.ChangePropertyAccess(_entityType, Member, entityPropertyName).Execute();
+            MemberExpression classMember = ExpressionVisitorFactory.ChangePropertyAccess(Member, _entityType, entityPropertyName).Execute();
 
             // set the new entity type as the class member
             _entityType = classMember.Type;
@@ -93,7 +93,7 @@
         }
         else
         {
-            newMember = ExpressionVisitorFactory.ChangePropertyAccess(_entityType, Member, entityPropertyName).Execute();
+            newMember = ExpressionVisitorFactory.ChangePropertyAccess(Member, _entityType, entityPropertyName).Execute();
         }
 
         switch (Type.GetTypeCode(entityProperty.PropertyType))

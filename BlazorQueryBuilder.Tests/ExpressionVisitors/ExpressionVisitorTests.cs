@@ -17,18 +17,18 @@ namespace BlazorQueryBuilder.Tests.ExpressionVisitors
             BinaryExpression personIdEqualsOne =
                 Expression.MakeBinary(
                     ExpressionType.Equal,
-                Expression.MakeMemberAccess(
+                    Expression.MakeMemberAccess(
                         Expression.Parameter(typeof(Person), "person"),
                         typeof(Person).GetProperty(nameof(Person.PersonId))),
                     Expression.Constant("1"));
 
             // person.PersonId
-            Expression personId = personIdEqualsOne.Left;
+            var personId = (MemberExpression)personIdEqualsOne.Left;
 
             // person.Addresses
             MemberExpression personAddresses = ExpressionVisitorFactory.ChangePropertyAccess(
-                    typeof(Person),
                     personId,
+                    typeof(Person),
                     nameof(Person.Addresses))
                 .Execute();
 
