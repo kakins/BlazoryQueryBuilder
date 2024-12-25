@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using BlazorQueryBuilder.Tests.Util;
+﻿using BlazorQueryBuilder.Tests.Util;
 using BlazoryQueryBuilder.Shared.Models;
 using BlazoryQueryBuilder.Shared.Services;
 using Moq;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Reflection;
 using Xunit;
 
 namespace BlazorQueryBuilder.Tests
@@ -36,13 +35,13 @@ namespace BlazorQueryBuilder.Tests
 
             var predicate = new Predicate
             {
-                EntityName = nameof(Person),
+                EntityType = nameof(Person),
                 LambdaExpression = expression.ToString(),
                 SelectedProperties = properties
             };
 
-            IQueryService service = new QueryServiceFactory<TestContext>(_serviceProvider.Object)
-                .Create(predicate.EntityName);
+            var service = new QueryServiceFactory<TestContext>(_serviceProvider.Object)
+                .Create<Person>();
 
             IEnumerable data = await service.QueryData(predicate.LambdaExpression, properties);
         }

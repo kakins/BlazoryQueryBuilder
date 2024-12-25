@@ -8,11 +8,8 @@ namespace BlazorQueryBuilder
         public DbSet<Person> Persons { get; set; }
         public DbSet<Address> Addresses { get; set; }
 
-        private DbContextOptions<MyDbContext> _options;
-
         public MyDbContext(DbContextOptions<MyDbContext> options) : base(options)
         {
-            _options = options;
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

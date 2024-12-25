@@ -37,9 +37,5 @@ namespace BlazoryQueryBuilder.Shared.Services
 
             return lambda;
         }
-
-
     }
-
-
 }

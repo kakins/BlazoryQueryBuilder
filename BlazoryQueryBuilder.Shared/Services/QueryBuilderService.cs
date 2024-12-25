@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 
 namespace BlazoryQueryBuilder.Shared.Services
 {
-
     public class QueryBuilderService<TEntity>
     {
         public LambdaExpression Lambda { get; set; }
@@ -36,6 +35,5 @@ namespace BlazoryQueryBuilder.Shared.Services
 
             Parameter = Lambda.Parameters[0];
         }
-
     }
 }
