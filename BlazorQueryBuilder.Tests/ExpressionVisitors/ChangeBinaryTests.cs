@@ -22,7 +22,7 @@ namespace BlazorQueryBuilder.Tests.ExpressionVisitors
                 Expression.Constant(2));
 
             // Act
-            var result = originalExpression.ReplaceBinary(newExpression).Execute();
+            var result = originalExpression.ReplaceBinary(newExpression);
 
             // Assert
             result.Should().Be(newExpression);

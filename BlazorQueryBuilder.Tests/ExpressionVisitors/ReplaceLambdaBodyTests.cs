@@ -14,14 +14,14 @@ namespace BlazorQueryBuilder.Tests.ExpressionVisitors
         {
             // Arrange
             Expression<Func<Person, bool>> originalLambda = person => person.PersonId == "1";
-            var newBody = ((BinaryExpression)originalLambda.Body).ReplaceBinaryType(ExpressionType.NotEqual).Execute();
+            var lambdaBodyBinary = (BinaryExpression)originalLambda.Body;
+            var newBody = lambdaBodyBinary.ReplaceBinaryType(ExpressionType.NotEqual);
 
             // Act
-            var newLambda = originalLambda.ReplaceLambdaBody(newBody).Execute();
+            var newLambda = originalLambda.ReplaceLambdaBody(newBody);
 
             // Assert
             newLambda.Body.Should().Be(newBody);
-            Assert.Equal(newLambda.Body, newBody);
         }
     }
 }

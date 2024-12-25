@@ -2,16 +2,16 @@
 
 namespace BlazorQueryBuilder.ExpressionVisitors
 {
-    public class CopyExpression : ExpressionVisitor
+    public class CopyExpression : ExpressionVisitor, IExpressionVisitor<Expression>
     {
         private readonly Expression _expression;
 
-        public CopyExpression(Expression expression)
+        internal CopyExpression(Expression expression)
         {
             _expression = expression;
         }
 
-        public Expression Copy()
+        public Expression Execute()
         {
             return Visit(_expression);
         }
