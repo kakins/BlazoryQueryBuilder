@@ -16,7 +16,7 @@ namespace BlazorQueryBuilder.Tests.ExpressionVisitors
             var originalExpression = Expression.MakeBinary(ExpressionType.Equal, left, right);
 
             // Act
-            var newExpression = ExpressionVisitorFactory.ReplaceBinaryLeft(originalExpression, Expression.Constant(false)).Execute();
+            var newExpression = originalExpression.ReplaceBinaryLeft(Expression.Constant(false)).Execute();
 
             // Assert
             newExpression.Should().BeAssignableTo<BinaryExpression>();

@@ -26,11 +26,7 @@ namespace BlazorQueryBuilder.Tests.ExpressionVisitors
             var personId = (MemberExpression)personIdEqualsOne.Left;
 
             // person.Addresses
-            MemberExpression personAddresses = ExpressionVisitorFactory.ChangePropertyAccess(
-                    personId,
-                    typeof(Person),
-                    nameof(Person.Addresses))
-                .Execute();
+            MemberExpression personAddresses = personId.ChangePropertyAccess(typeof(Person), nameof(Person.Addresses)).Execute();
 
             // Select method
             MethodInfo selectMethod = EnumerableMethodInfo.Select<Address, int>();

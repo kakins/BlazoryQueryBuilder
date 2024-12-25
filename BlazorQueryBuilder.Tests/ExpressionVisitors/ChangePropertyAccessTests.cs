@@ -21,10 +21,7 @@ namespace BlazorQueryBuilder.Tests.ExpressionVisitors
 
             // Act
             // {Param_0.FirstName}
-            var personLastName = ExpressionVisitorFactory.ChangePropertyAccess(personId,
-                    typeof(Person),
-                    newPropertyName)
-                .Execute();
+            var personLastName = personId.ChangePropertyAccess(typeof(Person), newPropertyName).Execute();
 
             // Assert
             personLastName.Should().BeAssignableTo<MemberExpression>();
