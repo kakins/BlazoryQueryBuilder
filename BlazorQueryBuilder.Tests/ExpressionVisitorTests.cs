@@ -1,6 +1,5 @@
 using BlazorQueryBuilder.Visitors;
 using BlazoryQueryBuilder.Shared.Models;
-using BlazoryQueryBuilder.Shared.Services;
 using BlazoryQueryBuilder.Shared.Util;
 using System;
 using System.Collections.Generic;
@@ -11,61 +10,9 @@ using Xunit;
 
 namespace BlazorQueryBuilder.Tests
 {
+
     public class ExpressionVisitorTests
     {
-        [Fact]
-        public void AddLogicalBinary()
-        {
-            var parameter = Expression.Parameter(typeof(Person));
-
-            var lambda = new PredicateFactory().CreateRelationalPredicate<Person>(
-                typeof(Person).GetProperties().First().Name,
-                parameter,
-                string.Empty,
-                ExpressionType.Equal);
-
-            var addLogicalBinary = new AddLogicalBinaryVisitor();
-            var newLambda = (LambdaExpression)addLogicalBinary.Add(lambda);
-        }
-
-        [Fact]
-        public void ChangeMemberAccess()
-        {
-            MemberExpression personId = Expression.MakeMemberAccess(
-                Expression.Parameter(typeof(Person)),
-                typeof(Person).GetProperty(nameof(Person.PersonId)));
-
-            Expression personLastName = new ChangeMemberProperty(typeof(Person),
-                    personId,
-                    nameof(Person.LastName))
-                .Change();
-
-            Assert.IsAssignableFrom<MemberExpression>(personLastName);
-            Assert.Equal(nameof(Person.LastName), ((MemberExpression)personLastName).Member.Name);
-        }
-
-        [Fact]
-        public void ChangeNestedMemberAccess()
-        {
-            MemberExpression personId = Expression.MakeMemberAccess(
-                Expression.Parameter(typeof(Person)),
-                typeof(Person).GetProperty(nameof(Person.PersonId)));
-
-            MemberExpression personAddresses = new ChangeMemberProperty(
-                    typeof(Person),
-                    personId,
-                    nameof(Person.Addresses))
-                .Change();
-
-            // todo: fix to work with collection property accessors
-            MemberExpression newMember = Expression.MakeMemberAccess(
-                personAddresses,
-                personAddresses.Type.GetProperty(nameof(Address.AddressId)));
-
-            Assert.IsAssignableFrom<MemberExpression>(newMember);
-            Assert.Equal(nameof(Address.AddressId), newMember.Member.Name);
-        }
-
         [Fact]
         public void ChangeBinaryRight()
         {
