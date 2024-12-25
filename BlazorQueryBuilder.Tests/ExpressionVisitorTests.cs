@@ -127,12 +127,6 @@ namespace BlazorQueryBuilder.Tests
         [Fact]
         public void ChangeBinaryToMethodCall()
         {
-            var addresses = Expression.MakeMemberAccess(
-                Expression.Parameter(typeof(Person), "person"),
-                typeof(Person).GetProperty(nameof(Person.Addresses)));
-
-            var count = Expression.MakeMemberAccess(addresses, typeof(Address).GetProperty("Count"));
-
             // person.PersonId == "1"
             BinaryExpression personIdEqualsOne =
                 Expression.MakeBinary(
@@ -141,7 +135,6 @@ namespace BlazorQueryBuilder.Tests
                         Expression.Parameter(typeof(Person), "person"),
                         typeof(Person).GetProperty(nameof(Person.PersonId))),
                     Expression.Constant("1"));
-
 
             // person.PersonId
             Expression personId = personIdEqualsOne.Left;
