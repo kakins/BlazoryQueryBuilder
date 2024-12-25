@@ -87,7 +87,7 @@ namespace BlazorQueryBuilder.Tests
             Expression personId = personIdEqualsOne.Left;
 
             // person.Addresses
-            MemberExpression personAddresses = new ChangeMemberProperty(
+            MemberExpression personAddresses = new ChangePropertyAccess(
                     typeof(Person),
                     personId,
                     nameof(Person.Addresses))

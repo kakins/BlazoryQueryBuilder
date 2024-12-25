@@ -80,7 +80,7 @@
 
         if (entityProperty.PropertyType.IsClass && entityProperty.PropertyType != typeof(string))
         {
-            MemberExpression classMember = new ChangeMemberProperty(_entityType, Member, entityPropertyName).Change();
+            MemberExpression classMember = new ChangePropertyAccess(_entityType, Member, entityPropertyName).Change();
 
             // set the new entity type as the class member
             _entityType = classMember.Type;
@@ -93,7 +93,7 @@
         }
         else
         {
-            newMember = new ChangeMemberProperty(_entityType, Member, entityPropertyName).Change();
+            newMember = new ChangePropertyAccess(_entityType, Member, entityPropertyName).Change();
         }
 
         switch (Type.GetTypeCode(entityProperty.PropertyType))

@@ -6,12 +6,12 @@ using Xunit;
 
 namespace BlazorQueryBuilder.Tests.ExpressionVisitors
 {
-    public class ChangeMemberAccessTests
+    public class ChangePropertyAccessTests
     {
         [Theory]
         [InlineData("FirstName")]
         [InlineData("Addresses")]
-        public void Changes_member_access_for_property(string newPropertyName)
+        public void Changes_property_access(string newPropertyName)
         {
             // Arrange
             // {Param_0.PersonId}
@@ -21,7 +21,7 @@ namespace BlazorQueryBuilder.Tests.ExpressionVisitors
 
             // Act
             // {Param_0.FirstName}
-            var personLastName = new ChangeMemberProperty(typeof(Person),
+            var personLastName = new ChangePropertyAccess(typeof(Person),
                     personId,
                     newPropertyName)
                 .Change();
