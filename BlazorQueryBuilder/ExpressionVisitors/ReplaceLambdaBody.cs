@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System.Linq.Expressions;
 
-namespace BlazorQueryBuilder.Visitors
+namespace BlazorQueryBuilder.ExpressionVisitors
 {
     public class ReplaceLambdaBody : ExpressionVisitor
     {
@@ -21,10 +21,10 @@ namespace BlazorQueryBuilder.Visitors
 
         protected override Expression VisitLambda<T>(Expression<T> node)
         {
-            
+
             if (node == _lambda)
             {
-                var parameters = node.Parameters.Select(p => (ParameterExpression)Visit((Expression) p)).ToArray();
+                var parameters = node.Parameters.Select(p => (ParameterExpression)Visit(p)).ToArray();
                 return Expression.Lambda(_newBody, parameters);
             }
 

@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace BlazorQueryBuilder.Visitors
+namespace BlazorQueryBuilder.ExpressionVisitors
 {
     public class ReplaceBinary : ExpressionVisitor
     {
@@ -15,7 +15,7 @@ namespace BlazorQueryBuilder.Visitors
 
         public BinaryExpression Replace()
         {
-            return (BinaryExpression) Visit(_original);
+            return (BinaryExpression)Visit(_original);
         }
 
         protected override Expression VisitBinary(BinaryExpression node)

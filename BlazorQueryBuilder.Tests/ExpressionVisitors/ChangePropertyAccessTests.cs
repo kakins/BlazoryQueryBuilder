@@ -1,4 +1,4 @@
-﻿using BlazorQueryBuilder.Visitors;
+﻿using BlazorQueryBuilder.ExpressionVisitors;
 using BlazoryQueryBuilder.Shared.Models;
 using FluentAssertions;
 using System.Linq.Expressions;

@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace BlazorQueryBuilder.Visitors
+namespace BlazorQueryBuilder.ExpressionVisitors
 {
     public class AddLogicalBinaryLambda : ExpressionVisitor
     {
