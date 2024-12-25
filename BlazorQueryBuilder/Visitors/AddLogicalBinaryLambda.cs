@@ -6,16 +6,18 @@ namespace BlazorQueryBuilder.Visitors
 {
     public class AddLogicalBinaryLambda : ExpressionVisitor
     {
+        private readonly Expression _originalExpression;
         private readonly ExpressionType _binaryExpressionType;
 
-        public AddLogicalBinaryLambda(ExpressionType binaryExpressionType = ExpressionType.AndAlso)
+        public AddLogicalBinaryLambda(Expression originalExpression, ExpressionType binaryExpressionType = ExpressionType.AndAlso)
         {
+            _originalExpression = originalExpression;
             _binaryExpressionType = binaryExpressionType;
         }
 
-        public Expression Add(Expression expression)
+        public Expression Add()
         {
-            return Visit(expression);
+            return Visit(_originalExpression);
         }
 
         protected override Expression VisitLambda<T>(Expression<T> node)
