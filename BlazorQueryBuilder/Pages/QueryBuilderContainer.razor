@@ -2,7 +2,10 @@
 @using BlazoryQueryBuilder.Shared.Models
 @using System.Linq.Dynamic.Core
 @using System.Linq.Expressions
+@using Microsoft.EntityFrameworkCore
 @using MudBlazor
+@typeparam TDbContext where TDbContext : DbContext
+@inject TDbContext DbContext
 
 <MudStack Spacing="5"> 
     @if (_queryLoaded || _newQuery)
@@ -42,7 +45,7 @@
                 <MudItem xs="12">
                     <MudText Typo="Typo.h5">FROM</MudText>
                     <MudSelect T="string" Label="Entity" ValueChanged="Select">
-                        @foreach (var entity in Entities)
+                        @foreach (var entity in _entities)
                         {
                             <MudSelectItem Value="@entity">@entity</MudSelectItem>
                         }
@@ -61,14 +64,13 @@
 
 @code {
 
-    string[] Entities = new[] { nameof(Person), nameof(Address) };
 
     Type SelectedEntityType;
-    // string SelectedEntityTypeName;
 
     private bool _newQuery = false;
     private bool _queryLoaded = false;
     private string _selectedQuery;
+    private string[] _entities = Array.Empty<string>();
     private IEnumerable<string> _queries = new[] 
     { 
         "worker => ((worker.PersonId == \"1\") OrElse (worker.PersonId == \"2\"))", 
@@ -92,6 +94,12 @@
 
     protected override void OnInitialized()
     {
+        _entities = DbContext
+            .Model
+            .GetEntityTypes()
+            .Select(e => e.ClrType.Name)
+            .ToArray();
+        base.OnInitialized();
     }
 
     public void Select(string value)
@@ -113,7 +121,6 @@
         _state = new Loaded();
         string entityType = nameof(Person);
         Expression<Func<Person, bool>> expression = worker => worker.PersonId == "1" || worker.PersonId == "2";
-        // Expression = expression.ToString();
         Expression = _selectedQuery;
         SelectEntity(entityType);
         _queryLoaded = true;
@@ -122,7 +129,7 @@
     public void NewQuery()
     {
         _state = new New();
-        SelectEntity(Entities[0]);
+        SelectEntity(_entities.FirstOrDefault());
         Expression = string.Empty;
         _newQuery = true;
     }

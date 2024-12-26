@@ -3,6 +3,7 @@ using BlazoryQueryBuilder.Shared.Models;
 using BlazoryQueryBuilder.Shared.Services;
 using Bunit;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using MudBlazor.Services;
@@ -15,13 +16,19 @@ namespace BlazorQueryBuilder.Tests.Pages
     public class QueryBuilderContainerTests : TestContext
     {
         private readonly IRenderedComponent<MudPopoverProvider> _popoverProvider;
+        private readonly MyDbContext _dbContext;
 
         public QueryBuilderContainerTests()
         {
             Services.AddSingleton<PredicateFactory>();
             Services.AddSingleton<QueryBuilderService<Person>>();
+            Services.AddSingleton<QueryBuilderService<Address>>();
             Services.AddSingleton<QueryServiceFactory<MyDbContext>>();
             Services.AddMudServices();
+
+            var dbContextOptionsBuilder = new DbContextOptionsBuilder<MyDbContext>().UseInMemoryDatabase("test");
+            _dbContext = new MyDbContext(dbContextOptionsBuilder.Options);
+            Services.AddSingleton(provider => _dbContext);
 
             JSInterop.Mode = JSRuntimeMode.Loose;
             JSInterop.SetupVoid("mudKeyInterceptor.connect", _ => true);
@@ -33,50 +40,65 @@ namespace BlazorQueryBuilder.Tests.Pages
         public void Loads_component()
         {
             // Arrange & Act
-            var component = RenderComponent<QueryBuilderContainer>();
+            var component = RenderComponent<QueryBuilderContainer<MyDbContext>>();
 
             // Assert
             component.Should().NotBeNull();
         }
 
         [Fact]
-        public void Displays_new_query_button_on_load()
-        {
-            // Arrange & Act
-            var component = RenderComponent<QueryBuilderContainer>();
-
-            var newQueryButton = component
-                .FindComponents<MudButton>()
-                .Single(button => button.Markup.Contains("New Query"));
-
-            // Assert            
-            newQueryButton.Should().NotBeNull();
-        }
-
-        [Fact]
         public async Task Displays_query_builder_for_new_query()
         {
             // Arrange
-            var component = RenderComponent<QueryBuilderContainer>();
-            
-            // Act
-            var newQueryButton = component
-                .FindComponents<MudButton>()
-                .Single(button => button.Markup.Contains("New Query"));
+            var component = RenderComponent<QueryBuilderContainer<MyDbContext>>();
 
-            await component.InvokeAsync(newQueryButton.Instance.OnClick.InvokeAsync);
+            // Act
+            component
+                .FindComponents<MudButton>()
+                .Single(button => button.Markup.Contains("New Query"))
+                .Find("button")
+                .Click();
 
             // Assert
-            var queryBuilder = component.FindComponent<QueryBuilder<Person>>();
+            var queryBuilder = component.FindComponent<QueryBuilder<Address>>();
             queryBuilder.Should().NotBeNull();
             queryBuilder.Instance.Expression.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task Loads_enities_from_db_context_for_new_query()
+        {
+            // Arrange
+            var component = RenderComponent<QueryBuilderContainer<MyDbContext>>();
+            component
+                .FindComponents<MudButton>()
+                .Single(button => button.Markup.Contains("New Query"))
+                .Find("button")
+                .Click();
+            
+            // Act
+            var entitiesSelect = component.FindComponents<MudSelect<string>>().FirstOrDefault();
+            var entityItems = entitiesSelect.Instance.Items;
+            await component.InvokeAsync(async () =>
+            {
+                await entitiesSelect.Instance.OpenMenu();
+                await entitiesSelect.Instance.SelectOption(0);
+                await entitiesSelect.Instance.ToggleMenu();
+                entityItems = entitiesSelect.Instance.Items;
+            });
+
+            // Assert
+            entityItems
+                .Select(i => i.Value)
+                .Should()
+                .BeEquivalentTo(_dbContext.Model.GetEntityTypes().Select(e => e.ClrType.Name));
         }
 
         [Fact]
         public async Task Disables_load_query_button_when_query_is_deselected()
         {
             // Arrange
-            var component = RenderComponent<QueryBuilderContainer>();
+            var component = RenderComponent<QueryBuilderContainer<MyDbContext>>();
 
             // Act
             var loadQueryButton = component
@@ -91,7 +113,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Enables_load_query_button_when_query_is_selected()
         {
             // Arrange
-            var component = RenderComponent<QueryBuilderContainer>();
+            var component = RenderComponent<QueryBuilderContainer<MyDbContext>>();
 
             var select = component.FindComponent<MudSelect<string>>();
             string selectedQuery = string.Empty;
@@ -116,7 +138,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Displays_query_builder_for_loaded_query()
         {
             // Arrange
-            var component = RenderComponent<QueryBuilderContainer>();
+            var component = RenderComponent<QueryBuilderContainer<MyDbContext>>();
 
             var select = component.FindComponent<MudSelect<string>>();
             string selectedQuery = string.Empty;
