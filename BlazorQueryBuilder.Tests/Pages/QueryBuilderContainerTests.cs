@@ -50,7 +50,7 @@ namespace BlazorQueryBuilder.Tests.Pages
                 .Click();
 
             // Assert
-            var queryBuilder = component.FindComponent<QueryBuilder<Address>>();
+            var queryBuilder = component.FindComponent<QueryBuilder<MyDbContext, Address>>();
             queryBuilder.Should().NotBeNull();
             queryBuilder.Instance.Expression.Should().BeEmpty();
         }
@@ -148,7 +148,7 @@ namespace BlazorQueryBuilder.Tests.Pages
                 .Click();
 
             // Assert
-            var queryBuilder = component.FindComponent<QueryBuilder<Person>>();
+            var queryBuilder = component.FindComponent<QueryBuilder<MyDbContext, Person>>();
             queryBuilder.Should().NotBeNull();
             queryBuilder.Instance.Expression.Should().Be(selectedQuery);
         }

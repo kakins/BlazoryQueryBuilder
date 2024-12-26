@@ -1,16 +1,18 @@
 ﻿@using System.Linq.Expressions
 @using System.Linq.Dynamic
 @using System.Linq.Dynamic.Core
+@using Microsoft.EntityFrameworkCore
 @using Newtonsoft.Json
 @using BlazorQueryBuilder.ExpressionVisitors
 @using BlazoryQueryBuilder.Shared.Models
 @using BlazoryQueryBuilder.Shared.Services
 @using System.Reflection
 @using System.Collections
+@typeparam TDbContext where TDbContext : DbContext
+@typeparam TEntity where TEntity : class
 @inject PredicateFactory PredicateFactory
 @inject QueryBuilderService<TEntity> QueryBuilderService
-@inject QueryServiceFactory<MyDbContext> QueryServiceFactory
-@typeparam TEntity where TEntity : class
+@inject QueryServiceFactory<TDbContext> QueryServiceFactory
 
 <MudStack Spacing="5">
     <div>

@@ -81,7 +81,7 @@
     {
         _state = _state.DisplayBuilder(() =>
         {
-            builder.OpenComponent(0, typeof(QueryBuilder<>).MakeGenericType(SelectedEntityType));
+            builder.OpenComponent(0, typeof(QueryBuilder<,>).MakeGenericType(typeof(TDbContext), SelectedEntityType));
             builder.AddAttribute(1, "Expression", Expression);
             builder.CloseComponent();
         });
