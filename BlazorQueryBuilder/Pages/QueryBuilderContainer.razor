@@ -4,25 +4,24 @@
 @using System.Linq.Expressions
 @using MudBlazor
 
-<MudStack Row Spacing="2"> 
+<MudStack Spacing="5"> 
     @if (_queryLoaded || _newQuery)
     {
-        <MudButton Color="Color.Primary" OnClick="@StartOver">Start Over</MudButton>
+        <div>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@StartOver">Start Over</MudButton>
+        </div>
     }
     else
     {
-        <MudStack>
+        <MudStack Spacing="10">
             <div>
-                <MudButton Color="Color.Primary" OnClick="NewQuery">New Query</MudButton>
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="NewQuery">New Query</MudButton>
             </div>
             <div>
                 <MudStack>
-                    @if (!string.IsNullOrWhiteSpace(_selectedQuery))
-                    {
-                        <div>
-                            <MudButton Color="Color.Primary" OnClick="@LoadQuery">Load Query</MudButton>
-                        </div>
-                    }
+                    <div>
+                        <MudButton Disabled="@(string.IsNullOrWhiteSpace(_selectedQuery))" Color="Color.Primary" Variant="Variant.Filled" OnClick="@LoadQuery">Load Query</MudButton>
+                    </div>
                     <div>
                         <MudSelect T="string" @bind-Value="_selectedQuery" Label="Select Query">
                             @foreach (var query in _queries)
@@ -35,28 +34,30 @@
             </div>
         </MudStack>
     }
+
+    <MudStack Spacing="5">
+        @if (_newQuery)
+        {
+            <MudStack Spacing="2">
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h5">FROM</MudText>
+                    <MudSelect T="string" Label="Entity" ValueChanged="Select">
+                        @foreach (var entity in Entities)
+                        {
+                            <MudSelectItem Value="@entity">@entity</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            </MudStack>
+        }
+
+        <div>
+            @CreateQueryBuilder()
+        </div>
+    </MudStack>
 </MudStack>
 
-<MudStack Spacing="5">
-    @if (_newQuery)
-    {
-        <MudStack Spacing="2">
-            <MudItem xs="12">
-                <MudText Typo="Typo.h5">FROM</MudText>
-                <MudSelect T="string" Label="Entity" ValueChanged="Select">
-                    @foreach (var entity in Entities)
-                    {
-                        <MudSelectItem Value="@entity">@entity</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
-        </MudStack>
-    }
 
-    <div>
-        @CreateQueryBuilder()
-    </div>
-</MudStack>
 
 @code {
 

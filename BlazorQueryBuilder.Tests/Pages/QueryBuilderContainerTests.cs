@@ -73,6 +73,46 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         [Fact]
+        public async Task Disables_load_query_button_when_query_is_deselected()
+        {
+            // Arrange
+            var component = RenderComponent<QueryBuilderContainer>();
+
+            // Act
+            var loadQueryButton = component
+                .FindComponents<MudButton>()
+                .Single(button => button.Markup.Contains("Load Query"));
+
+            // Assert
+            loadQueryButton.Instance.Disabled.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Enables_load_query_button_when_query_is_selected()
+        {
+            // Arrange
+            var component = RenderComponent<QueryBuilderContainer>();
+
+            var select = component.FindComponent<MudSelect<string>>();
+            string selectedQuery = string.Empty;
+            await component.InvokeAsync(async () =>
+            {
+                await select.Instance.OpenMenu();
+                await select.Instance.SelectOption(0);
+                await select.Instance.ToggleMenu();
+                selectedQuery = select.Instance.Items.First().Value;
+            });
+
+            // Act
+            var loadQueryButton = component
+                .FindComponents<MudButton>()
+                .Single(button => button.Markup.Contains("Load Query"));
+
+            // Assert
+            loadQueryButton.Instance.Disabled.Should().BeFalse();
+        }
+
+        [Fact]
         public async Task Displays_query_builder_for_loaded_query()
         {
             // Arrange
