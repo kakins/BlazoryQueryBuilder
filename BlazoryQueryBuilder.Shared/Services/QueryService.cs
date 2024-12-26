@@ -49,12 +49,14 @@ namespace BlazoryQueryBuilder.Shared.Services
         {
             try
             {
-                Expression<Func<T, T>> select = new SelectBuilderService<T>().BuildSelect(selectedProperties);
-                IEnumerable<T> results = _dbContext
+                var select = new SelectBuilderService<T>().BuildSelect(selectedProperties);
+                
+                var results = await _dbContext
                     .Set<T>()
                     .Where(predicate)
                     .Select(select)
-                    .ToList();
+                    .ToListAsync();
+                
                 return results.AsEnumerable();
             }
             catch (Exception ex)

@@ -1,6 +1,7 @@
 ﻿using BlazorQueryBuilder.Tests.Util;
 using BlazoryQueryBuilder.Shared.Models;
 using BlazoryQueryBuilder.Shared.Services;
+using FluentAssertions;
 using Moq;
 using System;
 using System.Collections;
@@ -19,7 +20,7 @@ namespace BlazorQueryBuilder.Tests.ExpressionVisitors
         public LambdaParseTests()
         {
             _textContext = new TestContext(EfHelpers.CreateEfInMemoryContextOptions<TestContext>("TestContext"));
-            _textContext.Persons.Add(new Person { PersonId = "1", LastName = "Jones" });
+            _textContext.Persons.Add(new Person { PersonId = "1", FirstName = "Casey", LastName = "Jones" });
             _textContext.SaveChanges();
             _serviceProvider = new Mock<IServiceProvider>();
             _serviceProvider
@@ -30,20 +31,17 @@ namespace BlazorQueryBuilder.Tests.ExpressionVisitors
         [Fact]
         public async System.Threading.Tasks.Task ParseLambdaAndReturnData()
         {
+            // Arrange
             Expression<Func<Person, bool>> expression = person => person.PersonId == "1" && person.LastName == "Jones";
-            var properties = new List<string> { nameof(Person.PersonId), nameof(Person.FirstName) };
+            var properties = new List<string> { nameof(Person.PersonId), nameof(Person.FirstName), nameof(Person.LastName) };
 
-            var predicate = new Predicate
-            {
-                EntityType = nameof(Person),
-                LambdaExpression = expression.ToString(),
-                SelectedProperties = properties
-            };
-
+            // Act
             var service = new QueryServiceFactory<TestContext>(_serviceProvider.Object)
                 .Create<Person>();
+            var data = await service.QueryData(expression, properties);
 
-            IEnumerable data = await service.QueryData(predicate.LambdaExpression, properties);
+            // Assert
+            data.Should().BeEquivalentTo(new List<Person> { new() { PersonId = "1", FirstName = "Casey", LastName = "Jones" } });
         }
 
         [Fact]
