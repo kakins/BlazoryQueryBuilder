@@ -54,7 +54,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         [Fact]
-        public async Task Displays_query_builder_when_new_query_button_is_clicked()
+        public async Task Displays_query_builder_for_new_query()
         {
             // Arrange
             var component = RenderComponent<QueryBuilderContainer>();
@@ -73,7 +73,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         [Fact]
-        public async Task Displays_query_builder_when_load_query_button_is_clicked()
+        public async Task Displays_query_builder_for_loaded_query()
         {
             // Arrange
             var component = RenderComponent<QueryBuilderContainer>();
