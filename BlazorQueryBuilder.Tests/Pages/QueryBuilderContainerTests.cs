@@ -37,16 +37,6 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         [Fact]
-        public void Loads_component()
-        {
-            // Arrange & Act
-            var component = RenderComponent<QueryBuilderContainer<MyDbContext>>();
-
-            // Assert
-            component.Should().NotBeNull();
-        }
-
-        [Fact]
         public async Task Displays_query_builder_for_new_query()
         {
             // Arrange
@@ -151,11 +141,11 @@ namespace BlazorQueryBuilder.Tests.Pages
             });
 
             // Act
-            var loadQueryButton = component
+            component
                 .FindComponents<MudButton>()
-                .Single(button => button.Markup.Contains("Load Query"));
-
-            await component.InvokeAsync(loadQueryButton.Instance.OnClick.InvokeAsync);
+                .Single(button => button.Markup.Contains("Load Query"))
+                .Find("button")
+                .Click();
 
             // Assert
             var queryBuilder = component.FindComponent<QueryBuilder<Person>>();
