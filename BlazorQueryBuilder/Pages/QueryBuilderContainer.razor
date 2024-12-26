@@ -11,8 +11,29 @@
     }
     else
     {
-        <MudButton Color="Color.Primary" OnClick="@LoadQuery">Load Query</MudButton>
-        <MudButton Color="Color.Primary" OnClick="NewQuery">New Query</MudButton>
+        <MudStack>
+            <div>
+                <MudButton Color="Color.Primary" OnClick="NewQuery">New Query</MudButton>
+            </div>
+            <div>
+                <MudStack>
+                    @if (!string.IsNullOrWhiteSpace(_selectedQuery))
+                    {
+                        <div>
+                            <MudButton Color="Color.Primary" OnClick="@LoadQuery">Load Query</MudButton>
+                        </div>
+                    }
+                    <div>
+                        <MudSelect T="string" @bind-Value="_selectedQuery" Label="Select Query">
+                            @foreach (var query in _queries)
+                            {
+                                <MudSelectItem Value="@query">@query</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </div>
+                </MudStack>
+            </div>
+        </MudStack>
     }
 </MudStack>
 
@@ -42,10 +63,16 @@
     string[] Entities = new[] { nameof(Person), nameof(Address) };
 
     Type SelectedEntityType;
-    string SelectedEntityTypeName;
+    // string SelectedEntityTypeName;
 
     private bool _newQuery = false;
     private bool _queryLoaded = false;
+    private string _selectedQuery;
+    private IEnumerable<string> _queries = new[] 
+    { 
+        "worker => ((worker.PersonId == \"1\") OrElse (worker.PersonId == \"2\"))", 
+        "worker => worker.LastName == \"Jones\""
+    };
 
     RenderFragment CreateQueryBuilder() => builder =>
     {
@@ -84,8 +111,9 @@
     {
         _state = new Loaded();
         string entityType = nameof(Person);
-        Expression<Func<Person, bool>> expression = worker => worker.PersonId == "820009398";
-        Expression = expression.ToString();
+        Expression<Func<Person, bool>> expression = worker => worker.PersonId == "1" || worker.PersonId == "2";
+        // Expression = expression.ToString();
+        Expression = _selectedQuery;
         SelectEntity(entityType);
         _queryLoaded = true;
     }
