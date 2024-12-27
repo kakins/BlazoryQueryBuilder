@@ -3,7 +3,6 @@ using BlazoryQueryBuilder.Shared.Models;
 using BlazoryQueryBuilder.Shared.Services;
 using Bunit;
 using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MudBlazor;
@@ -79,8 +78,10 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var expression = "person => (person.PersonId == \"1\")";
-            var component = RenderComponent<QueryBuilder<MyDbContext, Person>>(parameters => parameters
-                .Add(p => p.Expression, expression));
+            var component = RenderComponent<QueryBuilder<MyDbContext, Person>>(parameters =>
+            {
+                parameters.Add(p => p.Expression, expression);
+            });
 
             // Act
             var lambdaComponent = component.FindComponent<LambdaComponent>();
