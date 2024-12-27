@@ -12,7 +12,7 @@
 @typeparam TEntity where TEntity : class
 @inject PredicateFactory PredicateFactory
 @inject QueryBuilderService<TEntity> QueryBuilderService
-@inject QueryServiceFactory<TDbContext> QueryServiceFactory
+@inject IQueryServiceFactory<TDbContext> QueryServiceFactory
 
 <MudStack Spacing="5">
     <div>
@@ -55,13 +55,13 @@
 </MudStack>
 
 @code {
-    List<TEntity> _data = new List<TEntity>();
-
-    Expression<Func<TEntity, bool>> Predicate => (Expression<Func<TEntity, bool>>)QueryBuilderService.Lambda;
-    IEnumerable<PropertyInfo> SelectedProperties = new List<PropertyInfo>();
 
     [Parameter]
     public string Expression { get; set; }
+
+    private List<TEntity> _data = new List<TEntity>();
+    private Expression<Func<TEntity, bool>> Predicate => (Expression<Func<TEntity, bool>>)QueryBuilderService.Lambda;
+    private IEnumerable<PropertyInfo> SelectedProperties = new List<PropertyInfo>();
 
     protected override Task OnInitializedAsync()
     {

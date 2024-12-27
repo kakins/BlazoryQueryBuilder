@@ -4,7 +4,13 @@ using System;
 
 namespace BlazoryQueryBuilder.Shared.Services
 {
-    public class QueryServiceFactory<TDbContext> where TDbContext : DbContext
+    public interface IQueryServiceFactory<TDbContext> where TDbContext : DbContext
+    {
+        IQueryService<T> Create<T>() where T : class;
+    }
+
+    public class QueryServiceFactory<TDbContext> : IQueryServiceFactory<TDbContext> 
+        where TDbContext : DbContext
     {
         private readonly IServiceProvider _serviceProvider;
 

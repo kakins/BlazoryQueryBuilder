@@ -9,7 +9,7 @@ public static class QueryBuilderServicesExtensions
         services.AddTransient(typeof(QueryBuilderService<>));
         services.AddSingleton<PredicateFactory>();
         
-        services.AddTransient<QueryServiceFactory<TDbContext>>();
+        services.AddTransient<IQueryServiceFactory<TDbContext>, QueryServiceFactory<TDbContext>>();
         services.AddDbContext<TDbContext>(options =>
         {
             options.UseInMemoryDatabase("InMemoryDb");
