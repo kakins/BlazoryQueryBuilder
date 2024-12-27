@@ -1,5 +1,5 @@
 # BlazoryQueryBuilder
-Dynamic query builder using Blazor, ASP.NET Core, and Entity Framework
+Dynamic query builder using Blazor and Entity Framework
 
 This is a work in progress.
 
