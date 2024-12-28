@@ -3,11 +3,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlazorQueryBuilder.Tests.Util
 {
-    public class TestContext : DbContext
+    public class TestDbContext : DbContext
     {
         public DbSet<Person> Persons { get; set; }
 
-        public TestContext(DbContextOptions<TestContext> options): base(options)
+        public TestDbContext(DbContextOptions<TestDbContext> options): base(options)
         {
             
         }

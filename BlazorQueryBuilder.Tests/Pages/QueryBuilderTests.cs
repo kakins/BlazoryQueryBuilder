@@ -118,6 +118,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
             // Assert
             var resultsTable = component.FindComponent<MudTable<Person>>();
+            component.WaitForState(() => resultsTable.Instance.Items.Any());
 
             resultsTable.Instance.Items.Should().BeEquivalentTo(_persons);
 

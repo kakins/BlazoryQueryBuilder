@@ -14,18 +14,18 @@ namespace BlazorQueryBuilder.Tests.ExpressionVisitors
 {
     public class LambdaParseTests
     {
-        private TestContext _textContext;
+        private TestDbContext _textContext;
         private Mock<IServiceProvider> _serviceProvider;
 
         public LambdaParseTests()
         {
-            _textContext = new TestContext(EfHelpers.CreateEfInMemoryContextOptions<TestContext>("TestContext"));
+            _textContext = new TestDbContext(EfHelpers.CreateEfInMemoryContextOptions<TestDbContext>("TestContext"));
             _textContext.Persons.Add(new Person { PersonId = "1", FirstName = "Casey", LastName = "Jones" });
             _textContext.SaveChanges();
             _serviceProvider = new Mock<IServiceProvider>();
             _serviceProvider
-                .Setup(provider => provider.GetService(typeof(QueryService<Person, TestContext>)))
-                .Returns(new QueryService<Person, TestContext>(_textContext));
+                .Setup(provider => provider.GetService(typeof(QueryService<Person, TestDbContext>)))
+                .Returns(new QueryService<Person, TestDbContext>(_textContext));
         }
 
         [Fact]
@@ -36,7 +36,7 @@ namespace BlazorQueryBuilder.Tests.ExpressionVisitors
             var properties = new List<string> { nameof(Person.PersonId), nameof(Person.FirstName), nameof(Person.LastName) };
 
             // Act
-            var service = new QueryServiceFactory<TestContext>(_serviceProvider.Object)
+            var service = new QueryServiceFactory<TestDbContext>(_serviceProvider.Object)
                 .Create<Person>();
             var data = await service.QueryData(expression, properties);
 

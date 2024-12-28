@@ -155,7 +155,8 @@
 
     private void OnOperatorChanged(ExpressionType expressionType)
     {
-        var newRelational = new ReplaceBinaryType(Binary, expressionType).Execute();
+        var newRelational = Binary.ReplaceType(expressionType);
+        // var newRelational = new ReplaceBinaryType(Binary, expressionType).Execute();
         Console.WriteLine(newRelational);
         UpdateExpression(newRelational);
     }

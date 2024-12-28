@@ -14,6 +14,7 @@ using Xunit;
 
 namespace BlazorQueryBuilder.Tests.Pages
 {
+
     public class LogicalPredicateTests : TestContext
     {
         private Expression<Func<Person, bool>> _lambdaExpression;
