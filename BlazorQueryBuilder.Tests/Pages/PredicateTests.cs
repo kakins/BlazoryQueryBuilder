@@ -13,9 +13,9 @@ using Xunit;
 
 namespace BlazorQueryBuilder.Tests.Pages
 {
-    public class PredicateComponentTests : TestContext
+    public class PredicateTests : TestContext
     {
-        public PredicateComponentTests()
+        public PredicateTests()
         {
             Services.AddSingleton<PredicateFactory>();
 
