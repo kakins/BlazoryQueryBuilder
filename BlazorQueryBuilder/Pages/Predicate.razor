@@ -1,9 +1,7 @@
 ﻿@using System.Linq.Expressions
 @switch (Expression.NodeType)
 {
-    case (ExpressionType.AndAlso):
-    case ExpressionType.And:
-    case ExpressionType.Or:
+    case ExpressionType.AndAlso:
     case ExpressionType.OrElse:
         <LogicalPredicate Binary="@GetBinaryExpression()"
                           Parameter="@Parameter"
