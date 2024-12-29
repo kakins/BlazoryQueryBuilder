@@ -16,29 +16,20 @@
         }
     </MudSelect>
     <RelationalOperators OnChange="@OnOperatorChanged" ExpressionType="@Binary.NodeType"></RelationalOperators>
-    @if (Binary.Right is ConstantExpression constant)
+    @switch (Type.GetTypeCode(Binary.Left.Type))
     {
-        @switch (Type.GetTypeCode(Binary.Left.Type))
-        {
-            case TypeCode.Int32:
-                <MudTextField Label="Value" T="int" Value="@((int)constant.Value)" ValueChanged="@OnValueChanged" />
-                break;
-            case TypeCode.String:
-                <MudTextField Label="Value" T="string" Value="@(constant.Value?.ToString())" ValueChanged="@OnValueChanged" />
-                break;
-            case TypeCode.Boolean:
-                <MudCheckBox Label="Value" T="bool" Value="@(bool.Parse(constant.Value?.ToString()))" ValueChanged="@OnValueChanged" />
-                break;
-        }
-    }
-    @if (Binary.Right is NewExpression newExpression)
-    {
-        @switch (Type.GetTypeCode(Binary.Left.Type))
-        {
-            case TypeCode.DateTime:
-                <MudDatePicker Label="Value" Date="@(new DateTime((long)((ConstantExpression)newExpression.Arguments[0]).Value))" DateChanged="@OnValueChanged" />
-                break;
-        }           
+        case TypeCode.Int32 when Binary.Right is ConstantExpression intConstant:
+            <MudTextField Label="Value" T="int" Value="@((int)intConstant.Value)" ValueChanged="@OnValueChanged" />
+            break;
+        case TypeCode.String when Binary.Right is ConstantExpression stringConstant:
+            <MudTextField Label="Value" T="string" Value="@(stringConstant.Value?.ToString())" ValueChanged="@OnValueChanged" />
+            break;
+        case TypeCode.Boolean when Binary.Right is ConstantExpression boolConstant:
+            <MudCheckBox Label="Value" T="bool" Value="@((bool)boolConstant.Value)" ValueChanged="@OnValueChanged" />
+            break;
+        case TypeCode.DateTime when Binary.Right is NewExpression newDateTime:
+            <MudDatePicker Label="Value" Date="@(new DateTime((long)((ConstantExpression)newDateTime.Arguments[0]).Value))" DateChanged="@OnValueChanged" />
+            break;
     }
     <MudStack Row Spacing="2">
         <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.AndAlso))">And</MudButton>
@@ -74,7 +65,7 @@
     private void OnMemberAccessChange(string entityPropertyName)
     {
         _selectedPropertyName = entityPropertyName;
-        PropertyInfo entityProperty = _entityType.GetProperty(entityPropertyName);
+        var entityProperty = _entityType.GetProperty(entityPropertyName);
 
         MemberExpression newMemberExpression;
 
@@ -105,6 +96,7 @@
                 is TypeCode.DateTime => DateTimeExpression.New(DateTime.UtcNow),
             _ => null
         };
+
         if (rightExpression != null)
         {
             UpdateExpression(Expression.MakeBinary(Binary.NodeType, newMemberExpression, rightExpression));
