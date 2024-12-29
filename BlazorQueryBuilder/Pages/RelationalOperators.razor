@@ -9,16 +9,7 @@
 </MudSelect>
 
 @code {
-    Dictionary<string, string> Operators = new Dictionary<string, string>
-    {
-        {"Equal", "Equals"},
-        {"NotEqual", "Does not equal"},
-        {"LessThan", "Less than"},
-        {"GreaterThan", "Greater than"},
-        // TODO: Implement these operators
-        // {"InList", "In List"},
-        // {"NotInList", "Not In List"},
-    };
+    Dictionary<string, string> Operators = new Dictionary<string, string>();
 
     [Parameter]
     public Action<ExpressionType> OnChange { get; set; }
@@ -26,14 +17,70 @@
     [Parameter]
     public ExpressionType ExpressionType { get; set; }
 
+    [Parameter]
+    public Type OperandType { get; set; }
+
+    protected override void OnInitialized()
+    {
+        InitializeOperators();
+    }
+
+    public void SetOperand(Type operandType)
+    {
+        OperandType = operandType;
+        InitializeOperators();
+        ExpressionType = GetExpressionType(Operators.Keys.First());
+    }
+
+    private void InitializeOperators()
+    {
+        Operators = OperandType switch
+        {
+            Type type when type == typeof(int) => new()
+            {
+                {"Equal", "Equals"},
+                {"NotEqual", "Does not equal"},
+                {"LessThan", "Less than"},
+                {"GreaterThan", "Greater than"},
+            },
+            Type type when type == typeof(string) => new()
+            {
+                {"Equal", "Equals"},
+                {"NotEqual", "Does not equal"},
+                // {"Contains", "Contains"}, // method
+                // {"StartsWith", "Starts with"}, // method
+                // {"EndsWith", "Ends with"}, // method
+            },
+            Type type when type == typeof(bool) => new()
+            {
+                {"Equal", "Equals"},
+                {"NotEqual", "Does not equal"},
+            },
+            Type type when type == typeof(DateTime) => new()
+            {
+                {"Equal", "Equals"},
+                {"NotEqual", "Does not equal"},
+                {"LessThan", "Less than"},
+                {"GreaterThan", "Greater than"},
+            },
+            _ => new()
+            {
+                {"Equal", "Equals"},
+                {"NotEqual", "Does not equal"},
+            },
+        };
+    }
+
     private string SelectedOperator
     {
         get => ExpressionType.ToString();
         set
         {
-            var expressionType = (ExpressionType)Enum.Parse(typeof(ExpressionType), value);
+            var expressionType = GetExpressionType(value);
             ExpressionType = expressionType;
             OnChange.Invoke(expressionType);
         }
     }
+
+    private ExpressionType GetExpressionType(string key) => (ExpressionType)Enum.Parse(typeof(ExpressionType), key);
 }

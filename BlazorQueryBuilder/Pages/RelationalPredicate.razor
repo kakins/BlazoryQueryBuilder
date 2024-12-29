@@ -14,19 +14,19 @@
             </MudSelectItem>
         }
     </MudSelect>
-    <RelationalOperators OnChange="@OnOperatorChanged" ExpressionType="@PredicateExpression.NodeType"></RelationalOperators>
-    @switch (Type.GetTypeCode(PredicateExpression.Left.Type))
+    <RelationalOperators @ref="_relationalOperators" OnChange="@OnOperatorChanged" ExpressionType="@PredicateExpression.NodeType" OperandType="PredicateExpression.Left.Type"></RelationalOperators>
+    @switch (PredicateExpression.Left.Type)
     {
-        case TypeCode.Int32 when PredicateExpression.Right is ConstantExpression intConstant:
+        case Type intType when intType == typeof(int) && PredicateExpression.Right is ConstantExpression intConstant:
             <MudTextField Label="Value" T="int" Value="@((int)intConstant.Value)" ValueChanged="@OnValueChanged" />
             break;
-        case TypeCode.String when PredicateExpression.Right is ConstantExpression stringConstant:
+        case Type stringType when stringType == typeof(string) && PredicateExpression.Right is ConstantExpression stringConstant:
             <MudTextField Label="Value" T="string" Value="@(stringConstant.Value?.ToString())" ValueChanged="@OnValueChanged" />
             break;
-        case TypeCode.Boolean when PredicateExpression.Right is ConstantExpression boolConstant:
+        case Type boolType when boolType == typeof(bool) && PredicateExpression.Right is ConstantExpression boolConstant:
             <MudCheckBox Label="Value" T="bool" Value="@((bool)boolConstant.Value)" ValueChanged="@OnValueChanged" />
             break;
-        case TypeCode.DateTime when PredicateExpression.Right is NewExpression newDateTime:
+        case Type dateTimeType when dateTimeType == typeof(DateTime) && PredicateExpression.Right is NewExpression newDateTime:
             <MudDatePicker Label="Value" Date="@(new DateTime((long)((ConstantExpression)newDateTime.Arguments[0]).Value))" DateChanged="@OnValueChanged" />
             break;
     }
@@ -50,28 +50,29 @@
     [Parameter]
     public BinaryExpression PredicateExpression { get; set; }
 
-    private MemberExpression _leftOperand => (MemberExpression)PredicateExpression.Left;
+    private RelationalOperators _relationalOperators;
     private Type _selectedPropertyType;
     private string _selectedPropertyName;
 
     protected override void OnInitialized()
     {
-        _selectedPropertyType = _leftOperand.Member.DeclaringType;
-        _selectedPropertyName = _leftOperand.Member.Name;
+        var leftOperand = (MemberExpression)PredicateExpression.Left;
+        _selectedPropertyType = leftOperand.Member.DeclaringType;
+        _selectedPropertyName = leftOperand.Member.Name;
         base.OnInitialized();
     }
 
     private void OnFieldChanged(string propertyName)
     {
+        var leftOperand = (MemberExpression)PredicateExpression.Left;
         _selectedPropertyName = propertyName;
         var property = _selectedPropertyType.GetProperty(propertyName);
 
-        MemberExpression leftOperand;
 
         // Navigation properties
         if (property.PropertyType.IsClass && property.PropertyType != typeof(string))
         {
-            var navigationProperty = _leftOperand.ChangePropertyAccess(_selectedPropertyType, propertyName);
+            var navigationProperty = leftOperand.ChangePropertyAccess(_selectedPropertyType, propertyName);
 
             _selectedPropertyType = navigationProperty.Type;
 
@@ -84,21 +85,23 @@
         // Simple properties
         else
         {
-            leftOperand = _leftOperand.ChangePropertyAccess(_selectedPropertyType, propertyName);
+            leftOperand = leftOperand.ChangePropertyAccess(_selectedPropertyType, propertyName);
         }
 
         Expression rightOperand = property.PropertyType switch
         {
-            Type type when Type.GetTypeCode(type) 
-                is TypeCode.Int32 
-                or TypeCode.String 
-                or TypeCode.Boolean => Expression.Constant(property.PropertyType.GetDefaultValue(), property.PropertyType),
-            Type type when Type.GetTypeCode(type)
-                is TypeCode.DateTime => DateTimeExpression.New(DateTime.UtcNow),
+            Type type when 
+                type == typeof(int)
+                || type == typeof(long)
+                || type == typeof(string)
+                || type == typeof(bool) => Expression.Constant(property.PropertyType.GetDefaultValue(), property.PropertyType),
+            Type type when
+                type == typeof(DateTime) => DateTimeExpression.New(DateTime.UtcNow),
             _ => throw new Exception("Unsupported property type")
         };
 
-        UpdateExpression(Expression.MakeBinary(PredicateExpression.NodeType, leftOperand, rightOperand));
+        _relationalOperators.SetOperand(property.PropertyType);
+        UpdateExpression(Expression.MakeBinary(_relationalOperators.ExpressionType, leftOperand, rightOperand));
     }
 
     private void OnValueChanged(int intValue) => UpdateRightOperandConstant(intValue);
@@ -123,6 +126,7 @@
 
     private void UpdateExpression(BinaryExpression expression)
     {
+        PredicateExpression = expression;
         OnChange(expression);
         StateHasChanged();
     }
