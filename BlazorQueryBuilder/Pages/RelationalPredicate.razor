@@ -7,8 +7,8 @@
 @inject PredicateFactory PredicateFactory;
 
 <MudStack Row>
-    <MudSelect Label="Field" T="string" ValueChanged="OnMemberAccessChange" Value="_selectedPropertyName">
-        @foreach (PropertyInfo property in _entityType.GetProperties())
+    <MudSelect Label="Field" T="string" ValueChanged="OnFieldChanged" Value="_selectedPropertyName">
+        @foreach (PropertyInfo property in _selectedPropertyType.GetProperties())
         {
             <MudSelectItem Value="@property.Name" style="@(@property.PropertyType.IsClass ? "font-weight: bold" : "")">
                 @property.Name.ToString()
@@ -39,10 +39,6 @@
 </MudStack>
 
 @code {
-    MemberExpression Member => (MemberExpression)Binary.Left;
-    private Type _entityType;
-    private string _selectedPropertyName;
-
     [Parameter]
     public Action<BinaryExpression> OnChange { get; set; }
 
@@ -55,81 +51,76 @@
     [Parameter]
     public BinaryExpression Binary { get; set; }
 
+    private MemberExpression _leftOperand => (MemberExpression)Binary.Left;
+    private Type _selectedPropertyType;
+    private string _selectedPropertyName;
+
     protected override void OnInitialized()
     {
-        _entityType = Member.Member.DeclaringType;
-        _selectedPropertyName = Member.Member.Name;
+        _selectedPropertyType = _leftOperand.Member.DeclaringType;
+        _selectedPropertyName = _leftOperand.Member.Name;
         base.OnInitialized();
     }
 
-    private void OnMemberAccessChange(string entityPropertyName)
+    private void OnFieldChanged(string propertyName)
     {
-        _selectedPropertyName = entityPropertyName;
-        var entityProperty = _entityType.GetProperty(entityPropertyName);
+        _selectedPropertyName = propertyName;
+        var property = _selectedPropertyType.GetProperty(propertyName);
 
-        MemberExpression newMemberExpression;
+        MemberExpression leftOperand;
 
-        if (entityProperty.PropertyType.IsClass && entityProperty.PropertyType != typeof(string))
+        // Navigation properties
+        if (property.PropertyType.IsClass && property.PropertyType != typeof(string))
         {
-            var classMember = Member.ChangePropertyAccess(_entityType, entityPropertyName);
+            var navigationProperty = _leftOperand.ChangePropertyAccess(_selectedPropertyType, propertyName);
 
-            _entityType = classMember.Type;
+            _selectedPropertyType = navigationProperty.Type;
 
-            entityProperty = classMember.Type.GetProperties().First();
+            property = navigationProperty.Type.GetProperties().First();
 
-            newMemberExpression = Expression.MakeMemberAccess(
-                classMember,
-                classMember.Type.GetProperties().First());
+            leftOperand = Expression.MakeMemberAccess(
+                navigationProperty,
+                navigationProperty.Type.GetProperties().First());
         }
+        // Simple properties
         else
         {
-            newMemberExpression = Member.ChangePropertyAccess(_entityType, entityPropertyName);
+            leftOperand = _leftOperand.ChangePropertyAccess(_selectedPropertyType, propertyName);
         }
 
-        Expression rightExpression = entityProperty.PropertyType switch
+        Expression rightOperand = property.PropertyType switch
         {
             Type type when Type.GetTypeCode(type) 
                 is TypeCode.Int32 
                 or TypeCode.String 
-                or TypeCode.Boolean => Expression.Constant(entityProperty.PropertyType.GetDefaultValue(), entityProperty.PropertyType),
+                or TypeCode.Boolean => Expression.Constant(property.PropertyType.GetDefaultValue(), property.PropertyType),
             Type type when Type.GetTypeCode(type) 
                 is TypeCode.DateTime => DateTimeExpression.New(DateTime.UtcNow),
-            _ => null
+            _ => throw new Exception("Unsupported property type")
         };
 
-        if (rightExpression != null)
-        {
-            UpdateExpression(Expression.MakeBinary(Binary.NodeType, newMemberExpression, rightExpression));
-        }
+        UpdateExpression(Expression.MakeBinary(Binary.NodeType, leftOperand, rightOperand));
     }
 
-    private void OnValueChanged(int intValue) => UpdateConstantExpression(intValue);
+    private void OnValueChanged(int intValue) => UpdateRightOperandConstant(intValue);
 
-    private void OnValueChanged(string stringValue) => UpdateConstantExpression(stringValue);
+    private void OnValueChanged(string stringValue) => UpdateRightOperandConstant(stringValue);
 
-    private void OnValueChanged(bool boolValue) => UpdateConstantExpression(boolValue);
+    private void OnValueChanged(bool boolValue) => UpdateRightOperandConstant(boolValue);
 
     private void OnValueChanged(DateTime? dateTime)
     {
         if (dateTime.HasValue)
         {
-            UpdateBinaryRightExpression(DateTimeExpression.New(dateTime.Value));
+            UpdateRightOperand(DateTimeExpression.New(dateTime.Value));
         }
     }
 
-    private void UpdateConstantExpression<T>(T value) => UpdateBinaryRightExpression(Expression.Constant(value, typeof(T)));
+    private void UpdateRightOperandConstant<T>(T value) => UpdateRightOperand(Expression.Constant(value, typeof(T)));
 
-    private void UpdateBinaryRightExpression(Expression expression)
-    {
-        var newBinaryExpression = Binary.ReplaceRight(expression);
-        UpdateExpression(newBinaryExpression);
-    }
+    private void UpdateRightOperand(Expression expression) => UpdateExpression(Binary.ReplaceRight(expression));
 
-    private void OnOperatorChanged(ExpressionType expressionType)
-    {
-        var newRelational = Binary.ReplaceType(expressionType);
-        UpdateExpression(newRelational);
-    }
+    private void OnOperatorChanged(ExpressionType expressionType) => UpdateExpression(Binary.ReplaceType(expressionType));
 
     private void UpdateExpression(BinaryExpression newBinary)
     {
