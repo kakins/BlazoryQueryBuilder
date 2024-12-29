@@ -21,13 +21,13 @@
         @switch (Type.GetTypeCode(Binary.Left.Type))
         {
             case TypeCode.Int32:
-                <MudTextField Label="Value" T="int" Value="@((int)constant.Value)" ValueChanged="@OnConstantChange" />
+                <MudTextField Label="Value" T="int" Value="@((int)constant.Value)" ValueChanged="@OnValueChanged" />
                 break;
             case TypeCode.String:
-                <MudTextField Label="Value" T="string" Value="@(constant.Value?.ToString())" ValueChanged="@OnConstantChange" />
+                <MudTextField Label="Value" T="string" Value="@(constant.Value?.ToString())" ValueChanged="@OnValueChanged" />
                 break;
             case TypeCode.Boolean:
-                <MudCheckBox Label="Value" T="bool" Value="@(bool.Parse(constant.Value?.ToString()))" ValueChanged="@OnConstantChange" />
+                <MudCheckBox Label="Value" T="bool" Value="@(bool.Parse(constant.Value?.ToString()))" ValueChanged="@OnValueChanged" />
                 break;
         }
     }
@@ -36,7 +36,7 @@
         @switch (Type.GetTypeCode(Binary.Left.Type))
         {
             case TypeCode.DateTime:
-                <MudDatePicker Label="Value" Date="@(new DateTime((long)((ConstantExpression)newExpression.Arguments[0]).Value))" DateChanged="@OnConstantChange" />
+                <MudDatePicker Label="Value" Date="@(new DateTime((long)((ConstantExpression)newExpression.Arguments[0]).Value))" DateChanged="@OnValueChanged" />
                 break;
         }           
     }
@@ -49,7 +49,6 @@
 
 @code {
     MemberExpression Member => (MemberExpression)Binary.Left;
-    ConstantExpression Constant => (ConstantExpression)Binary.Right;
     private Type _entityType;
     private string _selectedPropertyName;
 
@@ -77,7 +76,7 @@
         _selectedPropertyName = entityPropertyName;
         PropertyInfo entityProperty = _entityType.GetProperty(entityPropertyName);
 
-        MemberExpression newMember;
+        MemberExpression newMemberExpression;
 
         if (entityProperty.PropertyType.IsClass && entityProperty.PropertyType != typeof(string))
         {
@@ -87,62 +86,51 @@
 
             entityProperty = classMember.Type.GetProperties().First();
 
-            newMember = Expression.MakeMemberAccess(
+            newMemberExpression = Expression.MakeMemberAccess(
                 classMember,
                 classMember.Type.GetProperties().First());
         }
         else
         {
-            newMember = Member.ChangePropertyAccess(_entityType, entityPropertyName);
+            newMemberExpression = Member.ChangePropertyAccess(_entityType, entityPropertyName);
         }
 
-        switch (Type.GetTypeCode(entityProperty.PropertyType))
+        Expression rightExpression = entityProperty.PropertyType switch
         {
-            case TypeCode.Int32:
-                var newIntConstant = Expression.Constant(entityProperty.PropertyType.GetDefaultValue(), entityProperty.PropertyType);
-                UpdateExpression(Expression.MakeBinary(Binary.NodeType, newMember, newIntConstant));
-                break;
-            case TypeCode.String:
-                var newStringConstant = Expression.Constant(entityProperty.PropertyType.GetDefaultValue(), entityProperty.PropertyType);
-                UpdateExpression(Expression.MakeBinary(Binary.NodeType, newMember, newStringConstant));
-                break;
-            case TypeCode.Boolean:
-                var newBoolConstant = Expression.Constant(entityProperty.PropertyType.GetDefaultValue(), entityProperty.PropertyType);
-                UpdateExpression(Expression.MakeBinary(Binary.NodeType, newMember, newBoolConstant));
-                break;
-            case TypeCode.DateTime:
-                var newDateTimeExpression = DateTimeExpression.New(DateTime.UtcNow);
-                UpdateExpression(Expression.MakeBinary(Binary.NodeType, newMember, newDateTimeExpression));
-                break;
-        }
-    }
-
-    private void OnConstantChange(int constant)
-    {
-        var newIntRelational = Binary.ReplaceRight(Expression.Constant(constant));
-        UpdateExpression(newIntRelational);
-    }
-
-    private void OnConstantChange(string constant)
-    {
-        var newStringRelational = Binary.ReplaceRight(Expression.Constant((string)constant));
-        UpdateExpression(newStringRelational);
-    }
-
-    private void OnConstantChange(bool constant)
-    {
-        var newBoolRelational = Binary.ReplaceRight(Expression.Constant(constant, typeof(bool)));
-        UpdateExpression(newBoolRelational);
-    }
-
-    private void OnConstantChange(DateTime? constant)
-    {
-        if (constant.HasValue)
+            Type type when Type.GetTypeCode(type) 
+                is TypeCode.Int32 
+                or TypeCode.String 
+                or TypeCode.Boolean => Expression.Constant(entityProperty.PropertyType.GetDefaultValue(), entityProperty.PropertyType),
+            Type type when Type.GetTypeCode(type) 
+                is TypeCode.DateTime => DateTimeExpression.New(DateTime.UtcNow),
+            _ => null
+        };
+        if (rightExpression != null)
         {
-            var newDateTimeExpression = DateTimeExpression.New(constant.Value);
-            var newDateTimeRelational = Binary.ReplaceRight(newDateTimeExpression);
-            UpdateExpression(newDateTimeRelational);
+            UpdateExpression(Expression.MakeBinary(Binary.NodeType, newMemberExpression, rightExpression));
         }
+    }
+
+    private void OnValueChanged(int intValue) => UpdateConstantExpression(intValue);
+
+    private void OnValueChanged(string stringValue) => UpdateConstantExpression(stringValue);
+
+    private void OnValueChanged(bool boolValue) => UpdateConstantExpression(boolValue);
+
+    private void OnValueChanged(DateTime? dateTime)
+    {
+        if (dateTime.HasValue)
+        {
+            UpdateBinaryRightExpression(DateTimeExpression.New(dateTime.Value));
+        }
+    }
+
+    private void UpdateConstantExpression<T>(T value) => UpdateBinaryRightExpression(Expression.Constant(value, typeof(T)));
+
+    private void UpdateBinaryRightExpression(Expression expression)
+    {
+        var newBinaryExpression = Binary.ReplaceRight(expression);
+        UpdateExpression(newBinaryExpression);
     }
 
     private void OnOperatorChanged(ExpressionType expressionType)
