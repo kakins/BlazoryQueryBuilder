@@ -3,6 +3,7 @@ using BlazorQueryBuilder.Pages;
 using BlazorQueryBuilder.Tests.Util;
 using BlazoryQueryBuilder.Shared.Models;
 using BlazoryQueryBuilder.Shared.Services;
+using BlazoryQueryBuilder.Shared.Util;
 using Bunit;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
@@ -236,9 +237,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Initializes_date_value()
         {
             // Arrange
-            var ticksExpression = Expression.Constant(DateTime.Now.Ticks, typeof(long));
-            var newDateTimeExpression = Expression.New(typeof(DateTime).GetConstructor([typeof(long)]), ticksExpression);
-
+            var newDateTimeExpression = DateTimeExpression.New(DateTime.Now);
             Expression<Func<Person, bool>> lambdaExpression = person => person.Created == DateTime.MinValue;
             var lambdaBodyExpression = GetLambdaBodyExpression(lambdaExpression);
             lambdaBodyExpression = lambdaBodyExpression.ReplaceRight(newDateTimeExpression);
@@ -263,8 +262,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Updates_expression_when_date_value_changes()
         {
             // Arrange
-            var ticksExpression = Expression.Constant(DateTime.Now.Ticks, typeof(long));
-            var newDateTimeExpression = Expression.New(typeof(DateTime).GetConstructor([typeof(long)]), ticksExpression);
+            var newDateTimeExpression = DateTimeExpression.New(DateTime.Now);
             Expression<Func<Person, bool>> lambdaExpression = person => person.Created == DateTime.MinValue;
             var lambdaBodyExpression = GetLambdaBodyExpression(lambdaExpression);
             lambdaBodyExpression = lambdaBodyExpression.ReplaceRight(newDateTimeExpression);

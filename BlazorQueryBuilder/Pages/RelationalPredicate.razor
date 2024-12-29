@@ -3,6 +3,7 @@
 @using BlazorQueryBuilder.ExpressionVisitors.Extensions
 @using BlazoryQueryBuilder.Shared.Extensions
 @using BlazoryQueryBuilder.Shared.Services
+@using BlazoryQueryBuilder.Shared.Util
 @inject PredicateFactory PredicateFactory;
 
 <MudStack Row>
@@ -82,7 +83,6 @@
         {
             var classMember = Member.ChangePropertyAccess(_entityType, entityPropertyName);
 
-            // set the new entity type as the class member
             _entityType = classMember.Type;
 
             entityProperty = classMember.Type.GetProperties().First();
@@ -99,26 +99,20 @@
         switch (Type.GetTypeCode(entityProperty.PropertyType))
         {
             case TypeCode.Int32:
-                ConstantExpression newIntConstant = Expression.Constant(entityProperty.PropertyType.GetDefaultValue(), entityProperty.PropertyType);
-                BinaryExpression newIntRelational = Expression.MakeBinary(Binary.NodeType, newMember, newIntConstant);
-                UpdateExpression(newIntRelational);
+                var newIntConstant = Expression.Constant(entityProperty.PropertyType.GetDefaultValue(), entityProperty.PropertyType);
+                UpdateExpression(Expression.MakeBinary(Binary.NodeType, newMember, newIntConstant));
                 break;
             case TypeCode.String:
-                ConstantExpression newStringConstant = Expression.Constant(entityProperty.PropertyType.GetDefaultValue(), entityProperty.PropertyType);
-                BinaryExpression newStringRelational = Expression.MakeBinary(Binary.NodeType, newMember, newStringConstant);
-                UpdateExpression(newStringRelational);
+                var newStringConstant = Expression.Constant(entityProperty.PropertyType.GetDefaultValue(), entityProperty.PropertyType);
+                UpdateExpression(Expression.MakeBinary(Binary.NodeType, newMember, newStringConstant));
                 break;
             case TypeCode.Boolean:
-                ConstantExpression newBoolConstant = Expression.Constant(entityProperty.PropertyType.GetDefaultValue(), entityProperty.PropertyType);
-                BinaryExpression newBoolRelational = Expression.MakeBinary(Binary.NodeType, newMember, newBoolConstant);
-                UpdateExpression(newBoolRelational);
+                var newBoolConstant = Expression.Constant(entityProperty.PropertyType.GetDefaultValue(), entityProperty.PropertyType);
+                UpdateExpression(Expression.MakeBinary(Binary.NodeType, newMember, newBoolConstant));
                 break;
             case TypeCode.DateTime:
-                var dateTimeConstructor = typeof(DateTime).GetConstructor(new[] { typeof(long) });
-                var ticksExpression = Expression.Constant(DateTime.UtcNow.Ticks, typeof(long));
-                var newDateTimeExpression = Expression.New(dateTimeConstructor, ticksExpression);
-                BinaryExpression newDateTimeRelational = Expression.MakeBinary(Binary.NodeType, newMember, newDateTimeExpression);
-                UpdateExpression(newDateTimeRelational);
+                var newDateTimeExpression = DateTimeExpression.New(DateTime.UtcNow);
+                UpdateExpression(Expression.MakeBinary(Binary.NodeType, newMember, newDateTimeExpression));
                 break;
         }
     }
@@ -145,9 +139,7 @@
     {
         if (constant.HasValue)
         {
-            var dateTimeConstructor = typeof(DateTime).GetConstructor(new[] { typeof(long) });
-            var ticksExpression = Expression.Constant(constant.Value.Ticks, typeof(long));
-            var newDateTimeExpression = Expression.New(dateTimeConstructor, ticksExpression);
+            var newDateTimeExpression = DateTimeExpression.New(constant.Value);
             var newDateTimeRelational = Binary.ReplaceRight(newDateTimeExpression);
             UpdateExpression(newDateTimeRelational);
         }
@@ -156,8 +148,6 @@
     private void OnOperatorChanged(ExpressionType expressionType)
     {
         var newRelational = Binary.ReplaceType(expressionType);
-        // var newRelational = new ReplaceBinaryType(Binary, expressionType).Execute();
-        Console.WriteLine(newRelational);
         UpdateExpression(newRelational);
     }
 
@@ -169,16 +159,14 @@
 
     private void Add(ExpressionType expressionType)
     {
-        MemberExpression newMemberAccess = Expression.MakeMemberAccess(Parameter, Parameter.Type.GetProperties().First());
-        ConstantExpression newConstant = Expression.Constant(newMemberAccess.Type.GetDefaultValue(), newMemberAccess.Type);
-        BinaryExpression newRight = Expression.MakeBinary(Binary.NodeType, newMemberAccess, newConstant);
+        var newMemberAccess = Expression.MakeMemberAccess(Parameter, Parameter.Type.GetProperties().First());
+        var newConstant = Expression.Constant(newMemberAccess.Type.GetDefaultValue(), newMemberAccess.Type);
+        var newRight = Expression.MakeBinary(Binary.NodeType, newMemberAccess, newConstant);
 
-        BinaryExpression newBinary = Expression.MakeBinary(
+        var newBinary = Expression.MakeBinary(
             expressionType,
             Binary.Copy(),
             newRight);
-
-        Console.WriteLine(newBinary);
 
         OnChange(newBinary);
     }
