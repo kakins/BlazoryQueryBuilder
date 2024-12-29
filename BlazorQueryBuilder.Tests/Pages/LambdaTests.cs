@@ -1,4 +1,4 @@
-﻿using BlazorQueryBuilder.ExpressionVisitors;
+﻿using BlazorQueryBuilder.ExpressionVisitors.Extensions;
 using BlazorQueryBuilder.Pages;
 using BlazoryQueryBuilder.Shared.Models;
 using BlazoryQueryBuilder.Shared.Services;

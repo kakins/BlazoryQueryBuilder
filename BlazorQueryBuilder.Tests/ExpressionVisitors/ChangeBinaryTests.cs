@@ -1,4 +1,4 @@
-﻿using BlazorQueryBuilder.ExpressionVisitors;
+﻿using BlazorQueryBuilder.ExpressionVisitors.Extensions;
 using FluentAssertions;
 using System.Linq.Expressions;
 using Xunit;
