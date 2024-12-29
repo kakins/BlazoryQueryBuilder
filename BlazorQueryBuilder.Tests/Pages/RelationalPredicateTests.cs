@@ -19,7 +19,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 {
     public class RelationalPredicateTests : TestContext
     {
-        private readonly Expression<Func<Person, bool>> _lambdaExpression;
+        private readonly LambdaExpression _lambdaExpression;
         private readonly ParameterExpression _predicateParameter;
         private readonly BinaryExpression _predicateExpression;
 
@@ -34,7 +34,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
             RenderComponent<MudPopoverProvider>();
 
-            _lambdaExpression = person => person.PersonId == "1";
+            _lambdaExpression = GetLambdaExpression(person => person.PersonId == "1");
             _predicateParameter = _lambdaExpression.Parameters[0];
             _predicateExpression = GetLambdaBodyExpression(_lambdaExpression);
         }
@@ -144,7 +144,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Initializes_int_value_text_field()
         {
             // Arrange
-            Expression<Func<Person, bool>> lambdaExpression = person => person.NumberOfChildren == 4;
+            var lambdaExpression = GetLambdaExpression(person => person.NumberOfChildren == 4);
             var lambdaBodyExpression = GetLambdaBodyExpression(lambdaExpression);
 
             // Act
@@ -165,7 +165,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Updates_right_operand_expression_when_int_value_changes()
         {
             // Arrange
-            Expression<Func<Person, bool>> lambdaExpression = person => person.NumberOfChildren == 4;
+            var lambdaExpression = GetLambdaExpression(person => person.NumberOfChildren == 4);
             var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
 
             var component = RenderComponent<RelationalPredicate>(parameters =>
@@ -192,7 +192,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Initializes_string_value_text_field()
         {
             // Arrange
-            Expression<Func<Person, bool>> lambdaExpression = person => person.PersonId == "1";
+            var lambdaExpression = GetLambdaExpression(person => person.PersonId == "1");
             var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
             
             // Act
@@ -213,8 +213,9 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Updates_right_operand_expression_when_string_value_changes()
         {
             // Arrange
-            Expression<Func<Person, bool>> lambdaExpression = person => person.PersonId == "1";
+            var lambdaExpression = GetLambdaExpression(person => person.PersonId == "1");
             var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
+
             var component = RenderComponent<RelationalPredicate>(parameters =>
             {
                 parameters
@@ -239,10 +240,8 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Initializes_date_value_date_picker()
         {
             // Arrange
-            var newDateTimeExpression = DateTimeExpression.New(DateTime.Now);
-            Expression<Func<Person, bool>> lambdaExpression = person => person.Created == DateTime.MinValue;
-            var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
-            predicateExpression = predicateExpression.ReplaceRight(newDateTimeExpression);
+            var lambdaExpression = GetLambdaExpression(person => person.Created == DateTime.MinValue);
+            var predicateExpression = GetLambdaBodyExpression(lambdaExpression).ReplaceRight(DateTimeExpression.New(DateTime.Now));
 
             // Act
             var component = RenderComponent<RelationalPredicate>(parameters =>
@@ -264,10 +263,8 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Updates_right_operand_expression_when_date_value_changes()
         {
             // Arrange
-            var newDateTimeExpression = DateTimeExpression.New(DateTime.Now);
-            Expression<Func<Person, bool>> lambdaExpression = person => person.Created == DateTime.MinValue;
-            var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
-            predicateExpression = predicateExpression.ReplaceRight(newDateTimeExpression);
+            var lambdaExpression = GetLambdaExpression(person => person.Created == DateTime.MinValue);
+            var predicateExpression = GetLambdaBodyExpression(lambdaExpression).ReplaceRight(DateTimeExpression.New(DateTime.Now));
             
             var component = RenderComponent<RelationalPredicate>(parameters =>
             {
@@ -297,7 +294,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Initializes_bool_value_check_box()
         {
             // Arrange
-            Expression<Func<Person, bool>> lambdaExpression = person => person.IsAlive == true;
+            var lambdaExpression = GetLambdaExpression(person => person.IsAlive == true);
             var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
 
             // Act
@@ -318,8 +315,9 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Updates_right_operand_expression_when_bool_value_changes()
         {
             // Arrange
-            Expression<Func<Person, bool>> lambdaExpression = person => person.IsAlive == true;
+            var lambdaExpression = GetLambdaExpression(person => person.IsAlive == true);
             var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
+
             var component = RenderComponent<RelationalPredicate>(parameters =>
             {
                 parameters
@@ -352,7 +350,12 @@ namespace BlazorQueryBuilder.Tests.Pages
             throw new NotImplementedException();
         }
 
-        private BinaryExpression GetLambdaBodyExpression(Expression<Func<Person, bool>> lambdaExpression)
+        private LambdaExpression GetLambdaExpression(Expression<Func<Person, bool>> lambdaExpression)
+        {
+            return lambdaExpression;
+        }
+
+        private BinaryExpression GetLambdaBodyExpression(LambdaExpression lambdaExpression)
         {
             return lambdaExpression.Body as BinaryExpression;
         }
