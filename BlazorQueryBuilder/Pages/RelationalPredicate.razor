@@ -4,7 +4,6 @@
 @using BlazoryQueryBuilder.Shared.Extensions
 @using BlazoryQueryBuilder.Shared.Services
 @using BlazoryQueryBuilder.Shared.Util
-@inject PredicateFactory PredicateFactory;
 
 <MudStack Row>
     <MudSelect Label="Field" T="string" ValueChanged="OnFieldChanged" Value="_selectedPropertyName">
@@ -130,21 +129,21 @@
 
     private void Add(ExpressionType expressionType)
     {
-        var newMemberAccess = Expression.MakeMemberAccess(Parameter, Parameter.Type.GetProperties().First());
-        var newConstant = Expression.Constant(newMemberAccess.Type.GetDefaultValue(), newMemberAccess.Type);
-        var newRight = Expression.MakeBinary(Binary.NodeType, newMemberAccess, newConstant);
+        var leftOperand = Expression.MakeMemberAccess(Parameter, Parameter.Type.GetProperties().First());
+        
+        var rightOperandConstant = Expression.Constant(leftOperand.Type.GetDefaultValue(), leftOperand.Type);
+        var rightOperand = Expression.MakeBinary(Binary.NodeType, leftOperand, rightOperandConstant);
 
-        var newBinary = Expression.MakeBinary(
+        var predicate = Expression.MakeBinary(
             expressionType,
             Binary.Copy(),
-            newRight);
+            rightOperand);
 
-        OnChange(newBinary);
+        OnChange(predicate);
     }
 
     private void Remove()
     {
         OnRemove();
     }
-
 }
