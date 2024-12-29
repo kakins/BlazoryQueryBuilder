@@ -12,7 +12,7 @@
     case ExpressionType.NotEqual:
     case ExpressionType.GreaterThan:
     case ExpressionType.LessThan:
-        <RelationalPredicate Binary="@GetBinaryExpression()"
+        <RelationalPredicate PredicateExpression="@GetBinaryExpression()"
                              Parameter="@Parameter"
                              OnChange="@Change"
                              OnRemove="@Remove">

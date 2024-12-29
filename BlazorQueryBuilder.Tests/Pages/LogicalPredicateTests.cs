@@ -69,7 +69,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
             // Assert
             var leftPredicate = component.FindComponents<RelationalPredicate>()[0];
-            leftPredicate.Instance.Binary.Should().Be(leftBinaryExpression);
+            leftPredicate.Instance.PredicateExpression.Should().Be(leftBinaryExpression);
         }
 
         [Fact]
@@ -89,7 +89,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
             // Assert
             var rightPredicate = component.FindComponents<RelationalPredicate>()[1];
-            rightPredicate.Instance.Binary.Should().Be(rightBinaryExpression);
+            rightPredicate.Instance.PredicateExpression.Should().Be(rightBinaryExpression);
         }
 
         [Theory]

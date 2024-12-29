@@ -14,19 +14,19 @@
             </MudSelectItem>
         }
     </MudSelect>
-    <RelationalOperators OnChange="@OnOperatorChanged" ExpressionType="@Binary.NodeType"></RelationalOperators>
-    @switch (Type.GetTypeCode(Binary.Left.Type))
+    <RelationalOperators OnChange="@OnOperatorChanged" ExpressionType="@PredicateExpression.NodeType"></RelationalOperators>
+    @switch (Type.GetTypeCode(PredicateExpression.Left.Type))
     {
-        case TypeCode.Int32 when Binary.Right is ConstantExpression intConstant:
+        case TypeCode.Int32 when PredicateExpression.Right is ConstantExpression intConstant:
             <MudTextField Label="Value" T="int" Value="@((int)intConstant.Value)" ValueChanged="@OnValueChanged" />
             break;
-        case TypeCode.String when Binary.Right is ConstantExpression stringConstant:
+        case TypeCode.String when PredicateExpression.Right is ConstantExpression stringConstant:
             <MudTextField Label="Value" T="string" Value="@(stringConstant.Value?.ToString())" ValueChanged="@OnValueChanged" />
             break;
-        case TypeCode.Boolean when Binary.Right is ConstantExpression boolConstant:
+        case TypeCode.Boolean when PredicateExpression.Right is ConstantExpression boolConstant:
             <MudCheckBox Label="Value" T="bool" Value="@((bool)boolConstant.Value)" ValueChanged="@OnValueChanged" />
             break;
-        case TypeCode.DateTime when Binary.Right is NewExpression newDateTime:
+        case TypeCode.DateTime when PredicateExpression.Right is NewExpression newDateTime:
             <MudDatePicker Label="Value" Date="@(new DateTime((long)((ConstantExpression)newDateTime.Arguments[0]).Value))" DateChanged="@OnValueChanged" />
             break;
     }
@@ -48,9 +48,9 @@
     public ParameterExpression Parameter { get; set; }
 
     [Parameter]
-    public BinaryExpression Binary { get; set; }
+    public BinaryExpression PredicateExpression { get; set; }
 
-    private MemberExpression _leftOperand => (MemberExpression)Binary.Left;
+    private MemberExpression _leftOperand => (MemberExpression)PredicateExpression.Left;
     private Type _selectedPropertyType;
     private string _selectedPropertyName;
 
@@ -87,18 +87,18 @@
             leftOperand = _leftOperand.ChangePropertyAccess(_selectedPropertyType, propertyName);
         }
 
-        Expression rightOperand = property.PropertyType switch
+            Expression rightOperand = property.PropertyType switch
         {
             Type type when Type.GetTypeCode(type) 
                 is TypeCode.Int32 
                 or TypeCode.String 
                 or TypeCode.Boolean => Expression.Constant(property.PropertyType.GetDefaultValue(), property.PropertyType),
-            Type type when Type.GetTypeCode(type) 
+            Type type when Type.GetTypeCode(type)
                 is TypeCode.DateTime => DateTimeExpression.New(DateTime.UtcNow),
             _ => throw new Exception("Unsupported property type")
         };
 
-        UpdateExpression(Expression.MakeBinary(Binary.NodeType, leftOperand, rightOperand));
+            UpdateExpression(Expression.MakeBinary(PredicateExpression.NodeType, leftOperand, rightOperand));
     }
 
     private void OnValueChanged(int intValue) => UpdateRightOperandConstant(intValue);
@@ -117,13 +117,13 @@
 
     private void UpdateRightOperandConstant<T>(T value) => UpdateRightOperand(Expression.Constant(value, typeof(T)));
 
-    private void UpdateRightOperand(Expression expression) => UpdateExpression(Binary.ReplaceRight(expression));
+    private void UpdateRightOperand(Expression expression) => UpdateExpression(PredicateExpression.ReplaceRight(expression));
 
-    private void OnOperatorChanged(ExpressionType expressionType) => UpdateExpression(Binary.ReplaceType(expressionType));
+    private void OnOperatorChanged(ExpressionType expressionType) => UpdateExpression(PredicateExpression.ReplaceType(expressionType));
 
-    private void UpdateExpression(BinaryExpression newBinary)
+    private void UpdateExpression(BinaryExpression expression)
     {
-        OnChange(newBinary);
+        OnChange(expression);
         StateHasChanged();
     }
 
@@ -132,14 +132,14 @@
         var leftOperand = Expression.MakeMemberAccess(Parameter, Parameter.Type.GetProperties().First());
         
         var rightOperandConstant = Expression.Constant(leftOperand.Type.GetDefaultValue(), leftOperand.Type);
-        var rightOperand = Expression.MakeBinary(Binary.NodeType, leftOperand, rightOperandConstant);
+        var rightOperand = Expression.MakeBinary(PredicateExpression.NodeType, leftOperand, rightOperandConstant);
 
-        var predicate = Expression.MakeBinary(
+        var expression = Expression.MakeBinary(
             expressionType,
-            Binary.Copy(),
+            PredicateExpression.Copy(),
             rightOperand);
 
-        OnChange(predicate);
+        OnChange(expression);
     }
 
     private void Remove()

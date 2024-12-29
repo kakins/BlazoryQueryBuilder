@@ -43,7 +43,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
             // Assert
             var logicalPredicate = component.FindComponent<RelationalPredicate>();
-            logicalPredicate.Instance.Binary.Should().Be(lambdaExpression.Body as BinaryExpression);
+            logicalPredicate.Instance.PredicateExpression.Should().Be(lambdaExpression.Body as BinaryExpression);
             logicalPredicate.Instance.Parameter.Should().Be(lambdaExpression.Parameters[0]);
         }
 
