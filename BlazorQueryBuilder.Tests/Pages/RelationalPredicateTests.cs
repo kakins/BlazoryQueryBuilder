@@ -338,16 +338,66 @@ namespace BlazorQueryBuilder.Tests.Pages
             rightOperand.Value.Should().Be(false);
         }
 
-        [Fact]
-        public async Task Adds_new_expression()
+        [Theory]
+        [InlineData("And")]
+        [InlineData("Or")]
+        public async Task Adds_predicate_expression(string buttonText)
         {
-            throw new NotImplementedException();
+            // Arrange
+            var lambdaExpression = GetLambdaExpression(person => person.PersonId == "1");
+            var originalPredicateExpression = GetLambdaBodyExpression(lambdaExpression);
+
+            BinaryExpression updatedPredicateExpression = null;
+
+            var component = RenderComponent<RelationalPredicate>(parameters =>
+            {
+                parameters
+                    .Add(p => p.PredicateExpression, originalPredicateExpression)
+                    .Add(p => p.Parameter, lambdaExpression.Parameters[0])
+                    .Add(p => p.OnChange, updatedExpression => { updatedPredicateExpression = updatedExpression; });
+            });
+
+            // Act
+            component
+                .FindComponents<MudButton>()
+                .Single(button => button.Markup.Contains(buttonText))
+                .Find("button")
+                .Click();
+
+            // Assert
+            updatedPredicateExpression.Should().NotBeNull();
+            updatedPredicateExpression.Should().NotBe(originalPredicateExpression);
+            updatedPredicateExpression.Left.Should().Be(originalPredicateExpression);
+            updatedPredicateExpression.NodeType.Should().Be(buttonText == "And" ? ExpressionType.AndAlso : ExpressionType.OrElse);
+            // TODO: Add better assertion for right operand
+            updatedPredicateExpression.Right.Should().NotBeNull();
         }
 
         [Fact]
-        public async Task Removes_expression()
+        public async Task Removes_predicate_expression()
         {
-            throw new NotImplementedException();
+            // Arrange
+            var lambdaExpression = GetLambdaExpression(person => person.PersonId == "1");
+            var originalPredicateExpression = GetLambdaBodyExpression(lambdaExpression);
+            
+            bool removed = false;
+            var component = RenderComponent<RelationalPredicate>(parameters =>
+            {
+                parameters
+                    .Add(p => p.PredicateExpression, originalPredicateExpression)
+                    .Add(p => p.Parameter, lambdaExpression.Parameters[0])
+                    .Add(p => p.OnChange, _ => { })
+                    .Add(p => p.OnRemove, () => { removed = true; });
+            });
+
+            // Act
+            await component.InvokeAsync(() =>
+            {
+                component.Instance.OnRemove.Invoke();
+            });
+
+            // Assert
+            removed.Should().BeTrue();
         }
 
         private LambdaExpression GetLambdaExpression(Expression<Func<Person, bool>> lambdaExpression)

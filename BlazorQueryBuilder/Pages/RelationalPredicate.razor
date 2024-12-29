@@ -87,7 +87,7 @@
             leftOperand = _leftOperand.ChangePropertyAccess(_selectedPropertyType, propertyName);
         }
 
-            Expression rightOperand = property.PropertyType switch
+        Expression rightOperand = property.PropertyType switch
         {
             Type type when Type.GetTypeCode(type) 
                 is TypeCode.Int32 
@@ -98,7 +98,7 @@
             _ => throw new Exception("Unsupported property type")
         };
 
-            UpdateExpression(Expression.MakeBinary(PredicateExpression.NodeType, leftOperand, rightOperand));
+        UpdateExpression(Expression.MakeBinary(PredicateExpression.NodeType, leftOperand, rightOperand));
     }
 
     private void OnValueChanged(int intValue) => UpdateRightOperandConstant(intValue);
