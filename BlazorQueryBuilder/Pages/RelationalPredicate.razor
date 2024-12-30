@@ -65,43 +65,41 @@
 
     private void OnFieldChanged(string propertyName)
     {
-        var leftOperand = (MemberExpression)PredicateExpression.Left;
-        var property = _selectedPropertyType.GetProperty(propertyName);
+        var leftOperandExpression = (MemberExpression)PredicateExpression.Left;
+        var selectedProperty = _selectedPropertyType.GetProperty(propertyName);
 
-        // Navigation properties
-        if (property.PropertyType.IsClass && property.PropertyType != typeof(string))
+        if (selectedProperty.PropertyType.IsClass && selectedProperty.PropertyType != typeof(string))
         {
-            var navigationProperty = leftOperand.ChangePropertyAccess(_selectedPropertyType, propertyName);
-            _selectedPropertyType = navigationProperty.Type;
+            var navigationPropertyExpression = leftOperandExpression.ChangePropertyAccess(_selectedPropertyType, propertyName);
+            _selectedPropertyType = navigationPropertyExpression.Type;
 
-            property = navigationProperty.Type.GetProperties().First();
-            _selectedPropertyName = property.Name;
+            selectedProperty = navigationPropertyExpression.Type.GetProperties().First();
+            _selectedPropertyName = selectedProperty.Name;
 
-            leftOperand = Expression.MakeMemberAccess(
-                navigationProperty,
-                navigationProperty.Type.GetProperties().First());
+            leftOperandExpression = Expression.MakeMemberAccess(
+                navigationPropertyExpression,
+                selectedProperty);
         }
-        // Simple properties
         else
         {
             _selectedPropertyName = propertyName;
-            leftOperand = leftOperand.ChangePropertyAccess(_selectedPropertyType, propertyName);
+            leftOperandExpression = leftOperandExpression.ChangePropertyAccess(_selectedPropertyType, propertyName);
         }
 
-        Expression rightOperand = property.PropertyType switch
+        Expression rightOperandExpression = selectedProperty.PropertyType switch
         {
             Type type when 
                 type == typeof(int)
                 || type == typeof(long)
                 || type == typeof(string)
-                || type == typeof(bool) => Expression.Constant(property.PropertyType.GetDefaultValue(), property.PropertyType),
+                || type == typeof(bool) => Expression.Constant(selectedProperty.PropertyType.GetDefaultValue(), selectedProperty.PropertyType),
             Type type when
                 type == typeof(DateTime) => DateTimeExpression.New(DateTime.UtcNow),
             _ => throw new Exception("Unsupported property type")
         };
 
-        _relationalOperators.SetOperand(property.PropertyType);
-        UpdateExpression(Expression.MakeBinary(_relationalOperators.ExpressionType, leftOperand, rightOperand));
+        _relationalOperators.SetOperand(selectedProperty.PropertyType);
+        UpdateExpression(Expression.MakeBinary(_relationalOperators.ExpressionType, leftOperandExpression, rightOperandExpression));
     }
 
     private void OnValueChanged(int intValue) => UpdateRightOperandConstant(intValue);
