@@ -66,18 +66,16 @@
     private void OnFieldChanged(string propertyName)
     {
         var leftOperand = (MemberExpression)PredicateExpression.Left;
-        _selectedPropertyName = propertyName;
         var property = _selectedPropertyType.GetProperty(propertyName);
-
 
         // Navigation properties
         if (property.PropertyType.IsClass && property.PropertyType != typeof(string))
         {
             var navigationProperty = leftOperand.ChangePropertyAccess(_selectedPropertyType, propertyName);
-
             _selectedPropertyType = navigationProperty.Type;
 
             property = navigationProperty.Type.GetProperties().First();
+            _selectedPropertyName = property.Name;
 
             leftOperand = Expression.MakeMemberAccess(
                 navigationProperty,
@@ -86,6 +84,7 @@
         // Simple properties
         else
         {
+            _selectedPropertyName = propertyName;
             leftOperand = leftOperand.ChangePropertyAccess(_selectedPropertyType, propertyName);
         }
 
