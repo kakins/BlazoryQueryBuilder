@@ -35,7 +35,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
             RenderComponent<MudPopoverProvider>();
 
-            _lambdaExpression = GetLambdaExpression(person => person.PersonId == "1");
+            _lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
             _predicateParameter = _lambdaExpression.Parameters[0];
             _predicateExpression = GetLambdaBodyExpression(_lambdaExpression);
         }
@@ -44,13 +44,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Initializes_field_items()
         {
             // Arrange
-            var component = RenderComponent<RelationalPredicate>(parameters =>
-            {
-                parameters
-                    .Add(p => p.PredicateExpression, _predicateExpression)
-                    .Add(p => p.Parameter, _predicateParameter)
-                    .Add(p => p.OnChange, _ => { });
-            });
+            var component = CreateComponent(_predicateExpression, _predicateParameter);
 
             // Act
             var fieldSelect = component.FindInputByLabel<MudSelect<string>, string>("Field");
@@ -77,17 +71,14 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Updates_left_operand_to_selected_field(List<string> fields)
         {
             // Arrange
-            Expression<Func<Address, bool>> lambdaExpression = address => address.AddressId == 1;
+            var lambdaExpression = GetLambdaExpression<Address>(address => address.AddressId == 1);
             var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
             var predicateParameter = lambdaExpression.Parameters[0];
 
-            var component = RenderComponent<RelationalPredicate>(parameters =>
-            {
-                parameters
-                    .Add(p => p.PredicateExpression, predicateExpression)
-                    .Add(p => p.Parameter, predicateParameter)
-                    .Add(p => p.OnChange, expression => { predicateExpression = expression; });
-            });
+            var component = CreateComponent(
+                predicateExpression,
+                predicateParameter,
+                onChange: expression => { predicateExpression = expression; });
 
             // Act
             var fieldSelect = component.FindInputByLabel<MudSelect<string>, string>("Field");
@@ -111,7 +102,29 @@ namespace BlazorQueryBuilder.Tests.Pages
         [Fact]
         public async Task Updates_left_operand_to_navigation_field_first_property()
         {
-            throw new NotImplementedException();
+            // Arrange
+            var lambdaExpression = GetLambdaExpression<Address>(address => address.AddressId == 1);
+            var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
+            var predicateParameter = lambdaExpression.Parameters[0];
+
+            var component = CreateComponent(
+                predicateExpression, 
+                predicateParameter,
+                onChange: expression => { predicateExpression = expression; });
+
+            // Act
+            var fieldSelect = component.FindInputByLabel<MudSelect<string>, string>("Field");
+            await component.InvokeAsync(async () =>
+            {
+                await fieldSelect.Instance.OpenMenu();
+                await fieldSelect.Instance.SelectOption(nameof(Address.Person));
+            });
+
+            // Assert
+            var leftOperand = ((MemberExpression)predicateExpression.Left);
+            leftOperand.Member.DeclaringType.Should().Be(typeof(Person));   
+            leftOperand.Member.Name.Should().Be(nameof(Address.Person.PersonId));
+            fieldSelect.Instance.Value.Should().Be(nameof(Address.Person.PersonId));
         }
 
         [Theory]
@@ -121,13 +134,8 @@ namespace BlazorQueryBuilder.Tests.Pages
             // Arrange
             var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
             var predicateParameter = lambdaExpression.Parameters[0];
-            var component = RenderComponent<RelationalPredicate>(parameters =>
-            {
-                parameters
-                    .Add(p => p.PredicateExpression, predicateExpression)
-                    .Add(p => p.Parameter, predicateParameter)
-                    .Add(p => p.OnChange, _ => { });
-            });
+            
+            var component = CreateComponent(predicateExpression, predicateParameter);   
 
             // Act
             var operators = component.FindComponent<RelationalOperators>();
@@ -141,13 +149,10 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var predicateExpression = _predicateExpression;
-            var component = RenderComponent<RelationalPredicate>(parameters =>
-            {
-                parameters
-                    .Add(p => p.PredicateExpression, _predicateExpression)
-                    .Add(p => p.Parameter, _predicateParameter)
-                    .Add(p => p.OnChange, updatedExpression => { predicateExpression = updatedExpression; });
-            });
+            var component = CreateComponent(
+                _predicateExpression, 
+                _predicateParameter,
+                onChange: updatedExpression => { predicateExpression = updatedExpression; });
 
             // Act
             var operators = component.FindComponent<RelationalOperators>();
@@ -164,17 +169,11 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Initializes_int_value()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression(person => person.NumberOfChildren == 4);
-            var lambdaBodyExpression = GetLambdaBodyExpression(lambdaExpression);
+            var lambdaExpression = GetLambdaExpression<Person>(person => person.NumberOfChildren == 4);
+            var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
 
             // Act
-            var component = RenderComponent<RelationalPredicate>(parameters =>
-            {
-                parameters
-                    .Add(p => p.PredicateExpression, lambdaBodyExpression)
-                    .Add(p => p.Parameter, lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChange, _ => { });
-            });
+            var component = CreateComponent(predicateExpression, lambdaExpression.Parameters[0]);
 
             // Assert
             var valueInput = component.FindInputByLabel<MudTextField<int>, int>("Value");
@@ -185,16 +184,13 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Updates_right_operand_to_int_value()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression(person => person.NumberOfChildren == 4);
+            var lambdaExpression = GetLambdaExpression<Person>(person => person.NumberOfChildren == 4);
             var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
 
-            var component = RenderComponent<RelationalPredicate>(parameters =>
-            {
-                parameters
-                    .Add(p => p.PredicateExpression, predicateExpression)
-                    .Add(p => p.Parameter, lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChange, updatedExpression => { predicateExpression = updatedExpression; });
-            });
+            var component = CreateComponent(
+                predicateExpression, 
+                lambdaExpression.Parameters[0], 
+                updatedExpression => { predicateExpression = updatedExpression; });
 
             // Act
             var valueInput = component.FindInputByLabel<MudTextField<int>, int>("Value");
@@ -212,17 +208,11 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Initializes_string_value()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression(person => person.PersonId == "1");
+            var lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
             var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
 
             // Act
-            var component = RenderComponent<RelationalPredicate>(parameters =>
-            {
-                parameters
-                    .Add(p => p.PredicateExpression, predicateExpression)
-                    .Add(p => p.Parameter, lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChange, _ => { });
-            });
+            var component = CreateComponent(predicateExpression, lambdaExpression.Parameters[0]);
 
             // Assert
             var valueInput = component.FindInputByLabel<MudTextField<string>, string>("Value");
@@ -233,16 +223,13 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Updates_right_operand_to_string_value()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression(person => person.PersonId == "1");
+            var lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
             var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
 
-            var component = RenderComponent<RelationalPredicate>(parameters =>
-            {
-                parameters
-                    .Add(p => p.PredicateExpression, predicateExpression)
-                    .Add(p => p.Parameter, lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChange, updatedExpression => { predicateExpression = updatedExpression; });
-            });
+            var component = CreateComponent(
+                predicateExpression,
+                lambdaExpression.Parameters[0],
+                onChange: updatedExpression => { predicateExpression = updatedExpression; });
 
             // Act
             var valueInput = component.FindInputByLabel<MudTextField<string>, string>("Value");
@@ -260,17 +247,11 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Initializes_date_value()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression(person => person.Created == DateTime.MinValue);
+            var lambdaExpression = GetLambdaExpression<Person>(person => person.Created == DateTime.MinValue);
             var predicateExpression = GetLambdaBodyExpression(lambdaExpression).ReplaceRight(DateTimeExpression.New(DateTime.Now));
 
             // Act
-            var component = RenderComponent<RelationalPredicate>(parameters =>
-            {
-                parameters
-                    .Add(p => p.PredicateExpression, predicateExpression)
-                    .Add(p => p.Parameter, lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChange, _ => { });
-            });
+            var component = CreateComponent(predicateExpression, lambdaExpression.Parameters[0]);
 
             // Assert
             var valueInput = component
@@ -283,16 +264,13 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Updates_right_operand_to_date_value()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression(person => person.Created == DateTime.MinValue);
+            var lambdaExpression = GetLambdaExpression<Person>(person => person.Created == DateTime.MinValue);
             var predicateExpression = GetLambdaBodyExpression(lambdaExpression).ReplaceRight(DateTimeExpression.New(DateTime.Now));
 
-            var component = RenderComponent<RelationalPredicate>(parameters =>
-            {
-                parameters
-                    .Add(p => p.PredicateExpression, predicateExpression)
-                    .Add(p => p.Parameter, lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChange, updatedExpression => { predicateExpression = updatedExpression; });
-            });
+            var component = CreateComponent(
+                predicateExpression, 
+                lambdaExpression.Parameters[0],
+                onChange: updatedExpression => { predicateExpression = updatedExpression; });
 
             // Act
             var dateTime = DateTime.Now.AddDays(1);
@@ -314,17 +292,11 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Initializes_bool_value()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression(person => person.IsAlive == true);
+            var lambdaExpression = GetLambdaExpression<Person>(person => person.IsAlive == true);
             var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
 
             // Act
-            var component = RenderComponent<RelationalPredicate>(parameters =>
-            {
-                parameters
-                    .Add(p => p.PredicateExpression, predicateExpression)
-                    .Add(p => p.Parameter, lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChange, _ => { });
-            });
+            var component = CreateComponent(predicateExpression, lambdaExpression.Parameters[0]);   
 
             // Assert
             var valueInput = component.FindComponents<MudCheckBox<bool>>().FirstOrDefault(c => c.Instance.Label == "Value"); ;
@@ -335,19 +307,19 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Updates_right_operand_to_bool_value()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression(person => person.IsAlive == true);
+            var lambdaExpression = GetLambdaExpression<Person>(person => person.IsAlive == true);
             var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
 
-            var component = RenderComponent<RelationalPredicate>(parameters =>
-            {
-                parameters
-                    .Add(p => p.PredicateExpression, predicateExpression)
-                    .Add(p => p.Parameter, lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChange, updatedExpression => { predicateExpression = updatedExpression; });
-            });
+            var component = CreateComponent(
+                predicateExpression, 
+                lambdaExpression.Parameters[0], 
+                onChange: updatedExpression => { predicateExpression = updatedExpression; });
 
             // Act
-            var valueInput = component.FindComponents<MudCheckBox<bool>>().FirstOrDefault(c => c.Instance.Label == "Value");
+            var valueInput = component
+                .FindComponents<MudCheckBox<bool>>()
+                .FirstOrDefault(c => c.Instance.Label == "Value");
+            
             await component.InvokeAsync(async () =>
             {
                 await valueInput.Instance.ValueChanged.InvokeAsync(false);
@@ -364,18 +336,14 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Adds_predicate_expression(string buttonText)
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression(person => person.PersonId == "1");
+            var lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
             var originalPredicateExpression = GetLambdaBodyExpression(lambdaExpression);
-
             BinaryExpression updatedPredicateExpression = null;
 
-            var component = RenderComponent<RelationalPredicate>(parameters =>
-            {
-                parameters
-                    .Add(p => p.PredicateExpression, originalPredicateExpression)
-                    .Add(p => p.Parameter, lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChange, updatedExpression => { updatedPredicateExpression = updatedExpression; });
-            });
+            var component = CreateComponent(
+                originalPredicateExpression,
+                lambdaExpression.Parameters[0],
+                updatedExpression => { updatedPredicateExpression = updatedExpression; });
 
             // Act
             component
@@ -397,18 +365,14 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Removes_predicate_expression()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression(person => person.PersonId == "1");
+            var lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
             var originalPredicateExpression = GetLambdaBodyExpression(lambdaExpression);
+            var removed = false;
 
-            bool removed = false;
-            var component = RenderComponent<RelationalPredicate>(parameters =>
-            {
-                parameters
-                    .Add(p => p.PredicateExpression, originalPredicateExpression)
-                    .Add(p => p.Parameter, lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChange, _ => { })
-                    .Add(p => p.OnRemove, () => { removed = true; });
-            });
+            var component = CreateComponent(
+                originalPredicateExpression,
+                lambdaExpression.Parameters[0],
+                onRemove: () => { removed = true; });
 
             // Act
             await component.InvokeAsync(() =>
@@ -420,15 +384,29 @@ namespace BlazorQueryBuilder.Tests.Pages
             removed.Should().BeTrue();
         }
 
-        private LambdaExpression GetLambdaExpression(Expression<Func<Person, bool>> lambdaExpression)
+        private IRenderedComponent<RelationalPredicate> CreateComponent(
+            BinaryExpression predicateExpression = null, 
+            ParameterExpression parameterExpression = null,
+            Action<BinaryExpression> onChange = null,
+            Action onRemove = null)
         {
-            return lambdaExpression;
+            onChange ??= (_) => { };
+            onRemove ??= () => { };
+
+            return RenderComponent<RelationalPredicate>(parameters =>
+            {
+                parameters
+                    .Add(p => p.PredicateExpression, predicateExpression ?? _predicateExpression)
+                    .Add(p => p.Parameter, parameterExpression ?? _predicateParameter)
+                    .Add(p => p.OnChange, onChange)
+                    .Add(p => p.OnRemove, onRemove);
+            });
         }
 
-        private BinaryExpression GetLambdaBodyExpression(LambdaExpression lambdaExpression)
-        {
-            return lambdaExpression.Body as BinaryExpression;
-        }
+        private LambdaExpression GetLambdaExpression<T>(Expression<Func<T, bool>> lambdaExpression) => lambdaExpression;
+
+        private BinaryExpression GetLambdaBodyExpression(LambdaExpression lambdaExpression) => lambdaExpression.Body as BinaryExpression;
+        
         public static TheoryData<List<string>> LeftOperandTestData() => 
         [
             // address.PersonId
