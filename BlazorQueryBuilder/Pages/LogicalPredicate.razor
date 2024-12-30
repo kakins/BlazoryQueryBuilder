@@ -3,12 +3,12 @@
 @using BlazorQueryBuilder.ExpressionVisitors.Extensions
 <MudStack Spacing="5">
     <Predicate Expression="@GetLeft()"
-               Parameter="@Parameter"
+               ParameterExpression="@ParameterExpression"
                OnChange="@ChangeLeft"
                OnRemove="@RemoveLeft">
     </Predicate>
     <div>
-        <MudSelect T="string" Label="Operator" Value="@Binary.NodeType.ToString()" ValueChanged="ChangeOperator">
+        <MudSelect T="string" Label="Operator" Value="@PredicateExpression.NodeType.ToString()" ValueChanged="ChangeOperator">
             @foreach (var item in Operators)
             {
                 <MudSelectItem T="string" Value="@item.Key">@item.Value</MudSelectItem>
@@ -16,7 +16,7 @@
         </MudSelect>
     </div>
     <Predicate Expression="@GetRight()"
-               Parameter="@Parameter"
+               ParameterExpression="@ParameterExpression"
                OnChange="@ChangeRight"
                OnRemove="@RemoveRight">
     </Predicate>
@@ -34,10 +34,10 @@
     public Action<BinaryExpression> OnChange { get; set; }
 
     [Parameter]
-    public BinaryExpression Binary { get; set; }
+    public BinaryExpression PredicateExpression { get; set; }
 
     [Parameter]
-    public ParameterExpression Parameter { get; set; }
+    public ParameterExpression ParameterExpression { get; set; }
 
     protected override void OnInitialized()
     {
@@ -45,43 +45,43 @@
 
     private BinaryExpression GetLeft()
     {
-        return (BinaryExpression)Binary.Left;
+        return (BinaryExpression)PredicateExpression.Left;
     }
 
     private BinaryExpression GetRight()
     {
-        return (BinaryExpression)Binary.Right;
+        return (BinaryExpression)PredicateExpression.Right;
     }
 
     private void ChangeLeft(Expression left)
     {
-        Binary = Expression.MakeBinary(Binary.NodeType, left, Binary.Right);
-        OnChange(Binary);
+        PredicateExpression = Expression.MakeBinary(PredicateExpression.NodeType, left, PredicateExpression.Right);
+        OnChange(PredicateExpression);
     }
 
     private void ChangeRight(Expression right)
     {
-        Binary = Expression.MakeBinary(Binary.NodeType, Binary.Left, right);
-        OnChange(Binary);
+        PredicateExpression = Expression.MakeBinary(PredicateExpression.NodeType, PredicateExpression.Left, right);
+        OnChange(PredicateExpression);
     }
 
     private void ChangeOperator(string op)
     {
         var expressionType = (ExpressionType)Enum.Parse(typeof(ExpressionType), op);
 
-        Binary = Expression.MakeBinary(expressionType, Binary.Left, Binary.Right);
-        OnChange(Binary);
+        PredicateExpression = Expression.MakeBinary(expressionType, PredicateExpression.Left, PredicateExpression.Right);
+        OnChange(PredicateExpression);
     }
 
     private void RemoveLeft()
     {
-        var newBinary = Binary.Right.Copy();
+        var newBinary = PredicateExpression.Right.Copy();
         OnChange((BinaryExpression)newBinary);
     }
 
     private void RemoveRight()
     {
-        var newBinary = Binary.Left.Copy();
+        var newBinary = PredicateExpression.Left.Copy();
         OnChange((BinaryExpression)newBinary);
     }
 }

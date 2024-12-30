@@ -3,8 +3,8 @@
 {
     case ExpressionType.AndAlso:
     case ExpressionType.OrElse:
-        <LogicalPredicate Binary="@GetBinaryExpression()"
-                          Parameter="@Parameter"
+        <LogicalPredicate PredicateExpression="@GetBinaryExpression()"
+                          ParameterExpression="@ParameterExpression"
                           OnChange="@Change">
         </LogicalPredicate>
         break;
@@ -13,7 +13,7 @@
     case ExpressionType.GreaterThan:
     case ExpressionType.LessThan:
         <RelationalPredicate PredicateExpression="@GetBinaryExpression()"
-                             Parameter="@Parameter"
+                             ParameterExpression="@ParameterExpression"
                              OnChange="@Change"
                              OnRemove="@Remove">
         </RelationalPredicate>
@@ -26,7 +26,7 @@
     public Expression Expression { get; set; }
 
     [Parameter]
-    public ParameterExpression Parameter { get; set; }
+    public ParameterExpression ParameterExpression { get; set; }
 
     [Parameter]
     public Action<BinaryExpression> OnChange { get; set; }

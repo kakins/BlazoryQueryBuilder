@@ -397,7 +397,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             {
                 parameters
                     .Add(p => p.PredicateExpression, predicateExpression ?? _predicateExpression)
-                    .Add(p => p.Parameter, parameterExpression ?? _predicateParameter)
+                    .Add(p => p.ParameterExpression, parameterExpression ?? _predicateParameter)
                     .Add(p => p.OnChange, onChange)
                     .Add(p => p.OnRemove, onRemove);
             });

@@ -37,14 +37,14 @@ namespace BlazorQueryBuilder.Tests.Pages
             {
                 parameters
                     .Add(p => p.Expression, lambdaExpression.Body as BinaryExpression)
-                    .Add(p => p.Parameter, lambdaExpression.Parameters[0])
+                    .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
 
             // Assert
             var logicalPredicate = component.FindComponent<RelationalPredicate>();
             logicalPredicate.Instance.PredicateExpression.Should().Be(lambdaExpression.Body as BinaryExpression);
-            logicalPredicate.Instance.Parameter.Should().Be(lambdaExpression.Parameters[0]);
+            logicalPredicate.Instance.ParameterExpression.Should().Be(lambdaExpression.Parameters[0]);
         }
 
         [Theory]
@@ -57,14 +57,14 @@ namespace BlazorQueryBuilder.Tests.Pages
             {
                 parameters
                     .Add(p => p.Expression, lambdaExpression.Body as BinaryExpression)
-                    .Add(p => p.Parameter, lambdaExpression.Parameters[0])
+                    .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
 
             // Assert
             var logicalPredicate = component.FindComponent<LogicalPredicate>();
-            logicalPredicate.Instance.Binary.Should().Be(lambdaExpression.Body as BinaryExpression);
-            logicalPredicate.Instance.Parameter.Should().Be(lambdaExpression.Parameters[0]);
+            logicalPredicate.Instance.PredicateExpression.Should().Be(lambdaExpression.Body as BinaryExpression);
+            logicalPredicate.Instance.ParameterExpression.Should().Be(lambdaExpression.Parameters[0]);
         }
 
         [Fact]
@@ -77,7 +77,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             {
                 parameters
                     .Add(p => p.Expression, lambdaExpression.Body as BinaryExpression)
-                    .Add(p => p.Parameter, lambdaExpression.Parameters[0])
+                    .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { updated = true;  });
             });
 
@@ -102,7 +102,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             {
                 parameters
                     .Add(p => p.Expression, lambdaExpression.Body as BinaryExpression)
-                    .Add(p => p.Parameter, lambdaExpression.Parameters[0])
+                    .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { updated = true; });
             });
 

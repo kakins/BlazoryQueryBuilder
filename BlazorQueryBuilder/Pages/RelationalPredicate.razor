@@ -46,7 +46,7 @@
     public Action OnRemove { get; set; }
 
     [Parameter]
-    public ParameterExpression Parameter { get; set; }
+    public ParameterExpression ParameterExpression { get; set; }
 
     [Parameter]
     public BinaryExpression PredicateExpression { get; set; }
@@ -133,7 +133,7 @@
 
     private void Add(ExpressionType expressionType)
     {
-        var leftOperand = Expression.MakeMemberAccess(Parameter, Parameter.Type.GetProperties().First());
+        var leftOperand = Expression.MakeMemberAccess(ParameterExpression, ParameterExpression.Type.GetProperties().First());
         
         var rightOperandConstant = Expression.Constant(leftOperand.Type.GetDefaultValue(), leftOperand.Type);
         var rightOperand = Expression.MakeBinary(PredicateExpression.NodeType, leftOperand, rightOperandConstant);
