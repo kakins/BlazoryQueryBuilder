@@ -12,11 +12,19 @@
         </Predicate>
     </MudItem>
     <MudItem xs="4" lg="4">
-        <MudExpansionPanels>
-            <MudExpansionPanel Text="View Lambda Expression" Expanded="false">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Lambda Expression</MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudIconButton Icon="@Icons.Material.Filled.CopyAll" Color="Color.Default" />
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent>
                 <code>@Lambda.ToString()</code>
-            </MudExpansionPanel>
-        </MudExpansionPanels>
+            </MudCardContent>
+        </MudCard>
     </MudItem>
 </MudStack>
 

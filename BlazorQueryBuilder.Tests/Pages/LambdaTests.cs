@@ -93,10 +93,9 @@ namespace BlazorQueryBuilder.Tests.Pages
             });
 
             // Assert
-            var expansionPanel = component
-                .FindComponents<MudExpansionPanel>()
-                .FirstOrDefault(panel => panel.Instance.Text == "View Lambda Expression");
-            expansionPanel
+            var card = component
+                .FindComponent<MudCard>();
+            card
                 .Find("code")
                 .TextContent
                 .Should()

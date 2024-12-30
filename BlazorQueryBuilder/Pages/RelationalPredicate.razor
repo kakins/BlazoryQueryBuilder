@@ -5,46 +5,56 @@
 @using BlazoryQueryBuilder.Shared.Services
 @using BlazoryQueryBuilder.Shared.Util
 
-<MudStack Spacing="2">
-    <MudChipSet T="string" Color="Color.Tertiary" Variant="Variant.Text" Label="true" AllClosable>
-        @foreach (var path in _navigationPath)
-        {
-            <MudChip Text="@path"></MudChip>
-        }
-    </MudChipSet>
-    <MudStack Row>
-        <MudSelect Label="Field" T="string" ValueChanged="OnFieldChanged" Value="_selectedPropertyName">
-            @foreach (PropertyInfo property in _selectedPropertyType.GetProperties())
-            {
-                <MudSelectItem Value="@property.Name" style="@(@property.PropertyType.IsClass ? "font-weight: bold" : "")">
-                    @property.Name.ToString()
-                </MudSelectItem>
-            }
-        </MudSelect>
-        <RelationalOperators @ref="_relationalOperators" OnChange="@OnOperatorChanged" ExpressionType="@PredicateExpression.NodeType" OperandType="PredicateExpression.Left.Type"></RelationalOperators>
-        @switch (PredicateExpression.Left.Type)
-        {
-            case Type intType when intType == typeof(int) && PredicateExpression.Right is ConstantExpression intConstant:
-                <MudTextField Label="Value" T="int" Value="@((int)intConstant.Value)" ValueChanged="@OnValueChanged" />
-                break;
-            case Type stringType when stringType == typeof(string) && PredicateExpression.Right is ConstantExpression stringConstant:
-                <MudTextField Label="Value" T="string" Value="@(stringConstant.Value?.ToString())" ValueChanged="@OnValueChanged" />
-                break;
-            case Type boolType when boolType == typeof(bool) && PredicateExpression.Right is ConstantExpression boolConstant:
-                <MudCheckBox Label="Value" T="bool" Value="@((bool)boolConstant.Value)" ValueChanged="@OnValueChanged" />
-                break;
-            case Type dateTimeType when dateTimeType == typeof(DateTime) && PredicateExpression.Right is NewExpression newDateTime:
-                <MudDatePicker Label="Value" Date="@(new DateTime((long)((ConstantExpression)newDateTime.Arguments[0]).Value))" DateChanged="@OnValueChanged" />
-                break;
-        }
-        <MudStack Row Spacing="2">
-            <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.AndAlso))">And</MudButton>
-            <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.OrElse))">Or</MudButton>
-            <MudButton Variant="Variant.Filled" OnClick="Remove">Remove</MudButton>
-        </MudStack>
-    </MudStack>
-    <code>@PredicateExpression.Left.ToString()</code>
-</MudStack>
+<MudExpansionPanels>
+    <MudExpansionPanel Expanded="true">
+        <TitleContent>
+            <MudStack Row AlignItems="AlignItems.Center"> 
+                <MudChipSet T="string" Color="Color.Tertiary" Variant="Variant.Text" Label="true" AllClosable>
+                    @foreach (var path in _navigationPath)
+                    {
+                        <MudChip Text="@path"></MudChip>
+                    }
+                </MudChipSet>
+                <MudText Typo="Typo.caption">@PredicateExpression.ToString()</MudText>
+            </MudStack>
+        </TitleContent>
+        <ChildContent>
+            <MudStack Spacing="2">
+                <MudStack Row>
+                    <MudSelect Label="Field" T="string" ValueChanged="OnFieldChanged" Value="_selectedPropertyName">
+                        @foreach (PropertyInfo property in _selectedPropertyType.GetProperties())
+                        {
+                            <MudSelectItem Value="@property.Name" style="@(@property.PropertyType.IsClass ? "font-weight: bold" : "")">
+                                @property.Name.ToString()
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                    <RelationalOperators @ref="_relationalOperators" OnChange="@OnOperatorChanged" ExpressionType="@PredicateExpression.NodeType" OperandType="PredicateExpression.Left.Type"></RelationalOperators>
+                    @switch (PredicateExpression.Left.Type)
+                    {
+                        case Type intType when intType == typeof(int) && PredicateExpression.Right is ConstantExpression intConstant:
+                            <MudTextField Label="Value" T="int" Value="@((int)intConstant.Value)" ValueChanged="@OnValueChanged" />
+                            break;
+                        case Type stringType when stringType == typeof(string) && PredicateExpression.Right is ConstantExpression stringConstant:
+                            <MudTextField Label="Value" T="string" Value="@(stringConstant.Value?.ToString())" ValueChanged="@OnValueChanged" />
+                            break;
+                        case Type boolType when boolType == typeof(bool) && PredicateExpression.Right is ConstantExpression boolConstant:
+                            <MudCheckBox Label="Value" T="bool" Value="@((bool)boolConstant.Value)" ValueChanged="@OnValueChanged" />
+                            break;
+                        case Type dateTimeType when dateTimeType == typeof(DateTime) && PredicateExpression.Right is NewExpression newDateTime:
+                            <MudDatePicker Label="Value" Date="@(new DateTime((long)((ConstantExpression)newDateTime.Arguments[0]).Value))" DateChanged="@OnValueChanged" />
+                            break;
+                    }
+                    <MudStack Row Spacing="2">
+                        <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.AndAlso))">And</MudButton>
+                        <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.OrElse))">Or</MudButton>
+                        <MudButton Variant="Variant.Filled" OnClick="Remove">Remove</MudButton>
+                    </MudStack>
+                </MudStack>
+            </MudStack>
+        </ChildContent>
+    </MudExpansionPanel>
+</MudExpansionPanels>
 
 @code {
     [Parameter]

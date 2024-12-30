@@ -7,44 +7,40 @@
 @typeparam TDbContext where TDbContext : DbContext
 @inject TDbContext DbContext
 
-<MudStack Spacing="5"> 
-    @if (_queryLoaded || _newQuery)
-    {
-        <div>
-            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Large" OnClick="StartOver" />
-        </div>
-    }
-    else
-    {
-        <MudStack Spacing="10">
-            <div>
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="NewQuery">New Query</MudButton>
-            </div>
-            <div>
-                <MudStack>
-                    <div>
-                        <MudButton Disabled="@(string.IsNullOrWhiteSpace(_selectedQuery))" Color="Color.Primary" Variant="Variant.Filled" OnClick="@LoadQuery">Load Query</MudButton>
-                    </div>
-                    <div>
-                        <MudSelect T="string" @bind-Value="_selectedQuery" Label="Select Query">
-                            @foreach (var query in _queries)
-                            {
-                                <MudSelectItem Value="@query">@query</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </div>
-                </MudStack>
-            </div>
-        </MudStack>
-    }
+<MudToolBar>
+    <MudStack Row Spacing="3">
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="NewQuery">New Query</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@OpenDialog">Load Query</MudButton>
+    </MudStack>
+</MudToolBar>
 
-    <MudStack Spacing="5">
-        @if (_newQuery)
+<MudDialog @bind-Visible="_showLoadQueryDialog" Options="_loadQueryDialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-3" /> Load Query
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudSelect T="string" @bind-Value="_selectedQuery" Label="Select Query">
+            @foreach (var query in _queries)
+            {
+                <MudSelectItem Value="@query">@query</MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="px-10" OnClick="@LoadQuery" Disabled="@(string.IsNullOrWhiteSpace(_selectedQuery))">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudStack Spacing="5"> 
+    <MudStack Spacing="10">
+        @if (_state is New)
         {
             <MudStack Spacing="2">
                 <MudItem xs="12">
                     <MudText Typo="Typo.h5">FROM</MudText>
-                    <MudSelect T="string" Label="Entity" ValueChanged="Select">
+                    <MudSelect T="string" Label="Entity" ValueChanged="OnEntitySelect">
                         @foreach (var entity in _entities)
                         {
                             <MudSelectItem Value="@entity">@entity</MudSelectItem>
@@ -53,20 +49,15 @@
                 </MudItem>
             </MudStack>
         }
-
         <div>
             @CreateQueryBuilder()
         </div>
     </MudStack>
 </MudStack>
 
-
-
 @code {
     Type SelectedEntityType;
 
-    private bool _newQuery = false;
-    private bool _queryLoaded = false;
     private string _selectedQuery;
     private string[] _entities = Array.Empty<string>();
     private IEnumerable<string> _queries = new[] 
@@ -74,6 +65,8 @@
         "worker => ((worker.PersonId == \"1\") OrElse (worker.PersonId == \"2\"))", 
         "worker => worker.LastName == \"Jones\""
     };
+    private DialogOptions _loadQueryDialogOptions = new DialogOptions { CloseButton = true };
+    private bool _showLoadQueryDialog = false;
 
     RenderFragment CreateQueryBuilder() => builder =>
     {
@@ -83,7 +76,6 @@
             builder.AddAttribute(1, "Expression", Expression);
             builder.CloseComponent();
         });
-
     };
 
     private string Expression { get; set; } = string.Empty;
@@ -97,10 +89,13 @@
             .GetEntityTypes()
             .Select(e => e.ClrType.Name)
             .ToArray();
+
+        NewQuery();
+
         base.OnInitialized();
     }
 
-    public void Select(string value)
+    public void OnEntitySelect(string value)
     {
         Expression = string.Empty;
         SelectEntity(value);
@@ -114,14 +109,19 @@
         StateHasChanged();
     }
 
+    private void OpenDialog()
+    {
+        _showLoadQueryDialog = true;
+    }
+
     public void LoadQuery()
     {
         _state = new Loaded();
+        // TODO: move entity type selection to dialog
         string entityType = nameof(Person);
-        Expression<Func<Person, bool>> expression = worker => worker.PersonId == "1" || worker.PersonId == "2";
         Expression = _selectedQuery;
         SelectEntity(entityType);
-        _queryLoaded = true;
+        _showLoadQueryDialog = false;
     }
 
     public void NewQuery()
@@ -129,14 +129,5 @@
         _state = new New();
         SelectEntity(_entities.FirstOrDefault());
         Expression = string.Empty;
-        _newQuery = true;
-    }
-
-    public void StartOver()
-    {
-        _state = new None();
-        _newQuery = false;
-        _queryLoaded = false;
-        SelectedEntityType = null;
     }
 }

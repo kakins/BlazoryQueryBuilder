@@ -14,7 +14,7 @@
 @inject QueryBuilderService<TEntity> QueryBuilderService
 @inject IQueryServiceFactory<TDbContext> QueryServiceFactory
 
-<MudStack Spacing="5">
+<MudStack Spacing="10">
     <div>
         <MudText Typo="Typo.h5">SELECT</MudText>
         <MudSelect Label="Fields" T="PropertyInfo" @bind-SelectedValues="SelectedProperties" MultiSelection="true">
@@ -27,11 +27,13 @@
         </MudSelect>
     </div>
 
-    <MudText Typo="Typo.h5">WHERE</MudText>
-    <LambdaComponent OnChanged="@OnChanged"
-                     Lambda="@QueryBuilderService.Lambda"
-                     Parameter="@QueryBuilderService.Parameter">
-    </LambdaComponent>
+    <div>
+        <MudText Typo="Typo.h5" GutterBottom="true">WHERE</MudText>
+        <LambdaComponent OnChanged="@OnChanged"
+                         Lambda="@QueryBuilderService.Lambda"
+                         Parameter="@QueryBuilderService.Parameter">
+        </LambdaComponent>
+    </div>
 
     <div>
         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="RunQuery">Run Query</MudButton>
@@ -51,7 +53,6 @@
             }
         </RowTemplate>
     </MudTable>
-
 </MudStack>
 
 @code {
