@@ -41,7 +41,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         [Fact]
-        public async Task Initializes_field_select_items()
+        public async Task Initializes_field_items()
         {
             // Arrange
             var component = RenderComponent<RelationalPredicate>(parameters =>
@@ -74,7 +74,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
         [Theory]
         [MemberData(nameof(LeftOperandTestData))]
-        public async Task Updates_left_operand_when_selected_field_changes(List<string> fields)
+        public async Task Updates_left_operand_to_selected_field(List<string> fields)
         {
             // Arrange
             Expression<Func<Address, bool>> lambdaExpression = address => address.AddressId == 1;
@@ -103,14 +103,15 @@ namespace BlazorQueryBuilder.Tests.Pages
 
             // Assert
             // Verify the operand member expression matches the property selections
-            var leftOperand = predicateExpression.Left as MemberExpression;
-            var memberNames = new List<string>();
-            while (leftOperand != null)
-            {
-                memberNames.Insert(0, leftOperand.Member.Name);
-                leftOperand = leftOperand.Expression as MemberExpression;
-            }
-            memberNames.Should().BeEquivalentTo(fields);
+            var leftOperandMembers = ((MemberExpression)predicateExpression.Left).GetMemberExpressionMembers();
+            leftOperandMembers.Should().BeEquivalentTo(fields);
+            fieldSelect.Instance.Value.Should().Be(fields.Last());
+        }
+
+        [Fact]
+        public async Task Updates_left_operand_to_navigation_field_first_property()
+        {
+            throw new NotImplementedException();
         }
 
         [Theory]
@@ -136,7 +137,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         [Fact]
-        public async Task Updates_operator_when_selected_operator_changes()
+        public async Task Updates_operator_to_selected_operator()
         {
             // Arrange
             var predicateExpression = _predicateExpression;
@@ -181,7 +182,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         [Fact]
-        public async Task Updates_right_operand_when_int_value_changes()
+        public async Task Updates_right_operand_to_int_value()
         {
             // Arrange
             var lambdaExpression = GetLambdaExpression(person => person.NumberOfChildren == 4);
@@ -229,7 +230,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         [Fact]
-        public async Task Updates_right_operand_when_string_value_changes()
+        public async Task Updates_right_operand_to_string_value()
         {
             // Arrange
             var lambdaExpression = GetLambdaExpression(person => person.PersonId == "1");
@@ -279,7 +280,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         [Fact]
-        public async Task Updates_right_operand_when_date_value_changes()
+        public async Task Updates_right_operand_to_date_value()
         {
             // Arrange
             var lambdaExpression = GetLambdaExpression(person => person.Created == DateTime.MinValue);
@@ -331,7 +332,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         [Fact]
-        public async Task Updates_right_operand_when_bool_value_changes()
+        public async Task Updates_right_operand_to_bool_value()
         {
             // Arrange
             var lambdaExpression = GetLambdaExpression(person => person.IsAlive == true);
