@@ -11,7 +11,7 @@
     @if (_queryLoaded || _newQuery)
     {
         <div>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@StartOver">Start Over</MudButton>
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Large" OnClick="StartOver" />
         </div>
     }
     else
