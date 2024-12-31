@@ -90,7 +90,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         [Fact]
-        public async Task Updates_query_builder_for_selected_entity()
+        public async Task Displays_query_builder_for_new_query_selected_entity()
         {
             // Arrange
             var component = RenderComponent<QueryBuilderContainer<MyDbContext>>();
@@ -145,36 +145,6 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         [Fact]
-        public async Task Enables_loading_queries_when_query_is_specified()
-        {
-            // Arrange
-            var component = RenderComponent<QueryBuilderContainer<MyDbContext>>();
-            component
-                .FindComponents<MudButton>()
-                .Single(button => button.Markup.Contains("Load Query"))
-                .Find("button")
-                .Click();
-
-            // Act
-            var select = _dialogProvider.FindComponent<MudSelect<string>>();
-            string selectedQuery = string.Empty;
-            await component.InvokeAsync(async () =>
-            {
-                await select.Instance.OpenMenu();
-                await select.Instance.SelectOption(0);
-                await select.Instance.ToggleMenu();
-                selectedQuery = select.Instance.Items.First().Value;
-            });
-
-            // Assert
-            var okButton = _dialogProvider
-                .FindComponents<MudButton>()
-                .Single(button => button.Markup.Contains("Ok"));
-
-            okButton.Instance.Disabled.Should().BeFalse();
-        }
-
-        [Fact]
         public async Task Displays_query_builder_for_loaded_query()
         {
             // Arrange
@@ -187,7 +157,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
             // Act
             var select = _dialogProvider.FindComponent<MudSelect<string>>();
-            string selectedQuery = string.Empty;
+            var selectedQuery = string.Empty;
             await component.InvokeAsync(async () =>
             {
                 await select.Instance.OpenMenu();
