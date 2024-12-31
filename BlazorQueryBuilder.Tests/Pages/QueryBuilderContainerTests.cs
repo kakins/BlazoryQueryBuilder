@@ -17,6 +17,7 @@ namespace BlazorQueryBuilder.Tests.Pages
     public class QueryBuilderContainerTests : TestContext
     {
         private readonly IRenderedComponent<MudPopoverProvider> _popoverProvider;
+        private readonly IRenderedComponent<MudDialogProvider> _dialogProvider;
         private readonly MyDbContext _dbContext;
 
         public QueryBuilderContainerTests()
@@ -35,6 +36,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             JSInterop.SetupVoid("mudKeyInterceptor.connect", _ => true);
 
             _popoverProvider = RenderComponent<MudPopoverProvider>();
+            _dialogProvider = RenderComponent<MudDialogProvider>();
         }
 
         [Fact]
@@ -128,56 +130,6 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<QueryBuilderContainer<MyDbContext>>();
 
             // Act
-            var loadQueryButton = component
-                .FindComponents<MudButton>()
-                .Single(button => button.Markup.Contains("Load Query"));
-
-            // Assert
-            loadQueryButton.Instance.Disabled.Should().BeTrue();
-        }
-
-        [Fact]
-        public async Task Enables_loading_queries_when_query_is_specified()
-        {
-            // Arrange
-            var component = RenderComponent<QueryBuilderContainer<MyDbContext>>();
-
-            var select = component.FindComponent<MudSelect<string>>();
-            string selectedQuery = string.Empty;
-            await component.InvokeAsync(async () =>
-            {
-                await select.Instance.OpenMenu();
-                await select.Instance.SelectOption(0);
-                await select.Instance.ToggleMenu();
-                selectedQuery = select.Instance.Items.First().Value;
-            });
-
-            // Act
-            var loadQueryButton = component
-                .FindComponents<MudButton>()
-                .Single(button => button.Markup.Contains("Load Query"));
-
-            // Assert
-            loadQueryButton.Instance.Disabled.Should().BeFalse();
-        }
-
-        [Fact]
-        public async Task Displays_query_builder_for_loaded_query()
-        {
-            // Arrange
-            var component = RenderComponent<QueryBuilderContainer<MyDbContext>>();
-
-            var select = component.FindComponent<MudSelect<string>>();
-            string selectedQuery = string.Empty;
-            await component.InvokeAsync(async () =>
-            {
-                await select.Instance.OpenMenu();
-                await select.Instance.SelectOption(0);
-                await select.Instance.ToggleMenu();
-                selectedQuery = select.Instance.Items.First().Value;
-            });
-
-            // Act
             component
                 .FindComponents<MudButton>()
                 .Single(button => button.Markup.Contains("Load Query"))
@@ -185,6 +137,73 @@ namespace BlazorQueryBuilder.Tests.Pages
                 .Click();
 
             // Assert
+            var okButton = _dialogProvider
+                .FindComponents<MudButton>()
+                .Single(button => button.Markup.Contains("Ok"));
+
+            okButton.Instance.Disabled.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Enables_loading_queries_when_query_is_specified()
+        {
+            // Arrange
+            var component = RenderComponent<QueryBuilderContainer<MyDbContext>>();
+            component
+                .FindComponents<MudButton>()
+                .Single(button => button.Markup.Contains("Load Query"))
+                .Find("button")
+                .Click();
+
+            // Act
+            var select = _dialogProvider.FindComponent<MudSelect<string>>();
+            string selectedQuery = string.Empty;
+            await component.InvokeAsync(async () =>
+            {
+                await select.Instance.OpenMenu();
+                await select.Instance.SelectOption(0);
+                await select.Instance.ToggleMenu();
+                selectedQuery = select.Instance.Items.First().Value;
+            });
+
+            // Assert
+            var okButton = _dialogProvider
+                .FindComponents<MudButton>()
+                .Single(button => button.Markup.Contains("Ok"));
+
+            okButton.Instance.Disabled.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task Displays_query_builder_for_loaded_query()
+        {
+            // Arrange
+            var component = RenderComponent<QueryBuilderContainer<MyDbContext>>();
+            component
+                .FindComponents<MudButton>()
+                .Single(button => button.Markup.Contains("Load Query"))
+                .Find("button")
+                .Click();
+
+            // Act
+            var select = _dialogProvider.FindComponent<MudSelect<string>>();
+            string selectedQuery = string.Empty;
+            await component.InvokeAsync(async () =>
+            {
+                await select.Instance.OpenMenu();
+                await select.Instance.SelectOption(0);
+                await select.Instance.ToggleMenu();
+                selectedQuery = select.Instance.Items.First().Value;
+            });
+
+            _dialogProvider
+                .FindComponents<MudButton>()
+                .Single(button => button.Markup.Contains("Ok"))
+                .Find("button")
+                .Click();
+
+            // Assert
+            component.WaitForState(component.HasComponent<QueryBuilder<MyDbContext, Person>>);
             var queryBuilder = component.FindComponent<QueryBuilder<MyDbContext, Person>>();
             queryBuilder.Should().NotBeNull();
             queryBuilder.Instance.Expression.Should().Be(selectedQuery);
