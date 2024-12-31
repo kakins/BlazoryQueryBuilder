@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using MudBlazor.Services;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -67,7 +68,10 @@ namespace BlazorQueryBuilder.Tests.Pages
                 .Click();
             
             // Act
-            var entitiesSelect = component.FindComponents<MudSelect<string>>().FirstOrDefault();
+            var entitiesSelect = component
+                .FindComponents<MudSelect<Type>>()
+                .FirstOrDefault(select => select.Instance.Label == "Entity");
+            
             var entityItems = entitiesSelect.Instance.Items.ToList();
             await component.InvokeAsync(async () =>
             {
@@ -80,7 +84,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             entityItems
                 .Select(i => i.Value)
                 .Should()
-                .BeEquivalentTo(_dbContext.Model.GetEntityTypes().Select(e => e.ClrType.Name));
+                .BeEquivalentTo(_dbContext.Model.GetEntityTypes().Select(e => e.ClrType));
         }
 
         [Fact]
@@ -95,12 +99,12 @@ namespace BlazorQueryBuilder.Tests.Pages
                 .Find("button")
                 .Click();
 
-            var entitiesSelect = component.FindComponent<MudSelect<string>>();
+            var entitiesSelect = component.FindComponent<MudSelect<Type>>();
             
             await component.InvokeAsync(async () =>
             {
                 await entitiesSelect.Instance.OpenMenu();
-                var addressSelection = entitiesSelect.Instance.Items.First(i => i.Value == nameof(Address)).Value;
+                var addressSelection = entitiesSelect.Instance.Items.First(i => i.Value == typeof(Address)).Value;
                 await entitiesSelect.Instance.SelectOption(addressSelection);
             });
 
@@ -108,7 +112,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             await component.InvokeAsync(async () =>
             {
                 await entitiesSelect.Instance.OpenMenu();
-                var personSelection = entitiesSelect.Instance.Items.First(i => i.Value == nameof(Person)).Value;
+                var personSelection = entitiesSelect.Instance.Items.First(i => i.Value == typeof(Person)).Value;
                 await entitiesSelect.Instance.SelectOption(personSelection);
             });
 

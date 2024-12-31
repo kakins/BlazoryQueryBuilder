@@ -3,6 +3,7 @@
 @using System.Linq.Dynamic.Core
 @using System.Linq.Expressions
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.EntityFrameworkCore.Metadata
 @using MudBlazor
 @typeparam TDbContext where TDbContext : DbContext
 @inject TDbContext DbContext
@@ -40,10 +41,10 @@
             <MudStack Spacing="2">
                 <MudItem xs="12">
                     <MudText Typo="Typo.h5">FROM</MudText>
-                    <MudSelect T="string" Label="Entity" ValueChanged="OnEntitySelect">
+                    <MudSelect T="Type" Label="Entity" ValueChanged="OnEntitySelect">
                         @foreach (var entity in _entities)
                         {
-                            <MudSelectItem Value="@entity">@entity</MudSelectItem>
+                            <MudSelectItem Value="@entity.ClrType">@entity.ClrType.Name</MudSelectItem>
                         }
                     </MudSelect>
                 </MudItem>
@@ -59,7 +60,7 @@
     Type SelectedEntityType;
 
     private string _selectedQuery;
-    private string[] _entities = Array.Empty<string>();
+    private IReadOnlyList<IEntityType> _entities = Array.Empty<IEntityType>();
     private IEnumerable<string> _queries = new[] 
     { 
         "worker => ((worker.PersonId == \"1\") OrElse (worker.PersonId == \"2\"))", 
@@ -87,25 +88,22 @@
         _entities = DbContext
             .Model
             .GetEntityTypes()
-            .Select(e => e.ClrType.Name)
-            .ToArray();
+            .ToList();
 
         NewQuery();
 
         base.OnInitialized();
     }
 
-    public void OnEntitySelect(string value)
+    public void OnEntitySelect(Type value)
     {
         Expression = string.Empty;
         SelectEntity(value);
     }
 
-    private void SelectEntity(string entityTypeName)
+    private void SelectEntity(Type entityType)
     {
-        var typeName = $"BlazoryQueryBuilder.Shared.Models.{(string)entityTypeName}";
-        Assembly assembly = typeof(Person).Assembly;
-        SelectedEntityType = assembly.GetType(typeName);
+        SelectedEntityType = entityType;
         StateHasChanged();
     }
 
@@ -120,14 +118,14 @@
         // TODO: move entity type selection to dialog
         string entityType = nameof(Person);
         Expression = _selectedQuery;
-        SelectEntity(entityType);
+        SelectEntity(typeof(Person));
         _showLoadQueryDialog = false;
     }
 
     public void NewQuery()
     {
         _state = new New();
-        SelectEntity(_entities.FirstOrDefault());
+        SelectEntity(_entities.FirstOrDefault()?.ClrType);
         Expression = string.Empty;
     }
 }
