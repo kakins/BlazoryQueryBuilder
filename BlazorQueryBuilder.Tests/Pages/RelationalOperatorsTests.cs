@@ -37,15 +37,15 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var operators = RelationalOperators.GetOperators(type);
-            var component = RenderComponent<RelationalOperators>(parameters =>
+            var component = base.RenderComponent((Action<ComponentParameterCollectionBuilder<RelationalOperators>>)(parameters =>
             {
                 parameters.Add(p => p.OperandType, type);
-                parameters.Add(p => p.ExpressionOperator, new EqualsOperator());
-            });
+                parameters.Add(p => p.Operator, new EqualsOperator());
+            }));
 
             // Act
-            var select = component.FindComponent<MudSelect<Operator>>();
-            var selectItems = Enumerable.Empty<Operator>();
+            var select = component.FindComponent<MudSelect<ExpressionOperator>>();
+            var selectItems = Enumerable.Empty<ExpressionOperator>();
             await component.InvokeAsync(async () =>
             {
                 await select.Instance.OpenMenu();
@@ -58,17 +58,17 @@ namespace BlazorQueryBuilder.Tests.Pages
 
         [Theory]
         [MemberData(nameof(OperatorData))]
-        public async Task Initializes_selected_operator(Type type, Operator op)
+        public async Task Initializes_selected_operator(Type type, ExpressionOperator op)
         {
             // Arrange
-            var component = RenderComponent<RelationalOperators>(parameters =>
+            var component = base.RenderComponent((Action<ComponentParameterCollectionBuilder<RelationalOperators>>)(parameters =>
             {
                 parameters.Add(p => p.OperandType, type);
-                parameters.Add(p => p.ExpressionOperator, op);
-            });
+                parameters.Add(p => p.Operator, op);
+            }));
 
             // Act
-            var select = component.FindComponent<MudSelect<Operator>>();
+            var select = component.FindComponent<MudSelect<ExpressionOperator>>();
             var selectedOperator = select.Instance.Value;
 
             // Assert
@@ -80,17 +80,17 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Updates_selected_operator()
         {
             // Arrange
-            Operator op = new Operator { ExpressionType = ExpressionType.Equal };
-            var component = RenderComponent<RelationalOperators>(parameters =>
+            ExpressionOperator op = new ExpressionOperator { ExpressionType = ExpressionType.Equal };
+            var component = base.RenderComponent((Action<ComponentParameterCollectionBuilder<RelationalOperators>>)(parameters =>
             {
                 parameters.Add(p => p.OperandType, typeof(string));
-                parameters.Add(p => p.ExpressionOperator, op);
-                parameters.Add(p => p.OnChange, (Operator updatedOperator) => op = updatedOperator);
-            });
+                parameters.Add(p => p.Operator, op);
+                parameters.Add(p => p.OnChange, (ExpressionOperator updatedOperator) => op = updatedOperator);
+            }));
 
             // Act
-            var select = component.FindComponent<MudSelect<Operator>>();
-            Operator selectedOperator = null;
+            var select = component.FindComponent<MudSelect<ExpressionOperator>>();
+            ExpressionOperator selectedOperator = null;
             await component.InvokeAsync(async () =>
             {
                 await select.Instance.OpenMenu();
@@ -113,9 +113,9 @@ namespace BlazorQueryBuilder.Tests.Pages
                 { typeof(bool) }
             };
 
-        public static TheoryData<Type, Operator> OperatorData()
+        public static TheoryData<Type, ExpressionOperator> OperatorData()
         {
-            var data = new TheoryData<Type, Operator>();
+            var data = new TheoryData<Type, ExpressionOperator>();
             var types = new[] { typeof(string), typeof(int), typeof(DateTime), typeof(bool) };
 
             foreach (var type in types)

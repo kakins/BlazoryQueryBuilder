@@ -3,7 +3,7 @@
 @using MudBlazor
 @using System.Reflection
 
-<MudSelect T="Operator" Label="Operator" Value="ExpressionOperator" ValueChanged="OperatorChanged" ToStringFunc="SelectedOperatorToString">
+<MudSelect T="ExpressionOperator" Label="Operator" Value="Operator" ValueChanged="OperatorChanged" ToStringFunc="SelectedOperatorToString">
     @foreach (var item in Operators)
     {
         <MudSelectItem Value="@item">@item.DisplayText</MudSelectItem>
@@ -11,21 +11,21 @@
 </MudSelect>
 
 @code {
-    List<Operator> Operators = new();
+    List<ExpressionOperator> Operators = new();
 
     [Parameter]
-    public Action<Operator> OnChange { get; set; }
+    public Action<ExpressionOperator> OnChange { get; set; }
 
     [Parameter]
-    public Operator ExpressionOperator { get; set; }
+    public ExpressionOperator Operator { get; set; }
 
-    private void OperatorChanged(Operator op)
+    private void OperatorChanged(ExpressionOperator op)
     {
-        ExpressionOperator = op;
+        Operator = op;
         OnChange?.Invoke(op);
     }
 
-    private string SelectedOperatorToString(Operator op)
+    private string SelectedOperatorToString(ExpressionOperator op)
     {
         return op != null 
             ? Operators.Single(o => o == op).DisplayText
@@ -47,15 +47,15 @@
     {
         Operators = GetOperators(OperandType);
 
-        if (ExpressionOperator is MethodCallOperator methodOperator)
+        if (Operator is MethodCallOperator methodOperator)
         {
-            ExpressionOperator = Operators
+            Operator = Operators
                 .OfType<MethodCallOperator>()
                 .FirstOrDefault(op => op == methodOperator);
         }
         else
         {
-            ExpressionOperator = Operators.FirstOrDefault(x => x == ExpressionOperator);
+            Operator = Operators.FirstOrDefault(x => x == Operator);
         }
     }
 
@@ -63,10 +63,10 @@
     {
         OperandType = operandType;
         Operators = GetOperators(operandType);
-        ExpressionOperator = Operators.First();
+        Operator = Operators.First();
     }
 
-    public static List<Operator> GetOperators(Type operandType)
+    public static List<ExpressionOperator> GetOperators(Type operandType)
     {
         return operandType switch
         {
@@ -108,14 +108,14 @@
         };
     }
 
-    public class Operator
+    public class ExpressionOperator
     {
         public virtual ExpressionType ExpressionType { get; set; }
         public virtual string DisplayText { get; set; }
 
         public override bool Equals(object obj)
         {
-            return obj is Operator op 
+            return obj is ExpressionOperator op 
                 && ExpressionType == op.ExpressionType;
         }
 
@@ -124,54 +124,54 @@
             return HashCode.Combine(ExpressionType);
         }
 
-        public static bool operator ==(Operator left, Operator right)
+        public static bool operator ==(ExpressionOperator left, ExpressionOperator right)
         {
-            return EqualityComparer<Operator>.Default.Equals(left, right);
+            return EqualityComparer<ExpressionOperator>.Default.Equals(left, right);
         }
 
-        public static bool operator !=(Operator left, Operator right)
+        public static bool operator !=(ExpressionOperator left, ExpressionOperator right)
         {
             return !(left == right);
         }
     }
 
-    public class EqualsOperator : Operator
+    public class EqualsOperator : ExpressionOperator
     {
         public override ExpressionType ExpressionType => ExpressionType.Equal;
         public override string DisplayText => "Equals";
     }
 
-    public class NotEqualsOperator : Operator
+    public class NotEqualsOperator : ExpressionOperator
     {
         public override ExpressionType ExpressionType => ExpressionType.NotEqual;
         public override string DisplayText => "Does not equal";
     }
 
-    public class LessThanOperator : Operator
+    public class LessThanOperator : ExpressionOperator
     {
         public override ExpressionType ExpressionType => ExpressionType.LessThan;
         public override string DisplayText => "Less than";
     }
 
-    public class LessThanOrEqualOperator : Operator
+    public class LessThanOrEqualOperator : ExpressionOperator
     {
         public override ExpressionType ExpressionType => ExpressionType.LessThanOrEqual;
         public override string DisplayText => "Less than or equal";
     }
 
-    public class GreaterThanOperator : Operator
+    public class GreaterThanOperator : ExpressionOperator
     {
         public override ExpressionType ExpressionType => ExpressionType.GreaterThan;
         public override string DisplayText => "Greater than";
     }
 
-    public class GreaterThanOrEqualOperator : Operator
+    public class GreaterThanOrEqualOperator : ExpressionOperator
     {
         public override ExpressionType ExpressionType => ExpressionType.GreaterThanOrEqual;
         public override string DisplayText => "Greater than or equal";
     }
 
-    public class MethodCallOperator : Operator
+    public class MethodCallOperator : ExpressionOperator
     {
         public override ExpressionType ExpressionType => ExpressionType.Call;
         public MethodInfo MethodInfo { get; set; }

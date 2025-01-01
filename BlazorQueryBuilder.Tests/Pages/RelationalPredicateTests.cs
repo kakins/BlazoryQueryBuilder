@@ -154,7 +154,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var operators = component.FindComponent<RelationalOperators>();
 
             // Assert
-            operators.Instance.ExpressionOperator.ExpressionType.Should().Be(predicateExpression.NodeType);
+            operators.Instance.Operator.ExpressionType.Should().Be(predicateExpression.NodeType);
         }
 
         [Fact]

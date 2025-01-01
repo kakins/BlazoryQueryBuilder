@@ -33,9 +33,9 @@
                     @if (PredicateExpression is BinaryExpression binaryExpression)
                     {
                         <RelationalOperators @ref="_relationalOperators"
-                        OnChange="@OnOperatorChanged"
-                        OperandType="binaryExpression.Left.Type"
-                        ExpressionOperator="@(new () { ExpressionType = PredicateExpression.NodeType })">
+                            OnChange="@OnOperatorChanged"
+                            OperandType="binaryExpression.Left.Type"
+                            Operator="@(new() { ExpressionType = PredicateExpression.NodeType })">
                         </RelationalOperators>
                         @switch (binaryExpression.Left.Type)
                         {
@@ -82,7 +82,7 @@
     public Expression PredicateExpression { get; set; }
 
     private RelationalOperators _relationalOperators;
-    private RelationalOperators.Operator _selectedOperator;
+    private RelationalOperators.ExpressionOperator _selectedOperator;
     private Type _selectedPropertyType;
     private string _selectedPropertyName;
     private List<string> _navigationPath = new();
@@ -103,7 +103,7 @@
             var leftOperand = (MemberExpression)binaryExpression.Left;
             _selectedPropertyType = leftOperand.Member.DeclaringType;
             _selectedPropertyName = leftOperand.Member.Name;
-            _selectedOperator = new RelationalOperators.Operator { ExpressionType = binaryExpression.NodeType };
+            _selectedOperator = new RelationalOperators.ExpressionOperator { ExpressionType = binaryExpression.NodeType };
         }
 
         _navigationPath.Add(ParameterExpression.Type.Name);
@@ -151,7 +151,7 @@
             };
 
             _relationalOperators.SetOperand(selectedProperty.PropertyType);
-            UpdateExpression(Expression.MakeBinary(_relationalOperators.ExpressionOperator.ExpressionType, leftOperandExpression, rightOperandExpression));
+            UpdateExpression(Expression.MakeBinary(_relationalOperators.Operator.ExpressionType, leftOperandExpression, rightOperandExpression));
         }
     }
 
@@ -184,7 +184,7 @@
         }
     }
 
-    private void OnOperatorChanged(RelationalOperators.Operator op)
+    private void OnOperatorChanged(RelationalOperators.ExpressionOperator op)
     {
         if (PredicateExpression is BinaryExpression binaryExpression)
         {
