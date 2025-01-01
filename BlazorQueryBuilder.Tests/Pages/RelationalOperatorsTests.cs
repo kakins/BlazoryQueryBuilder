@@ -80,7 +80,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Updates_selected_operator()
         {
             // Arrange
-            ExpressionOperator op = new ExpressionOperator { ExpressionType = ExpressionType.Equal };
+            var op = new ExpressionOperator { ExpressionType = ExpressionType.Equal };
             var component = base.RenderComponent((Action<ComponentParameterCollectionBuilder<RelationalOperators>>)(parameters =>
             {
                 parameters.Add(p => p.OperandType, typeof(string));

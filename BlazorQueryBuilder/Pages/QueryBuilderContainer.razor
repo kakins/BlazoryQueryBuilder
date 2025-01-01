@@ -63,8 +63,9 @@
     private IReadOnlyList<IEntityType> _entities = Array.Empty<IEntityType>();
     private IEnumerable<string> _queries = new[] 
     { 
-        "worker => ((worker.PersonId == \"1\") OrElse (worker.PersonId == \"2\"))", 
-        "worker => worker.LastName == \"Jones\""
+        "person => ((person.PersonId == \"1\") OrElse (person.PersonId == \"2\"))", 
+        "person => person.LastName == \"Jones\"",
+        "person => EF.Functions.Like(person.FirstName, \"%Alice%\")"
     };
     private DialogOptions _loadQueryDialogOptions = new DialogOptions { CloseButton = true };
     private bool _showLoadQueryDialog = false;
