@@ -6,6 +6,7 @@ using BlazoryQueryBuilder.Shared.Services;
 using BlazoryQueryBuilder.Shared.Util;
 using Bunit;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using MudBlazor.Services;
@@ -40,11 +41,12 @@ namespace BlazorQueryBuilder.Tests.Pages
             _predicateExpression = GetLambdaBodyExpression(_lambdaExpression);
         }
 
-        [Fact]
-        public async Task Initializes_field_items()
+        [Theory]
+        [MemberData(nameof(FieldItemTestData))]
+        public async Task Initializes_field_items(LambdaExpression lambdaExpression, string expectedFieldName)
         {
             // Arrange
-            var component = CreateComponent(_predicateExpression, _predicateParameter);
+            var component = CreateComponent(lambdaExpression.Body, lambdaExpression.Parameters[0]);
 
             // Act
             var fieldSelect = component.FindInputByLabel<MudSelect<string>, string>("Field");
@@ -56,14 +58,25 @@ namespace BlazorQueryBuilder.Tests.Pages
             });
 
             // Assert
-            var expectedFieldName = ((MemberExpression)component.Instance.PredicateExpression.Left).Member.Name;
             fieldSelect.Instance.Value.Should().Be(expectedFieldName);
 
-            var expectedFieldItems = _lambdaExpression.Parameters[0].Type.GetProperties().Select(p => p.Name);
+            var expectedFieldItems = lambdaExpression.Parameters[0].Type.GetProperties().Select(p => p.Name);
             fieldItems
                 .Select(i => i.Value)
                 .Should()
                 .BeEquivalentTo(expectedFieldItems);
+        }
+
+        public static TheoryData<LambdaExpression, string> FieldItemTestData()
+        {
+            Expression<Func<Person, bool>> binaryLambda = person => person.PersonId == "1";
+            Expression<Func<Person, bool>> methodCallLambda = p => EF.Functions.Like(p.FirstName, "%Alice%");
+
+            return new()
+            {
+                { binaryLambda, nameof(Person.PersonId) },
+                { methodCallLambda, nameof(Person.FirstName) }
+            };
         }
 
         [Theory]
@@ -141,7 +154,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var operators = component.FindComponent<RelationalOperators>();
 
             // Assert
-            operators.Instance.ExpressionType.Should().Be(predicateExpression.NodeType);
+            operators.Instance.ExpressionOperator.ExpressionType.Should().Be(predicateExpression.NodeType);
         }
 
         [Fact]
@@ -158,7 +171,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var operators = component.FindComponent<RelationalOperators>();
             await component.InvokeAsync(() =>
             {
-                operators.Instance.OnChange(ExpressionType.NotEqual);
+                operators.Instance.OnChange(new() { ExpressionType = ExpressionType.NotEqual });
             });
 
             // Assert
@@ -385,7 +398,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         private IRenderedComponent<RelationalPredicate> CreateComponent(
-            BinaryExpression predicateExpression = null, 
+            Expression predicateExpression = null, 
             ParameterExpression parameterExpression = null,
             Action<BinaryExpression> onChange = null,
             Action onRemove = null)

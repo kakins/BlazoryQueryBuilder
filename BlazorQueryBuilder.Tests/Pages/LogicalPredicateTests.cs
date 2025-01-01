@@ -109,7 +109,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var logicalOperatorSelect = component
                 .FindComponents<MudSelect<string>>()
                 .Where(s => s.Instance.Label == "Operator")
-                .ToList()[1];
+                .ToList()[0];
 
             logicalOperatorSelect.Instance.Value.Should().Be(logicalOperator);
         }

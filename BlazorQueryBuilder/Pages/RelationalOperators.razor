@@ -1,86 +1,224 @@
 ﻿@using System.Linq.Expressions
+@using Microsoft.EntityFrameworkCore
 @using MudBlazor
+@using System.Reflection
 
-<MudSelect T="string" Label="Operator" @bind-Value="SelectedOperator">
+<MudSelect T="Operator" Label="Operator" Value="ExpressionOperator" ValueChanged="OperatorChanged" ToStringFunc="SelectedOperatorToString">
     @foreach (var item in Operators)
     {
-        <MudSelectItem Value="@item.Key">@item.Value</MudSelectItem>
+        <MudSelectItem Value="@item">@item.DisplayText</MudSelectItem>
     }
 </MudSelect>
 
 @code {
-    Dictionary<string, string> Operators = new Dictionary<string, string>();
+    List<Operator> Operators = new();
 
     [Parameter]
-    public Action<ExpressionType> OnChange { get; set; }
+    public Action<Operator> OnChange { get; set; }
 
     [Parameter]
-    public ExpressionType ExpressionType { get; set; }
+    public Operator ExpressionOperator { get; set; }
+
+    private void OperatorChanged(Operator op)
+    {
+        ExpressionOperator = op;
+        OnChange?.Invoke(op);
+    }
+
+    private string SelectedOperatorToString(Operator op)
+    {
+        return op != null 
+            ? Operators.Single(o => o == op).DisplayText
+            : string.Empty;
+    }
+
+    // TODO: Verify that this method is needed for MethodOperator
+    private string SelectedOperatorToString(MethodCallOperator op)
+    {
+        return op != null
+            ? Operators.Single(o => o == op).DisplayText
+            : string.Empty;
+    }
 
     [Parameter]
     public Type OperandType { get; set; }
 
     protected override void OnInitialized()
     {
-        InitializeOperators();
+        // InitializeOperators();
+        Operators = GetOperators();
+
+        // TODO: Replace equality check with simple op == methodOperator
+        if (ExpressionOperator is MethodCallOperator methodOperator)
+        {
+            ExpressionOperator = Operators
+                .OfType<MethodCallOperator>()
+                .FirstOrDefault(op =>
+                    op.ExpressionType == methodOperator.ExpressionType
+                    && op.MethodInfo == methodOperator.MethodInfo);
+        }
+        // TODO: Replace equality check with simple op == ExpressionOperator
+        else
+        {
+            ExpressionOperator = Operators.FirstOrDefault(x => x.ExpressionType == ExpressionOperator.ExpressionType);
+        }
     }
 
     public void SetOperand(Type operandType)
     {
         OperandType = operandType;
-        InitializeOperators();
-        ExpressionType = GetExpressionType(Operators.Keys.First());
+        Operators = GetOperators();
+        ExpressionOperator = Operators.First();
     }
 
-    private void InitializeOperators()
+    private List<Operator> GetOperators()
     {
-        Operators = OperandType switch
+        return OperandType switch
         {
             Type type when type == typeof(int) => new()
             {
-                {"Equal", "Equals"},
-                {"NotEqual", "Does not equal"},
-                {"LessThan", "Less than"},
-                {"GreaterThan", "Greater than"},
+                { new EqualsOperator() },
+                { new NotEqualsOperator() },
+                { new LessThanOperator() },
+                { new LessThanOrEqualOperator() },
+                { new GreaterThanOperator() },
+                { new GreaterThanOrEqualOperator() },
             },
             Type type when type == typeof(string) => new()
             {
-                {"Equal", "Equals"},
-                {"NotEqual", "Does not equal"},
-                // {"Contains", "Contains"}, // method
-                // {"StartsWith", "Starts with"}, // method
-                // {"EndsWith", "Ends with"}, // method
+                { new EqualsOperator() },
+                { new NotEqualsOperator() },
+                { new EfLikeOperator() },
+                { new EfLikeOperator(true) },
             },
             Type type when type == typeof(bool) => new()
             {
-                {"Equal", "Equals"},
-                {"NotEqual", "Does not equal"},
+                { new EqualsOperator() },
+                { new NotEqualsOperator() },
             },
             Type type when type == typeof(DateTime) => new()
             {
-                {"Equal", "Equals"},
-                {"NotEqual", "Does not equal"},
-                {"LessThan", "Less than"},
-                {"GreaterThan", "Greater than"},
+                { new EqualsOperator() },
+                { new NotEqualsOperator() },
+                { new LessThanOperator() },
+                { new LessThanOrEqualOperator() },
+                { new GreaterThanOperator() },
+                { new GreaterThanOrEqualOperator() },
             },
             _ => new()
             {
-                {"Equal", "Equals"},
-                {"NotEqual", "Does not equal"},
+                { new EqualsOperator() },
+                { new NotEqualsOperator() },
             },
         };
     }
 
-    private string SelectedOperator
+    public class Operator
     {
-        get => ExpressionType.ToString();
-        set
+        public virtual ExpressionType ExpressionType { get; set; }
+        public virtual string DisplayText { get; set; }
+
+        public override bool Equals(object obj)
         {
-            var expressionType = GetExpressionType(value);
-            ExpressionType = expressionType;
-            OnChange.Invoke(expressionType);
+            return obj is Operator op 
+                && ExpressionType == op.ExpressionType;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(ExpressionType);
+        }
+
+        public static bool operator ==(Operator left, Operator right)
+        {
+            return EqualityComparer<Operator>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(Operator left, Operator right)
+        {
+            return !(left == right);
         }
     }
 
-    private ExpressionType GetExpressionType(string key) => (ExpressionType)Enum.Parse(typeof(ExpressionType), key);
+    public class EqualsOperator : Operator
+    {
+        public override ExpressionType ExpressionType => ExpressionType.Equal;
+        public override string DisplayText => "Equals";
+    }
+
+    public class NotEqualsOperator : Operator
+    {
+        public override ExpressionType ExpressionType => ExpressionType.NotEqual;
+        public override string DisplayText => "Does not equal";
+    }
+
+    public class LessThanOperator : Operator
+    {
+        public override ExpressionType ExpressionType => ExpressionType.LessThan;
+        public override string DisplayText => "Less than";
+    }
+
+    public class LessThanOrEqualOperator : Operator
+    {
+        public override ExpressionType ExpressionType => ExpressionType.LessThanOrEqual;
+        public override string DisplayText => "Less than or equal";
+    }
+
+    public class GreaterThanOperator : Operator
+    {
+        public override ExpressionType ExpressionType => ExpressionType.GreaterThan;
+        public override string DisplayText => "Greater than";
+    }
+
+    public class GreaterThanOrEqualOperator : Operator
+    {
+        public override ExpressionType ExpressionType => ExpressionType.GreaterThanOrEqual;
+        public override string DisplayText => "Greater than or equal";
+    }
+
+    public class MethodCallOperator : Operator
+    {
+        public override ExpressionType ExpressionType => ExpressionType.Call;
+        public MethodInfo MethodInfo { get; set; }
+        public bool IsNegated { get; set; }
+
+        public MethodCallOperator(MethodInfo methodInfo, bool isNegated = false)
+        {
+            MethodInfo = methodInfo;
+            IsNegated = isNegated;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is MethodCallOperator op 
+                && base.Equals(obj) 
+                && EqualityComparer<MethodInfo>.Default.Equals(MethodInfo, op.MethodInfo) 
+                && IsNegated == op.IsNegated;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(base.GetHashCode(), MethodInfo, IsNegated);
+        }
+
+        public static bool operator ==(MethodCallOperator left, MethodCallOperator right)
+        {
+            return EqualityComparer<MethodCallOperator>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(MethodCallOperator left, MethodCallOperator right)
+        {
+            return !(left == right);
+        }
+    }
+
+    public class EfLikeOperator : MethodCallOperator
+    {
+        public override string DisplayText => "Like";
+
+        public EfLikeOperator(bool isNegated = false)
+            : base(typeof(DbFunctionsExtensions).GetMethod("Like", new[] { typeof(DbFunctions), typeof(string), typeof(string) }), isNegated)
+        {
+        }
+    }
 }
