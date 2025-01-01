@@ -70,7 +70,7 @@
 
 @code {
     [Parameter]
-    public Action<BinaryExpression> OnChange { get; set; }
+    public Action<Expression> OnChange { get; set; }
 
     [Parameter]
     public Action OnRemove { get; set; }
@@ -93,16 +93,24 @@
         // e.g., EF.Functions.Like(p.FirstName, "%Alice%")
         if (PredicateExpression is MethodCallExpression methodCallExpression)
         {
-            var leftOperand = (MemberExpression)methodCallExpression.Arguments[1];
-            _selectedPropertyType = leftOperand.Member.DeclaringType;
-            _selectedPropertyName = leftOperand.Member.Name;
+            // support specific method calls
+            var propertyMember = methodCallExpression.Method.Name switch
+            {
+                "StartsWith" => (MemberExpression)methodCallExpression.Object,
+                "EndsWith" => (MemberExpression)methodCallExpression.Object,
+                "Like" => (MemberExpression)methodCallExpression.Arguments[1],
+                _ => throw new NotSupportedException($"Method {methodCallExpression.Method.Name} is not supported")
+            };
+            
+            _selectedPropertyType = propertyMember.Member.DeclaringType;
+            _selectedPropertyName = propertyMember.Member.Name;
             _selectedOperator = new RelationalOperators.MethodCallOperator(methodCallExpression.Method);
         }
         else if (PredicateExpression is BinaryExpression binaryExpression)
         {
-            var leftOperand = (MemberExpression)binaryExpression.Left;
-            _selectedPropertyType = leftOperand.Member.DeclaringType;
-            _selectedPropertyName = leftOperand.Member.Name;
+            var propertyMember = (MemberExpression)binaryExpression.Left;
+            _selectedPropertyType = propertyMember.Member.DeclaringType;
+            _selectedPropertyName = propertyMember.Member.Name;
             _selectedOperator = new RelationalOperators.ExpressionOperator { ExpressionType = binaryExpression.NodeType };
         }
 

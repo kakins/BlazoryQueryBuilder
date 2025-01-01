@@ -11,8 +11,11 @@
     case ExpressionType.Equal:
     case ExpressionType.NotEqual:
     case ExpressionType.GreaterThan:
+    case ExpressionType.GreaterThanOrEqual:
     case ExpressionType.LessThan:
-        <RelationalPredicate PredicateExpression="@GetBinaryExpression()"
+    case ExpressionType.LessThanOrEqual:
+    case ExpressionType.Call:
+        <RelationalPredicate PredicateExpression="Expression"
                              ParameterExpression="@ParameterExpression"
                              OnChange="@Change"
                              OnRemove="@Remove">
@@ -29,7 +32,7 @@
     public ParameterExpression ParameterExpression { get; set; }
 
     [Parameter]
-    public Action<BinaryExpression> OnChange { get; set; }
+    public Action<Expression> OnChange { get; set; }
 
     [Parameter]
     public Action OnRemove { get; set; }
@@ -39,7 +42,7 @@
         return Expression as BinaryExpression;
     }
 
-    private void Change(BinaryExpression expression)
+    private void Change(Expression expression)
     {
         OnChange(expression);
         StateHasChanged();

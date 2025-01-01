@@ -23,7 +23,7 @@ namespace BlazorQueryBuilder.Tests.Pages
     {
         private readonly LambdaExpression _lambdaExpression;
         private readonly ParameterExpression _predicateParameter;
-        private readonly BinaryExpression _predicateExpression;
+        private readonly Expression _predicateExpression;
 
         public RelationalPredicateTests()
         {
@@ -38,7 +38,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
             _lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
             _predicateParameter = _lambdaExpression.Parameters[0];
-            _predicateExpression = GetLambdaBodyExpression(_lambdaExpression);
+            _predicateExpression = _lambdaExpression.Body;
         }
 
         [Theory]
@@ -85,13 +85,13 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = GetLambdaExpression<Address>(address => address.AddressId == 1);
-            var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
+            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression);
             var predicateParameter = lambdaExpression.Parameters[0];
 
             var component = CreateComponent(
                 predicateExpression,
                 predicateParameter,
-                onChange: expression => { predicateExpression = expression; });
+                onChange: expression => { predicateExpression = expression as BinaryExpression; });
 
             // Act
             var fieldSelect = component.FindInputByLabel<MudSelect<string>, string>("Field");
@@ -117,13 +117,13 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = GetLambdaExpression<Address>(address => address.AddressId == 1);
-            var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
+            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression);
             var predicateParameter = lambdaExpression.Parameters[0];
 
             var component = CreateComponent(
                 predicateExpression, 
                 predicateParameter,
-                onChange: expression => { predicateExpression = expression; });
+                onChange: expression => { predicateExpression = expression as BinaryExpression; });
 
             // Act
             var fieldSelect = component.FindInputByLabel<MudSelect<string>, string>("Field");
@@ -145,7 +145,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Initializes_operator(Expression<Func<Person, bool>> lambdaExpression)
         {
             // Arrange
-            var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
+            var predicateExpression = lambdaExpression.Body;
             var predicateParameter = lambdaExpression.Parameters[0];
             
             var component = CreateComponent(predicateExpression, predicateParameter);   
@@ -183,7 +183,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = GetLambdaExpression<Person>(person => person.NumberOfChildren == 4);
-            var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
+            var predicateExpression = lambdaExpression.Body;
 
             // Act
             var component = CreateComponent(predicateExpression, lambdaExpression.Parameters[0]);
@@ -198,12 +198,12 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = GetLambdaExpression<Person>(person => person.NumberOfChildren == 4);
-            var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
+            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression);
 
             var component = CreateComponent(
                 predicateExpression, 
                 lambdaExpression.Parameters[0], 
-                updatedExpression => { predicateExpression = updatedExpression; });
+                updatedExpression => { predicateExpression = updatedExpression as BinaryExpression; });
 
             // Act
             var valueInput = component.FindInputByLabel<MudTextField<int>, int>("Value");
@@ -222,7 +222,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
-            var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
+            var predicateExpression = lambdaExpression.Body;
 
             // Act
             var component = CreateComponent(predicateExpression, lambdaExpression.Parameters[0]);
@@ -237,12 +237,12 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
-            var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
+            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression);
 
             var component = CreateComponent(
                 predicateExpression,
                 lambdaExpression.Parameters[0],
-                onChange: updatedExpression => { predicateExpression = updatedExpression; });
+                onChange: updatedExpression => { predicateExpression = updatedExpression as BinaryExpression; });
 
             // Act
             var valueInput = component.FindInputByLabel<MudTextField<string>, string>("Value");
@@ -261,7 +261,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = GetLambdaExpression<Person>(person => person.Created == DateTime.MinValue);
-            var predicateExpression = GetLambdaBodyExpression(lambdaExpression).ReplaceRight(DateTimeExpression.New(DateTime.Now));
+            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression).ReplaceRight(DateTimeExpression.New(DateTime.Now));
 
             // Act
             var component = CreateComponent(predicateExpression, lambdaExpression.Parameters[0]);
@@ -278,12 +278,12 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = GetLambdaExpression<Person>(person => person.Created == DateTime.MinValue);
-            var predicateExpression = GetLambdaBodyExpression(lambdaExpression).ReplaceRight(DateTimeExpression.New(DateTime.Now));
+            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression).ReplaceRight(DateTimeExpression.New(DateTime.Now));
 
             var component = CreateComponent(
                 predicateExpression, 
                 lambdaExpression.Parameters[0],
-                onChange: updatedExpression => { predicateExpression = updatedExpression; });
+                onChange: updatedExpression => { predicateExpression = updatedExpression as BinaryExpression; });
 
             // Act
             var dateTime = DateTime.Now.AddDays(1);
@@ -306,7 +306,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = GetLambdaExpression<Person>(person => person.IsAlive == true);
-            var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
+            var predicateExpression = lambdaExpression.Body;
 
             // Act
             var component = CreateComponent(predicateExpression, lambdaExpression.Parameters[0]);   
@@ -321,12 +321,12 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = GetLambdaExpression<Person>(person => person.IsAlive == true);
-            var predicateExpression = GetLambdaBodyExpression(lambdaExpression);
+            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression);
 
             var component = CreateComponent(
                 predicateExpression, 
                 lambdaExpression.Parameters[0], 
-                onChange: updatedExpression => { predicateExpression = updatedExpression; });
+                onChange: updatedExpression => { predicateExpression = updatedExpression as BinaryExpression; });
 
             // Act
             var valueInput = component
@@ -350,13 +350,13 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
-            var originalPredicateExpression = GetLambdaBodyExpression(lambdaExpression);
+            var originalPredicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression);
             BinaryExpression updatedPredicateExpression = null;
 
             var component = CreateComponent(
                 originalPredicateExpression,
                 lambdaExpression.Parameters[0],
-                updatedExpression => { updatedPredicateExpression = updatedExpression; });
+                updatedExpression => { updatedPredicateExpression = updatedExpression as BinaryExpression; });
 
             // Act
             component
@@ -379,7 +379,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
-            var originalPredicateExpression = GetLambdaBodyExpression(lambdaExpression);
+            var originalPredicateExpression = lambdaExpression.Body;
             var removed = false;
 
             var component = CreateComponent(
@@ -400,7 +400,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         private IRenderedComponent<RelationalPredicate> CreateComponent(
             Expression predicateExpression = null, 
             ParameterExpression parameterExpression = null,
-            Action<BinaryExpression> onChange = null,
+            Action<Expression> onChange = null,
             Action onRemove = null)
         {
             onChange ??= (_) => { };
@@ -418,7 +418,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
         private LambdaExpression GetLambdaExpression<T>(Expression<Func<T, bool>> lambdaExpression) => lambdaExpression;
 
-        private BinaryExpression GetLambdaBodyExpression(LambdaExpression lambdaExpression) => lambdaExpression.Body as BinaryExpression;
+        private T GetLambdaBodyExpression<T>(LambdaExpression lambdaExpression) where T : Expression => lambdaExpression.Body as T;
         
         public static TheoryData<List<string>> LeftOperandTestData() => 
         [

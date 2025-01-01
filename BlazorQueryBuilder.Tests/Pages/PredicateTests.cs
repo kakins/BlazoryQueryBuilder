@@ -36,14 +36,14 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<BlazorQueryBuilder.Pages.Predicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.Expression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.Expression, lambdaExpression.Body)
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
 
             // Assert
             var logicalPredicate = component.FindComponent<RelationalPredicate>();
-            logicalPredicate.Instance.PredicateExpression.Should().Be(lambdaExpression.Body as BinaryExpression);
+            logicalPredicate.Instance.PredicateExpression.Should().Be(lambdaExpression.Body);
             logicalPredicate.Instance.ParameterExpression.Should().Be(lambdaExpression.Parameters[0]);
         }
 
@@ -101,7 +101,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<BlazorQueryBuilder.Pages.Predicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.Expression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.Expression, lambdaExpression.Body)
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { updated = true; });
             });
@@ -110,7 +110,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var relationalPredicate = component.FindComponent<RelationalPredicate>();
             await relationalPredicate.InvokeAsync(() =>
             {
-                relationalPredicate.Instance.OnChange.Invoke(lambdaExpression.Body as BinaryExpression);
+                relationalPredicate.Instance.OnChange.Invoke(lambdaExpression.Body);
             });
 
             // Assert
@@ -119,10 +119,13 @@ namespace BlazorQueryBuilder.Tests.Pages
 
         public static TheoryData<Expression<Func<Address, bool>>> RelationalPredicateTestData =>
         [
-            person => person.AddressId == 1,
-            person => person.AddressId != 1,
-            person => person.AddressId > 1,
-            person => person.AddressId < 1
+            address => address.AddressId == 1,
+            address => address.AddressId != 1,
+            address => address.AddressId > 1,
+            address => address.AddressId >= 1,
+            address => address.AddressId < 1,
+            address => address.AddressId <= 1,
+            address => address.City.StartsWith('a')
         ];
 
         public static TheoryData<Expression<Func<Person, bool>>> LogicalPredicateTestData =>
