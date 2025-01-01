@@ -1,19 +1,19 @@
 ﻿using BlazorQueryBuilder.Pages;
+using BlazorQueryBuilder.Tests.Util;
+using BlazoryQueryBuilder.Shared.Models;
 using BlazoryQueryBuilder.Shared.Services;
 using Bunit;
+using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using MudBlazor.Services;
-using System.Linq.Expressions;
 using System;
-using BlazoryQueryBuilder.Shared.Models;
-using Microsoft.EntityFrameworkCore;
-using Xunit;
-using BlazorQueryBuilder.Tests.Util;
-using System.Linq;
-using System.Threading.Tasks;
-using FluentAssertions;
 using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace BlazorQueryBuilder.Tests.Pages
 {
