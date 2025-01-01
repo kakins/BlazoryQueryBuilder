@@ -104,6 +104,32 @@ namespace BlazorQueryBuilder.Tests.Pages
             select.Instance.Text.Should().Be(op.DisplayText);
         }
 
+        [Fact]
+        public async Task Updates_operator_options_for_operand_type()
+        {
+            // Arrange
+            var component = base.RenderComponent((Action<ComponentParameterCollectionBuilder<RelationalOperators>>)(parameters =>
+            {
+                parameters.Add(p => p.OperandType, typeof(string));
+                parameters.Add(p => p.Operator, new EqualsOperator());
+            }));
+
+            // Act
+            component.Instance.SetOperand(typeof(int));
+            var select = component.FindComponent<MudSelect<ExpressionOperator>>();
+            var selectItems = Enumerable.Empty<ExpressionOperator>();
+            await component.InvokeAsync(async () =>
+            {
+                await select.Instance.OpenMenu();
+                selectItems = select.Instance.Items.Select(i => i.Value);
+            });
+
+            // Assert
+            var operators = RelationalOperators.GetOperators(typeof(int));
+            selectItems.Should().BeEquivalentTo(operators);
+            component.Instance.Operator.Should().Be(operators.First());
+        }
+
         public static TheoryData<Type> OperandTypeData =>
             new()
             {

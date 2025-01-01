@@ -4,20 +4,40 @@
 @using System.Reflection
 
 <MudSelect T="ExpressionOperator" Label="Operator" Value="Operator" ValueChanged="OperatorChanged" ToStringFunc="SelectedOperatorToString">
-    @foreach (var item in Operators)
+    @foreach (var item in _operators)
     {
         <MudSelectItem Value="@item">@item.DisplayText</MudSelectItem>
     }
 </MudSelect>
 
 @code {
-    List<ExpressionOperator> Operators = new();
 
     [Parameter]
     public Action<ExpressionOperator> OnChange { get; set; }
 
     [Parameter]
     public ExpressionOperator Operator { get; set; }
+
+    [Parameter]
+    public Type OperandType { get; set; }
+    
+    List<ExpressionOperator> _operators = new();
+
+    protected override void OnInitialized()
+    {
+        _operators = GetOperators(OperandType);
+
+        // if (Operator is MethodCallOperator methodOperator)
+        // {
+        //     Operator = _operators
+        //         .OfType<MethodCallOperator>()
+        //         .FirstOrDefault(op => op == methodOperator);
+        // }
+        // else
+        // {
+        //     Operator = _operators.FirstOrDefault(x => x == Operator);
+        // }
+    }
 
     private void OperatorChanged(ExpressionOperator op)
     {
@@ -28,7 +48,7 @@
     private string SelectedOperatorToString(ExpressionOperator op)
     {
         return op != null 
-            ? Operators.Single(o => o == op).DisplayText
+            ? _operators.Single(o => o == op).DisplayText
             : string.Empty;
     }
 
@@ -36,34 +56,15 @@
     private string SelectedOperatorToString(MethodCallOperator op)
     {
         return op != null
-            ? Operators.Single(o => o == op).DisplayText
+            ? _operators.Single(o => o == op).DisplayText
             : string.Empty;
-    }
-
-    [Parameter]
-    public Type OperandType { get; set; }
-
-    protected override void OnInitialized()
-    {
-        Operators = GetOperators(OperandType);
-
-        if (Operator is MethodCallOperator methodOperator)
-        {
-            Operator = Operators
-                .OfType<MethodCallOperator>()
-                .FirstOrDefault(op => op == methodOperator);
-        }
-        else
-        {
-            Operator = Operators.FirstOrDefault(x => x == Operator);
-        }
     }
 
     public void SetOperand(Type operandType)
     {
         OperandType = operandType;
-        Operators = GetOperators(operandType);
-        Operator = Operators.First();
+        _operators = GetOperators(operandType);
+        Operator = _operators.First();
     }
 
     public static List<ExpressionOperator> GetOperators(Type operandType)
