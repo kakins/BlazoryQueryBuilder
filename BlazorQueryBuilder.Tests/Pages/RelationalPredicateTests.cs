@@ -49,95 +49,80 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = CreateComponent(lambdaExpression.Body, lambdaExpression.Parameters[0]);
 
             // Act
-            var fieldSelect = component.FindInputByLabel<MudSelect<string>, string>("Field");
-            var fieldItems = fieldSelect.Instance.Items.ToList();
-            await component.InvokeAsync(async () =>
-            {
-                await fieldSelect.Instance.OpenMenu();
-                fieldItems = [.. fieldSelect.Instance.Items];
-            });
+            var field = component.FindComponent<RelationalPredicateField>();
 
             // Assert
-            fieldSelect.Instance.Value.Should().Be(expectedFieldName);
-
-            var expectedFieldItems = lambdaExpression.Parameters[0].Type.GetProperties().Select(p => p.Name);
-            fieldItems
-                .Select(i => i.Value)
-                .Should()
-                .BeEquivalentTo(expectedFieldItems);
-        }
-
-        public static TheoryData<LambdaExpression, string> FieldItemTestData()
-        {
-            Expression<Func<Person, bool>> binaryLambda = person => person.PersonId == "1";
-            Expression<Func<Person, bool>> methodCallLambda = p => EF.Functions.Like(p.FirstName, "%Alice%");
-
-            return new()
-            {
-                { binaryLambda, nameof(Person.PersonId) },
-                { methodCallLambda, nameof(Person.FirstName) }
-            };
-        }
-
-        [Theory]
-        [MemberData(nameof(LeftOperandTestData))]
-        public async Task Updates_left_operand_to_selected_field(List<string> fields)
-        {
-            // Arrange
-            var lambdaExpression = GetLambdaExpression<Address>(address => address.AddressId == 1);
-            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression);
-            var predicateParameter = lambdaExpression.Parameters[0];
-
-            var component = CreateComponent(
-                predicateExpression,
-                predicateParameter,
-                onChange: expression => { predicateExpression = expression as BinaryExpression; });
-
-            // Act
-            var fieldSelect = component.FindInputByLabel<MudSelect<string>, string>("Field");
-
-            await component.InvokeAsync(async () =>
-            {
-                foreach (var property in fields)
-                {
-                    await fieldSelect.Instance.OpenMenu();
-                    await fieldSelect.Instance.SelectOption(property);
-                }
-            });
-
-            // Assert
-            // Verify the operand member expression matches the property selections
-            var leftOperandMembers = ((MemberExpression)predicateExpression.Left).GetMemberExpressionMembers();
-            leftOperandMembers.Should().BeEquivalentTo(fields);
-            fieldSelect.Instance.Value.Should().Be(fields.Last());
+            field.Instance.PredicateExpression.Should().Be(lambdaExpression.Body);
+            field.Instance.ParameterExpression.Should().Be(lambdaExpression.Parameters[0]);
         }
 
         [Fact]
-        public async Task Updates_left_operand_to_navigation_field_first_property()
+        public async Task Updates_operators_on_field_change()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression<Address>(address => address.AddressId == 1);
-            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression);
-            var predicateParameter = lambdaExpression.Parameters[0];
-
+            var lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
             var component = CreateComponent(
-                predicateExpression, 
-                predicateParameter,
-                onChange: expression => { predicateExpression = expression as BinaryExpression; });
+                lambdaExpression.Body, 
+                lambdaExpression.Parameters[0]);
 
             // Act
-            var fieldSelect = component.FindInputByLabel<MudSelect<string>, string>("Field");
-            await component.InvokeAsync(async () =>
+            var updatedExpression = GetLambdaExpression<Person>(person => person.PersonId != "1").Body;
+            var field = component.FindComponent<RelationalPredicateField>();
+            await component.InvokeAsync(() =>
             {
-                await fieldSelect.Instance.OpenMenu();
-                await fieldSelect.Instance.SelectOption(nameof(Address.Person));
+                field.Instance.OnFieldChanged.Invoke(updatedExpression);
             });
 
             // Assert
-            var leftOperand = ((MemberExpression)predicateExpression.Left);
-            leftOperand.Member.DeclaringType.Should().Be(typeof(Person));   
-            leftOperand.Member.Name.Should().Be(nameof(Address.Person.PersonId));
-            fieldSelect.Instance.Value.Should().Be(nameof(Address.Person.PersonId));
+            var operators = component.FindComponent<RelationalOperators>();
+            operators.Instance.PredicateExpression.Should().Be(updatedExpression);
+        }
+
+        [Fact]
+        public async Task Updates_expression_on_field_change()
+        {
+            // Arrange
+            var lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
+            var component = CreateComponent(
+                lambdaExpression.Body,
+                lambdaExpression.Parameters[0]);
+
+            // Act
+            var updatedExpression = GetLambdaExpression<Person>(person => person.PersonId != "1").Body;
+            var field = component.FindComponent<RelationalPredicateField>();
+            await component.InvokeAsync(() =>
+            {
+                field.Instance.OnFieldChanged.Invoke(updatedExpression);
+            });
+
+            // Assert
+            component.Instance.PredicateExpression.Should().Be(updatedExpression);
+        }
+
+        [Fact]
+        public async Task Updates_navigation_path_on_field_change()
+        {
+            // Arrange
+            var lambdaExpression = GetLambdaExpression<Address>(person => person.PersonId == "1");
+            var component = CreateComponent(
+                lambdaExpression.Body,
+                lambdaExpression.Parameters[0]);
+
+            // Act
+            var field = component.FindComponent<RelationalPredicateField>();
+            await component.InvokeAsync(() =>
+            {
+                field.Instance.OnNavigatePathChanged.Invoke("Person");
+            });
+            var navigationPathChips = component
+                .FindComponent<MudChipSet<string>>()
+                .FindComponents<MudChip<string>>();
+
+            // Assert
+            navigationPathChips
+                .Select(c => c.Instance.Text)
+                .Should()
+                .BeEquivalentTo(["Address", "Person"]);
         }
 
         [Theory]
@@ -154,28 +139,29 @@ namespace BlazorQueryBuilder.Tests.Pages
             var operators = component.FindComponent<RelationalOperators>();
 
             // Assert
-            operators.Instance.Operator.ExpressionType.Should().Be(predicateExpression.NodeType);
+            operators.Instance.PredicateExpression.Should().Be(predicateExpression);
         }
 
         [Fact]
-        public async Task Updates_operator_to_selected_operator()
+        public async Task Updates_expression_when_operator_changes()
         {
             // Arrange
             var predicateExpression = _predicateExpression;
             var component = CreateComponent(
                 _predicateExpression, 
                 _predicateParameter,
-                onChange: updatedExpression => { predicateExpression = updatedExpression; });
+                onChange: expression => { predicateExpression = expression; });
 
             // Act
+            var updatedExpression = GetLambdaExpression<Person>(person => person.PersonId != "1").Body;
             var operators = component.FindComponent<RelationalOperators>();
             await component.InvokeAsync(() =>
             {
-                operators.Instance.OnChange(new() { ExpressionType = ExpressionType.NotEqual });
+                operators.Instance.OnChange(updatedExpression);
             });
 
             // Assert
-            predicateExpression.NodeType.Should().Be(ExpressionType.NotEqual);
+            predicateExpression.Should().BeEquivalentTo(updatedExpression);
         }
 
         [Fact]
@@ -430,6 +416,18 @@ namespace BlazorQueryBuilder.Tests.Pages
             [nameof(Address.Utilities), nameof(List<Utility>.Count)]
         ];
 
+        public static TheoryData<LambdaExpression, string> FieldItemTestData()
+        {
+            Expression<Func<Person, bool>> binaryLambda = person => person.PersonId == "1";
+            Expression<Func<Person, bool>> methodCallLambda = p => EF.Functions.Like(p.FirstName, "%Alice%");
+
+            return new()
+            {
+                { binaryLambda, nameof(Person.PersonId) },
+                { methodCallLambda, nameof(Person.FirstName) }
+            };
+        }
+
         public static TheoryData<Expression<Func<Person, bool>>> PredicateOperatorTestData =>
         [
             person => person.PersonId == "1",
@@ -447,7 +445,8 @@ namespace BlazorQueryBuilder.Tests.Pages
             person => person.Created < DateTime.Now,
             person => person.Created <= DateTime.Now,
             person => person.IsAlive == true,
-            person => person.IsAlive != true
+            person => person.IsAlive != true,
+            person => EF.Functions.Like(person.FirstName, "%Alice%"),
         ];
     }
 }

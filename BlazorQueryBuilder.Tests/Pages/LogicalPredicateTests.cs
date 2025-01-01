@@ -48,8 +48,8 @@ namespace BlazorQueryBuilder.Tests.Pages
             });
 
             // Assert
-            component.Instance.PredicateExpression.Should().Be(_lambdaExpression.Body as BinaryExpression);
-            component.Instance.ParameterExpression.Should().Be(_lambdaExpression.Parameters[0]);
+            component.Instance.PredicateExpression.Should().BeEquivalentTo(_lambdaExpression.Body as BinaryExpression);
+            component.Instance.ParameterExpression.Should().BeEquivalentTo(_lambdaExpression.Parameters[0]);
         }
 
         [Fact]

@@ -4,11 +4,11 @@ using BlazoryQueryBuilder.Shared.Models;
 using BlazoryQueryBuilder.Shared.Services;
 using Bunit;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using MudBlazor.Services;
 using System;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Xunit;
@@ -29,12 +29,11 @@ namespace BlazorQueryBuilder.Tests.Pages
             RenderComponent<MudPopoverProvider>();
         }
 
-        [Fact]
-        public async Task Initializes_predicate()
+        [Theory]
+        [MemberData(nameof(LambdaExpressionData))]
+        public async Task Initializes_predicate(Expression<Func<Person, bool>> lambdaExpression)
         {
-            // Arrange
-            Expression<Func<Person, bool>> lambdaExpression = person => person.PersonId == "1";
-            
+            // Arrange            
             // Act
             var component = RenderComponent<LambdaComponent>(parameters =>
             {
@@ -46,14 +45,14 @@ namespace BlazorQueryBuilder.Tests.Pages
 
             // Assert
             var predicateComponent = component.FindComponent<BlazorQueryBuilder.Pages.Predicate>();
-            predicateComponent.Instance.Expression.Should().Be(lambdaExpression.Body as BinaryExpression);
+            predicateComponent.Instance.Expression.Should().Be(lambdaExpression.Body);
         }
 
-        [Fact]
-        public async Task Updates_parent_component_when_lambda_body_changes()
+        [Theory]
+        [MemberData(nameof(LambdaExpressionData))]
+        public async Task Updates_parent_component_when_lambda_body_changes(LambdaExpression lambdaExpression)
         {
             // Arrange
-            LambdaExpression lambdaExpression = (Expression<Func<Person, bool>>)(person => person.PersonId == "1");
             var component = RenderComponent<LambdaComponent>(parameters =>
             {
                 parameters
@@ -61,7 +60,7 @@ namespace BlazorQueryBuilder.Tests.Pages
                     .Add(p => p.Parameter, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChanged, expression => 
                     {
-                        lambdaExpression = lambdaExpression.ReplaceBody(expression as BinaryExpression); 
+                        lambdaExpression = lambdaExpression.ReplaceBody(expression);
                     });
             });
 
@@ -70,19 +69,18 @@ namespace BlazorQueryBuilder.Tests.Pages
             Expression<Func<Person, bool>> updatedLambdaExpression = person => person.PersonId == "2";
             await predicateComponent.InvokeAsync(() =>
             {
-                predicateComponent.Instance.OnChange.Invoke(updatedLambdaExpression.Body as BinaryExpression);
+                predicateComponent.Instance.OnChange.Invoke(updatedLambdaExpression.Body);
             });
 
             // Assert
             lambdaExpression.Should().BeEquivalentTo(updatedLambdaExpression);
         }
 
-        [Fact]
-        public async Task Displays_lambda_expression()
+        [Theory]
+        [MemberData(nameof(LambdaExpressionData))]
+        public async Task Displays_lambda_expression(LambdaExpression lambdaExpression)
         {
             // Arrange
-            Expression<Func<Person, bool>> lambdaExpression = person => person.PersonId == "1";
-
             // Act
             var component = RenderComponent<LambdaComponent>(parameters =>
             {
@@ -101,5 +99,11 @@ namespace BlazorQueryBuilder.Tests.Pages
                 .Should()
                 .Be(lambdaExpression.ToString());
         }
+
+        public static TheoryData<Expression<Func<Person, bool>>> LambdaExpressionData =>
+        [
+            person => person.PersonId == "1",
+            person => EF.Functions.Like(person.LastName, "Doe"),
+        ];
     }
 }

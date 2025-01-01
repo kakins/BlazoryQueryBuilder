@@ -3,6 +3,7 @@ using BlazoryQueryBuilder.Shared.Models;
 using BlazoryQueryBuilder.Shared.Services;
 using Bunit;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using MudBlazor.Services;
@@ -29,7 +30,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
         [Theory]
         [MemberData(nameof(RelationalPredicateTestData))]
-        public async Task Initialiazes_relational_predicate(Expression<Func<Address, bool>> lambdaExpression)
+        public async Task Initializes_relational_predicate(Expression<Func<Address, bool>> lambdaExpression)
         {
             // Arrange
             // Act
@@ -125,7 +126,8 @@ namespace BlazorQueryBuilder.Tests.Pages
             address => address.AddressId >= 1,
             address => address.AddressId < 1,
             address => address.AddressId <= 1,
-            address => address.City.StartsWith('a')
+            address => EF.Functions.Like(address.City, "%a%"),  
+            //address => address.City.StartsWith('a')
         ];
 
         public static TheoryData<Expression<Func<Person, bool>>> LogicalPredicateTestData =>

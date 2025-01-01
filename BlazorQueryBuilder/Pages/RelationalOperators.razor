@@ -1,9 +1,11 @@
 ﻿@using System.Linq.Expressions
+@using BlazorQueryBuilder.ExpressionVisitors.Extensions
+@using BlazoryQueryBuilder.Shared.Extensions
 @using Microsoft.EntityFrameworkCore
 @using MudBlazor
 @using System.Reflection
 
-<MudSelect T="ExpressionOperator" Label="Operator" Value="Operator" ValueChanged="OperatorChanged" ToStringFunc="SelectedOperatorToString">
+<MudSelect T="ExpressionOperator" Label="Operator" Value="_operator" ValueChanged="OperatorChanged" ToStringFunc="SelectedOperatorToString">
     @foreach (var item in _operators)
     {
         <MudSelectItem Value="@item">@item.DisplayText</MudSelectItem>
@@ -11,38 +13,95 @@
 </MudSelect>
 
 @code {
+    [Parameter]
+    public Expression PredicateExpression { get; set; }
 
     [Parameter]
-    public Action<ExpressionOperator> OnChange { get; set; }
+    public Action<Expression> OnChange { get; set; }
 
-    [Parameter]
-    public ExpressionOperator Operator { get; set; }
-
-    [Parameter]
-    public Type OperandType { get; set; }
-    
-    List<ExpressionOperator> _operators = new();
+    private ExpressionOperator _operator { get; set; }
+    private List<ExpressionOperator> _operators = new();
+    private Expression _valueExpression;
+    private MemberExpression _memberAccessExpression;
 
     protected override void OnInitialized()
     {
-        _operators = GetOperators(OperandType);
+        InitializeOperators();
+    }
 
-        // if (Operator is MethodCallOperator methodOperator)
-        // {
-        //     Operator = _operators
-        //         .OfType<MethodCallOperator>()
-        //         .FirstOrDefault(op => op == methodOperator);
-        // }
-        // else
-        // {
-        //     Operator = _operators.FirstOrDefault(x => x == Operator);
-        // }
+    private void InitializeOperators()
+    {
+        if (PredicateExpression is BinaryExpression binaryExpression)
+        {
+            InitializeBinaryExpression(binaryExpression);
+        }
+        else if (PredicateExpression is MethodCallExpression methodCallExpression)
+        {
+            InitializeMethodCallExpression(methodCallExpression);
+        }
+        else if (PredicateExpression is UnaryExpression unaryExpression
+            && unaryExpression.NodeType == ExpressionType.Not
+            && unaryExpression.Operand is MethodCallExpression notMethodCallExpression)
+        {
+            InitializeMethodCallExpression(notMethodCallExpression, true);
+        }
+        else 
+        {
+            throw new NotSupportedException($"Expression type {PredicateExpression.NodeType} is not supported");
+        }
+    }
+
+    private void InitializeBinaryExpression(BinaryExpression binaryExpression)
+    {
+        _operators = GetOperators(binaryExpression.Left.Type);
+        _operator = _operators.FirstOrDefault(o => o.ExpressionType == binaryExpression.NodeType) ?? _operators.First();
+        _valueExpression = binaryExpression.Right;
+        _memberAccessExpression = (MemberExpression)binaryExpression.Left;
+    }
+
+    private void InitializeMethodCallExpression(MethodCallExpression methodCallExpression, bool isNegated = false)
+    {
+        switch (methodCallExpression.Method.Name)
+        {
+            case "Like":
+                _operators = GetOperators(((MemberExpression)methodCallExpression.Arguments[1]).Type);
+                _memberAccessExpression = (MemberExpression)methodCallExpression.Arguments[1];
+                _valueExpression = methodCallExpression.Arguments[2];
+                break;
+            default:
+                throw new NotSupportedException($"Method {methodCallExpression.Method.Name} is not supported");
+        }
+
+        _operator = _operators
+            .OfType<MethodCallOperator>()
+            .FirstOrDefault(o =>
+                o.ExpressionType == methodCallExpression.NodeType
+                && o.MethodInfo == methodCallExpression.Method
+                && o.IsNegated == isNegated)
+            ?? _operators.First();
+
+
     }
 
     private void OperatorChanged(ExpressionOperator op)
     {
-        Operator = op;
-        OnChange?.Invoke(op);
+        _operator = op;
+
+        if (op is BinaryOperator)
+        {
+            var newBinaryExpression = Expression.MakeBinary(op.ExpressionType, _memberAccessExpression, Expression.Constant(_memberAccessExpression.Type.GetDefaultValue()));
+            OnChange?.Invoke(newBinaryExpression);
+        }
+
+        if (op is MethodCallOperator methodCall)
+        {
+            if (methodCall.MethodInfo.Name == "Like")
+            {
+                var method = methodCall.MethodInfo;
+                var newMethodCallExpression = Expression.Call(null, method, Expression.Constant(EF.Functions), _memberAccessExpression, Expression.Constant(_memberAccessExpression.Type.GetDefaultValue(), _memberAccessExpression.Type));
+                OnChange?.Invoke(newMethodCallExpression);
+            }
+        }
     }
 
     private string SelectedOperatorToString(ExpressionOperator op)
@@ -60,11 +119,10 @@
             : string.Empty;
     }
 
-    public void SetOperand(Type operandType)
+    public void UpdateExpression(Expression predicateExpression)
     {
-        OperandType = operandType;
-        _operators = GetOperators(operandType);
-        Operator = _operators.First();
+        PredicateExpression = predicateExpression;
+        InitializeOperators();
     }
 
     public static List<ExpressionOperator> GetOperators(Type operandType)
@@ -136,37 +194,39 @@
         }
     }
 
-    public class EqualsOperator : ExpressionOperator
+    public class BinaryOperator : ExpressionOperator { }
+
+    public class EqualsOperator : BinaryOperator
     {
         public override ExpressionType ExpressionType => ExpressionType.Equal;
         public override string DisplayText => "Equals";
     }
 
-    public class NotEqualsOperator : ExpressionOperator
+    public class NotEqualsOperator : BinaryOperator
     {
         public override ExpressionType ExpressionType => ExpressionType.NotEqual;
         public override string DisplayText => "Does not equal";
     }
 
-    public class LessThanOperator : ExpressionOperator
+    public class LessThanOperator : BinaryOperator
     {
         public override ExpressionType ExpressionType => ExpressionType.LessThan;
         public override string DisplayText => "Less than";
     }
 
-    public class LessThanOrEqualOperator : ExpressionOperator
+    public class LessThanOrEqualOperator : BinaryOperator
     {
         public override ExpressionType ExpressionType => ExpressionType.LessThanOrEqual;
         public override string DisplayText => "Less than or equal";
     }
 
-    public class GreaterThanOperator : ExpressionOperator
+    public class GreaterThanOperator : BinaryOperator
     {
         public override ExpressionType ExpressionType => ExpressionType.GreaterThan;
         public override string DisplayText => "Greater than";
     }
 
-    public class GreaterThanOrEqualOperator : ExpressionOperator
+    public class GreaterThanOrEqualOperator : BinaryOperator
     {
         public override ExpressionType ExpressionType => ExpressionType.GreaterThanOrEqual;
         public override string DisplayText => "Greater than or equal";

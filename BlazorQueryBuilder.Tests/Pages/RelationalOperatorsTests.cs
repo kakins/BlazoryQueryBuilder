@@ -33,15 +33,14 @@ namespace BlazorQueryBuilder.Tests.Pages
 
         [Theory]
         [MemberData(nameof(OperandTypeData))]
-        public async Task Initializes_operator_options_for_operand_type(Type type)
+        public async Task Initializes_operator_options_for_operand_type(Type type, LambdaExpression lambdaExpression)
         {
             // Arrange
             var operators = RelationalOperators.GetOperators(type);
-            var component = base.RenderComponent((Action<ComponentParameterCollectionBuilder<RelationalOperators>>)(parameters =>
+            var component = RenderComponent<RelationalOperators>(parameters =>
             {
-                parameters.Add(p => p.OperandType, type);
-                parameters.Add(p => p.Operator, new EqualsOperator());
-            }));
+                parameters.Add(p => p.PredicateExpression, lambdaExpression.Body);
+            });
 
             // Act
             var select = component.FindComponent<MudSelect<ExpressionOperator>>();
@@ -58,64 +57,62 @@ namespace BlazorQueryBuilder.Tests.Pages
 
         [Theory]
         [MemberData(nameof(OperatorData))]
-        public async Task Initializes_selected_operator(Type type, ExpressionOperator op)
+        public async Task Initializes_selected_operator(LambdaExpression lambdaExpression, ExpressionOperator expectedOperator)
         {
             // Arrange
-            var component = base.RenderComponent((Action<ComponentParameterCollectionBuilder<RelationalOperators>>)(parameters =>
+            var component = RenderComponent<RelationalOperators>(parameters =>
             {
-                parameters.Add(p => p.OperandType, type);
-                parameters.Add(p => p.Operator, op);
-            }));
+                parameters.Add(p => p.PredicateExpression, lambdaExpression.Body);
+            });
 
             // Act
             var select = component.FindComponent<MudSelect<ExpressionOperator>>();
             var selectedOperator = select.Instance.Value;
 
             // Assert
-            select.Instance.Value.Should().BeEquivalentTo(op);
-            select.Instance.Text.Should().Be(op.DisplayText);
+            select.Instance.Value.Should().BeEquivalentTo(expectedOperator);
+            select.Instance.Text.Should().Be(expectedOperator.DisplayText);
         }
 
         [Fact]
         public async Task Updates_selected_operator()
         {
             // Arrange
-            var op = new ExpressionOperator { ExpressionType = ExpressionType.Equal };
-            var component = base.RenderComponent((Action<ComponentParameterCollectionBuilder<RelationalOperators>>)(parameters =>
+            var lambdaExpression = (Expression<Func<Person, bool>>)(p => p.FirstName == "John");
+            var component = RenderComponent<RelationalOperators>(parameters =>
             {
-                parameters.Add(p => p.OperandType, typeof(string));
-                parameters.Add(p => p.Operator, op);
-                parameters.Add(p => p.OnChange, (ExpressionOperator updatedOperator) => op = updatedOperator);
-            }));
+                parameters.Add(p => p.PredicateExpression, lambdaExpression.Body);
+            });
 
             // Act
             var select = component.FindComponent<MudSelect<ExpressionOperator>>();
-            ExpressionOperator selectedOperator = null;
+            MudSelectItem<ExpressionOperator> selectedOperator = null;
             await component.InvokeAsync(async () =>
             {
                 await select.Instance.OpenMenu();
                 var items = select.Instance.Items;
-                selectedOperator = items.First(i => i.Value != op).Value;
-                await select.Instance.SelectOption(selectedOperator);
+                selectedOperator = items.Single(i => i.Value is NotEqualsOperator);
+                await select.Instance.SelectOption(selectedOperator.Value);
             });
 
             // Assert
-            op.Should().Be(selectedOperator);
-            select.Instance.Text.Should().Be(op.DisplayText);
+            selectedOperator.Value.Should().BeOfType<NotEqualsOperator>();
+            select.Instance.Text.Should().Be(selectedOperator.Value.DisplayText);
         }
 
         [Fact]
         public async Task Updates_operator_options_for_operand_type()
         {
             // Arrange
-            var component = base.RenderComponent((Action<ComponentParameterCollectionBuilder<RelationalOperators>>)(parameters =>
+            var lambdaExpression = (Expression<Func<Person, bool>>)(p => p.FirstName == "John");
+            var component = base.RenderComponent<RelationalOperators>(parameters =>
             {
-                parameters.Add(p => p.OperandType, typeof(string));
-                parameters.Add(p => p.Operator, new EqualsOperator());
-            }));
+                parameters.Add(p => p.PredicateExpression, lambdaExpression.Body);
+            });
 
             // Act
-            component.Instance.SetOperand(typeof(int));
+            var newLambdaExpression = (Expression<Func<Person, bool>>)(p => p.NumberOfChildren == 2);
+            component.Instance.UpdateExpression(newLambdaExpression.Body);
             var select = component.FindComponent<MudSelect<ExpressionOperator>>();
             var selectItems = Enumerable.Empty<ExpressionOperator>();
             await component.InvokeAsync(async () =>
@@ -127,33 +124,41 @@ namespace BlazorQueryBuilder.Tests.Pages
             // Assert
             var operators = RelationalOperators.GetOperators(typeof(int));
             selectItems.Should().BeEquivalentTo(operators);
-            component.Instance.Operator.Should().Be(operators.First());
+            component.Instance.PredicateExpression.Should().BeEquivalentTo(newLambdaExpression.Body);
         }
 
-        public static TheoryData<Type> OperandTypeData =>
+        public static TheoryData<Type, Expression<Func<Person, bool>>> OperandTypeData =>
             new()
             {
-                { typeof(string) },
-                { typeof(int) },
-                { typeof(DateTime) },
-                { typeof(bool) }
+                { typeof(string), p => p.FirstName == "John" },
+                { typeof(int), p => p.NumberOfChildren == 2 },
+                { typeof(DateTime), p => p.Created == DateTime.UtcNow },
+                { typeof(bool), p => p.IsAlive == true  }
             };
 
-        public static TheoryData<Type, ExpressionOperator> OperatorData()
+        public static TheoryData<Expression<Func<Person, bool>>, ExpressionOperator> OperatorData()
         {
-            var data = new TheoryData<Type, ExpressionOperator>();
-            var types = new[] { typeof(string), typeof(int), typeof(DateTime), typeof(bool) };
-
-            foreach (var type in types)
+            return new() 
             {
-                var operators = RelationalOperators.GetOperators(type);
-                foreach (var op in operators)
-                {
-                    data.Add(type, op);
-                }
-            }
-
-            return data;
+                { p => p.FirstName == "John", new EqualsOperator() },
+                { p => p.FirstName != "John", new NotEqualsOperator() },
+                { p => EF.Functions.Like(p.FirstName, "%Alice%"), new EfLikeOperator() },
+                { p => !EF.Functions.Like(p.FirstName, "%Alice%"), new EfLikeOperator(true) },
+                { p => p.NumberOfChildren == 2, new EqualsOperator() },
+                { p => p.NumberOfChildren != 2, new NotEqualsOperator() },
+                { p => p.NumberOfChildren < 2, new LessThanOperator() },
+                { p => p.NumberOfChildren > 2, new GreaterThanOperator() },
+                { p => p.NumberOfChildren >= 2, new GreaterThanOrEqualOperator() },
+                { p => p.NumberOfChildren <= 2, new LessThanOrEqualOperator() },
+                { p => p.Created == DateTime.UtcNow, new EqualsOperator() },
+                { p => p.Created != DateTime.UtcNow, new NotEqualsOperator() },
+                { p => p.Created > DateTime.UtcNow, new GreaterThanOperator() },
+                { p => p.Created < DateTime.UtcNow, new LessThanOperator() },
+                { p => p.Created >= DateTime.UtcNow, new GreaterThanOrEqualOperator() },
+                { p => p.Created <= DateTime.UtcNow, new LessThanOrEqualOperator() },
+                { p => p.IsAlive == true, new EqualsOperator() },
+                { p => p.IsAlive != true, new NotEqualsOperator() },
+            };
         }
 
         [Fact]

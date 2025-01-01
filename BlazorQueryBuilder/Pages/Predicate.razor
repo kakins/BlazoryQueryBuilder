@@ -4,8 +4,8 @@
     case ExpressionType.AndAlso:
     case ExpressionType.OrElse:
         <LogicalPredicate PredicateExpression="@GetBinaryExpression()"
-                          ParameterExpression="@ParameterExpression"
-                          OnChange="@Change">
+        ParameterExpression="@ParameterExpression"
+        OnChange="@Change">
         </LogicalPredicate>
         break;
     case ExpressionType.Equal:
@@ -16,9 +16,9 @@
     case ExpressionType.LessThanOrEqual:
     case ExpressionType.Call:
         <RelationalPredicate PredicateExpression="Expression"
-                             ParameterExpression="@ParameterExpression"
-                             OnChange="@Change"
-                             OnRemove="@Remove">
+        ParameterExpression="@ParameterExpression"
+        OnChange="@Change"
+        OnRemove="@Remove">
         </RelationalPredicate>
         break;
 }
