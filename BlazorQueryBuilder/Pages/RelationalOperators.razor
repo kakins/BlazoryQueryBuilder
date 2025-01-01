@@ -45,35 +45,30 @@
 
     protected override void OnInitialized()
     {
-        // InitializeOperators();
-        Operators = GetOperators();
+        Operators = GetOperators(OperandType);
 
-        // TODO: Replace equality check with simple op == methodOperator
         if (ExpressionOperator is MethodCallOperator methodOperator)
         {
             ExpressionOperator = Operators
                 .OfType<MethodCallOperator>()
-                .FirstOrDefault(op =>
-                    op.ExpressionType == methodOperator.ExpressionType
-                    && op.MethodInfo == methodOperator.MethodInfo);
+                .FirstOrDefault(op => op == methodOperator);
         }
-        // TODO: Replace equality check with simple op == ExpressionOperator
         else
         {
-            ExpressionOperator = Operators.FirstOrDefault(x => x.ExpressionType == ExpressionOperator.ExpressionType);
+            ExpressionOperator = Operators.FirstOrDefault(x => x == ExpressionOperator);
         }
     }
 
     public void SetOperand(Type operandType)
     {
         OperandType = operandType;
-        Operators = GetOperators();
+        Operators = GetOperators(operandType);
         ExpressionOperator = Operators.First();
     }
 
-    private List<Operator> GetOperators()
+    public static List<Operator> GetOperators(Type operandType)
     {
-        return OperandType switch
+        return operandType switch
         {
             Type type when type == typeof(int) => new()
             {

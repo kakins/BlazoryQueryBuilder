@@ -9,7 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using MudBlazor.Services;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -33,14 +32,15 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         [Theory]
-        [MemberData(nameof(OperatorsData))]
-        public async Task Displays_operators_for_type(Type type, List<Operator> operators)
+        [MemberData(nameof(OperandTypeData))]
+        public async Task Initializes_operator_options_for_operand_type(Type type)
         {
             // Arrange
+            var operators = RelationalOperators.GetOperators(type);
             var component = RenderComponent<RelationalOperators>(parameters =>
             {
                 parameters.Add(p => p.OperandType, type);
-                parameters.Add(p => p.ExpressionOperator, operators.First());
+                parameters.Add(p => p.ExpressionOperator, new EqualsOperator());
             });
 
             // Act
@@ -56,35 +56,14 @@ namespace BlazorQueryBuilder.Tests.Pages
             selectItems.Should().BeEquivalentTo(operators);
         }
 
-        [Fact]
-        public async Task Initializes_standard_selected_operator()
+        [Theory]
+        [MemberData(nameof(OperatorData))]
+        public async Task Initializes_selected_operator(Type type, Operator op)
         {
             // Arrange
-            var op = new Operator { ExpressionType = ExpressionType.Equal };
             var component = RenderComponent<RelationalOperators>(parameters =>
             {
-                parameters.Add(p => p.OperandType, typeof(string));
-                parameters.Add(p => p.ExpressionOperator, op);
-            });
-
-            // Act
-            var select = component.FindComponent<MudSelect<Operator>>();
-            var selectedOperator = select.Instance.Value;
-
-            // Assert
-            select.Instance.Value.Should().BeEquivalentTo(op);
-            // TODO: get the text value from a lookup/mapping
-            select.Instance.Text.Should().Be("Equals");
-        }
-
-        [Fact]
-        public async Task Initializes_method_selected_operator()
-        {
-            // Arrange
-            var op = new EfLikeOperator();
-            var component = RenderComponent<RelationalOperators>(parameters =>
-            {
-                parameters.Add(p => p.OperandType, typeof(string));
+                parameters.Add(p => p.OperandType, type);
                 parameters.Add(p => p.ExpressionOperator, op);
             });
 
@@ -98,7 +77,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         [Fact]
-        public async Task Updated_selected_operator()
+        public async Task Updates_selected_operator()
         {
             // Arrange
             Operator op = new Operator { ExpressionType = ExpressionType.Equal };
@@ -125,52 +104,31 @@ namespace BlazorQueryBuilder.Tests.Pages
             select.Instance.Text.Should().Be(op.DisplayText);
         }
 
-        public static TheoryData<Type, List<Operator>> OperatorsData =>
+        public static TheoryData<Type> OperandTypeData =>
             new()
             {
-                {
-                    typeof(string),
-                    new()
-                    {
-                        new Operator { ExpressionType = ExpressionType.Equal },
-                        new Operator { ExpressionType = ExpressionType.NotEqual },
-                        new EfLikeOperator(),
-                        new EfLikeOperator(true)
-                    }
-                },
-                {
-                    typeof(int),
-                    new()
-                    {
-                        new Operator { ExpressionType = ExpressionType.Equal },
-                        new Operator { ExpressionType = ExpressionType.NotEqual },
-                        new Operator { ExpressionType = ExpressionType.GreaterThan },
-                        new Operator { ExpressionType = ExpressionType.GreaterThanOrEqual },
-                        new Operator { ExpressionType = ExpressionType.LessThan },
-                        new Operator { ExpressionType = ExpressionType.LessThanOrEqual }
-                    }
-                },
-                {
-                    typeof(DateTime),
-                    new()
-                    {
-                        new Operator { ExpressionType = ExpressionType.Equal },
-                        new Operator { ExpressionType = ExpressionType.NotEqual },
-                        new Operator { ExpressionType = ExpressionType.GreaterThan },
-                        new Operator { ExpressionType = ExpressionType.GreaterThanOrEqual },
-                        new Operator { ExpressionType = ExpressionType.LessThan },
-                        new Operator { ExpressionType = ExpressionType.LessThanOrEqual }
-                    }
-                },
-                {
-                    typeof(bool),
-                    new()
-                    {
-                        new Operator { ExpressionType = ExpressionType.Equal },
-                        new Operator { ExpressionType = ExpressionType.NotEqual }
-                    }
-                }
+                { typeof(string) },
+                { typeof(int) },
+                { typeof(DateTime) },
+                { typeof(bool) }
             };
+
+        public static TheoryData<Type, Operator> OperatorData()
+        {
+            var data = new TheoryData<Type, Operator>();
+            var types = new[] { typeof(string), typeof(int), typeof(DateTime), typeof(bool) };
+
+            foreach (var type in types)
+            {
+                var operators = RelationalOperators.GetOperators(type);
+                foreach (var op in operators)
+                {
+                    data.Add(type, op);
+                }
+            }
+
+            return data;
+        }
 
         [Fact]
         public async Task TestMethodCall()
