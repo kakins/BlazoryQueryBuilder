@@ -2,10 +2,10 @@
 @using BlazorQueryBuilder.ExpressionVisitors;
 @using BlazorQueryBuilder.ExpressionVisitors.Extensions
 <MudStack Spacing="5">
-    <Predicate Expression="@GetLeft()"
-    ParameterExpression="@ParameterExpression"
-    OnChange="@ChangeLeft"
-    OnRemove="@RemoveLeft">
+    <Predicate Expression="PredicateExpression.Left"
+               ParameterExpression="@ParameterExpression"
+               OnChange="@ChangeLeft"
+               OnRemove="@RemoveLeft">
     </Predicate>
     <div>
         <MudSelect T="string" Label="Operator" Value="@PredicateExpression.NodeType.ToString()" ValueChanged="ChangeOperator">
@@ -15,10 +15,10 @@
             }
         </MudSelect>
     </div>
-    <Predicate Expression="@GetRight()"
-    ParameterExpression="@ParameterExpression"
-    OnChange="@ChangeRight"
-    OnRemove="@RemoveRight">
+    <Predicate Expression="PredicateExpression.Right"
+               ParameterExpression="@ParameterExpression"
+               OnChange="@ChangeRight"
+               OnRemove="@RemoveRight">
     </Predicate>
 </MudStack>
 
@@ -41,16 +41,6 @@
 
     protected override void OnInitialized()
     {
-    }
-
-    private Expression GetLeft()
-    {
-        return PredicateExpression.Left;
-    }
-
-    private Expression GetRight()
-    {
-        return PredicateExpression.Right;
     }
 
     private void ChangeLeft(Expression left)
