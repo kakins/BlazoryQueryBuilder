@@ -45,7 +45,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
             // Assert
             var predicateComponent = component.FindComponent<BlazorQueryBuilder.Pages.Predicate>();
-            predicateComponent.Instance.Expression.Should().Be(lambdaExpression.Body);
+            predicateComponent.Instance.PredicateExpression.Should().Be(lambdaExpression.Body);
         }
 
         [Theory]

@@ -1,5 +1,5 @@
 ﻿@using System.Linq.Expressions
-@switch (Expression.NodeType)
+@switch (PredicateExpression.NodeType)
 {
     case ExpressionType.AndAlso:
     case ExpressionType.OrElse:
@@ -18,9 +18,9 @@
     @* TODO: Handle and unit test Not condition*@
     @* Separate component? *@
     case ExpressionType.Not 
-        when Expression is UnaryExpression unaryExpression 
+       when PredicateExpression is UnaryExpression unaryExpression
         && unaryExpression.Operand is MethodCallExpression:
-        <RelationalPredicate PredicateExpression="Expression"
+        <RelationalPredicate PredicateExpression="PredicateExpression"
                              ParameterExpression="@ParameterExpression"
                              OnChange="@Change"
                              OnRemove="@Remove">
@@ -31,7 +31,7 @@
 @code {
 
     [Parameter]
-    public Expression Expression { get; set; }
+    public Expression PredicateExpression { get; set; }
 
     [Parameter]
     public ParameterExpression ParameterExpression { get; set; }
@@ -44,7 +44,7 @@
 
     private BinaryExpression GetBinaryExpression()
     {
-        return Expression as BinaryExpression;
+        return PredicateExpression as BinaryExpression;
     }
 
     private void Change(Expression expression)

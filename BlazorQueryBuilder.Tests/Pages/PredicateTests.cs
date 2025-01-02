@@ -37,7 +37,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<BlazorQueryBuilder.Pages.Predicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.Expression, lambdaExpression.Body)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body)
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
@@ -57,7 +57,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<BlazorQueryBuilder.Pages.Predicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.Expression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body as BinaryExpression)
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
@@ -77,7 +77,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<BlazorQueryBuilder.Pages.Predicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.Expression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body as BinaryExpression)
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { updated = true;  });
             });
@@ -102,7 +102,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<BlazorQueryBuilder.Pages.Predicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.Expression, lambdaExpression.Body)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body)
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { updated = true; });
             });

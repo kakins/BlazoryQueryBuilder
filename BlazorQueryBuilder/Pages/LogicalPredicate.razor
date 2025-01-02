@@ -2,7 +2,7 @@
 @using BlazorQueryBuilder.ExpressionVisitors;
 @using BlazorQueryBuilder.ExpressionVisitors.Extensions
 <MudStack Spacing="5">
-    <Predicate Expression="PredicateExpression.Left"
+    <Predicate PredicateExpression="PredicateExpression.Left"
                ParameterExpression="@ParameterExpression"
                OnChange="@ChangeLeft"
                OnRemove="@RemoveLeft">
@@ -15,7 +15,7 @@
             }
         </MudSelect>
     </div>
-    <Predicate Expression="PredicateExpression.Right"
+    <Predicate PredicateExpression="PredicateExpression.Right"
                ParameterExpression="@ParameterExpression"
                OnChange="@ChangeRight"
                OnRemove="@RemoveRight">
