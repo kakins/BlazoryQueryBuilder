@@ -330,13 +330,11 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         [Theory]
-        [InlineData("And")]
-        [InlineData("Or")]
-        public async Task Adds_predicate_expression(string buttonText)
+        [MemberData(nameof(AddPredicateData))]
+        public async Task Adds_predicate_expression(string buttonText, LambdaExpression lambdaExpression)
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
-            var originalPredicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression);
+            var originalPredicateExpression = lambdaExpression.Body;
             BinaryExpression updatedPredicateExpression = null;
 
             var component = CreateComponent(
@@ -358,6 +356,17 @@ namespace BlazorQueryBuilder.Tests.Pages
             updatedPredicateExpression.NodeType.Should().Be(buttonText == "And" ? ExpressionType.AndAlso : ExpressionType.OrElse);
             // TODO: Add better assertion for right operand
             updatedPredicateExpression.Right.Should().NotBeNull();
+        }
+
+        public static TheoryData<string, Expression<Func<Address, bool>>> AddPredicateData()
+        {
+            return new()
+            {
+                { "And", address => address.PersonId == "1" },
+                { "And", address => EF.Functions.Like(address.City, "%Alice%") },
+                { "Or", address => address.PersonId == "1" },
+                { "Or", address => EF.Functions.Like(address.City, "%Alice%") }
+            };
         }
 
         [Fact]

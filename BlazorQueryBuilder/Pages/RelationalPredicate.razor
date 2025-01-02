@@ -4,6 +4,7 @@
 @using BlazoryQueryBuilder.Shared.Extensions
 @using BlazoryQueryBuilder.Shared.Services
 @using BlazoryQueryBuilder.Shared.Util
+@using static BlazorQueryBuilder.Pages.RelationalOperators
 
 <MudExpansionPanels>
     <MudExpansionPanel Expanded="true">
@@ -21,18 +22,18 @@
         <ChildContent>
             <MudStack Spacing="2">
                 <MudStack Row>
-                    <RelationalPredicateField 
-                    ParameterExpression="ParameterExpression"
-                    PredicateExpression="PredicateExpression"
-                    OnNavigatePathChanged="OnNavigationPathChanged"
-                    OnFieldChanged="OnFieldChanged">
+                    <RelationalPredicateField ParameterExpression="ParameterExpression"
+                                              PredicateExpression="PredicateExpression"
+                                              OnNavigatePathChanged="OnNavigationPathChanged"
+                                              OnFieldChanged="OnFieldChanged">
                     </RelationalPredicateField>
 
                     <RelationalOperators @ref="_relationalOperators"
-                    PredicateExpression="PredicateExpression"
-                    OnChange="@OnOperatorChanged">
+                                         PredicateExpression="PredicateExpression"
+                                         OnChange="@OnOperatorChanged">
                     </RelationalOperators>
 
+                    @* TODO: Move to separate component and test *@
                     @if (PredicateExpression is BinaryExpression binaryExpression)
                     {
 
@@ -55,7 +56,6 @@
                     @if (PredicateExpression is MethodCallExpression methodCallExpression)
                     {
 
-                        // TODO: Unit test
                         if (methodCallExpression.Method.Name == "Like")
                         {
                             @switch (((MemberExpression)methodCallExpression.Arguments[1]).Type)
@@ -150,7 +150,7 @@
         {
             if (methodCallExpression.Method.Name == "Like")
             {
-                var updated = methodCallExpression.Update(methodCallExpression.Object, new[] { methodCallExpression.Arguments[0], methodCallExpression.Arguments[1], expression});
+                var updated = methodCallExpression.Update(methodCallExpression.Object, new[] { methodCallExpression.Arguments[0], methodCallExpression.Arguments[1], expression });
                 UpdateExpression(updated);
             }
         }
@@ -168,19 +168,24 @@
         StateHasChanged();
     }
 
-    private void Add(ExpressionType expressionType)
+    private void Add(ExpressionType binaryExpressionType)
     {
-        var leftOperand = Expression.MakeMemberAccess(ParameterExpression, ParameterExpression.Type.GetProperties().First());
+        var memberAccess = Expression.MakeMemberAccess(ParameterExpression, ParameterExpression.Type.GetProperties().First());
+        
+        var addedExpressionOperator = RelationalOperators
+            .GetOperators(memberAccess.Type)
+            .OfType<BinaryOperator>()
+            .First();
+        
+        var addedExpressionConstant = Expression.Constant(memberAccess.Type.GetDefaultValue(), memberAccess.Type);
+        var addedExpression = Expression.MakeBinary(addedExpressionOperator.ExpressionType, memberAccess, addedExpressionConstant);
 
-        var rightOperandConstant = Expression.Constant(leftOperand.Type.GetDefaultValue(), leftOperand.Type);
-        var rightOperand = Expression.MakeBinary(PredicateExpression.NodeType, leftOperand, rightOperandConstant);
-
-        var expression = Expression.MakeBinary(
-            expressionType,
+        var newLogicalExpression = Expression.MakeBinary(
+            binaryExpressionType,
             PredicateExpression.Copy(),
-            rightOperand);
+            addedExpression);
 
-        OnChange(expression);
+        OnChange(newLogicalExpression);
     }
 
     private void Remove()

@@ -31,15 +31,18 @@
 
     protected override void OnInitialized()
     {
-        // TODO: Handle method calls with arguments in various positions
-        // e.g., EF.Functions.Like(p.FirstName, "%Alice%")
         if (PredicateExpression is MethodCallExpression methodCallExpression)
         {
             // support specific method calls
             var propertyMember = methodCallExpression.Method.Name switch
             {
+                // p.FirstName.StartsWith("Alice")
                 // "StartsWith" => (MemberExpression)methodCallExpression.Object,
+
+                // p.FirstName.EndsWith("Alice")
                 // "EndsWith" => (MemberExpression)methodCallExpression.Object,
+
+                // EF.Functions.Like(p.FirstName, "%Alice%")
                 "Like" => (MemberExpression)methodCallExpression.Arguments[1],
                 _ => throw new NotSupportedException($"Method {methodCallExpression.Method.Name} is not supported")
             };
@@ -59,50 +62,71 @@
 
     private void OnFieldSelected(string propertyName)
     {
-        if (PredicateExpression is BinaryExpression binaryExpression)
+        var memberExpression = GetMemberExpression();
+
+        var selectedProperty = _selectedPropertyType.GetProperty(propertyName);
+
+        if (selectedProperty.PropertyType.IsClass && selectedProperty.PropertyType != typeof(string))
         {
-            var memberExpression = (MemberExpression)binaryExpression.Left;
-            var selectedProperty = _selectedPropertyType.GetProperty(propertyName);
+            var navigationPropertyExpression = memberExpression.ChangePropertyAccess(_selectedPropertyType, propertyName);
+            _selectedPropertyType = navigationPropertyExpression.Type;
 
-            if (selectedProperty.PropertyType.IsClass && selectedProperty.PropertyType != typeof(string))
-            {
-                var navigationPropertyExpression = memberExpression.ChangePropertyAccess(_selectedPropertyType, propertyName);
-                _selectedPropertyType = navigationPropertyExpression.Type;
+            selectedProperty = navigationPropertyExpression.Type.GetProperties().First();
+            _selectedPropertyName = selectedProperty.Name;
 
-                selectedProperty = navigationPropertyExpression.Type.GetProperties().First();
-                _selectedPropertyName = selectedProperty.Name;
+            memberExpression = Expression.MakeMemberAccess(
+                navigationPropertyExpression,
+                selectedProperty);
 
-                memberExpression = Expression.MakeMemberAccess(
-                    navigationPropertyExpression,
-                    selectedProperty);
-
-                OnNavigatePathChanged?.Invoke(propertyName);
-            }
-            else
-            {
-                _selectedPropertyName = propertyName;
-                memberExpression = memberExpression.ChangePropertyAccess(_selectedPropertyType, propertyName);
-            }
-
-            Expression valueExpression = selectedProperty.PropertyType switch
-            {
-                Type type when
-                    type == typeof(int)
-                    || type == typeof(long)
-                    || type == typeof(string)
-                    || type == typeof(bool) => Expression.Constant(selectedProperty.PropertyType.GetDefaultValue(), selectedProperty.PropertyType),
-                Type type when
-                    type == typeof(DateTime) => DateTimeExpression.New(DateTime.UtcNow),
-                _ => throw new Exception("Unsupported property type")
-            };
-
-            var newBinaryExpression = Expression.MakeBinary(binaryExpression.NodeType, memberExpression, valueExpression);
-            PredicateExpression = newBinaryExpression;
-            OnFieldChanged?.Invoke(newBinaryExpression);
+            OnNavigatePathChanged?.Invoke(propertyName);
         }
-        // TODO: Handle and unit test
-        else if (PredicateExpression is MethodCallExpression methodCallExpression)
+        else
         {
+            _selectedPropertyName = propertyName;
+            memberExpression = memberExpression.ChangePropertyAccess(_selectedPropertyType, propertyName);
         }
+
+        var defaultValueExpression = GetDefaultValueExpression(selectedProperty);
+
+        var newOperator = RelationalOperators
+            .GetOperators(selectedProperty.PropertyType)
+            .OfType<RelationalOperators.BinaryOperator>()
+            .First();
+
+        var newExpression = Expression.MakeBinary(newOperator.ExpressionType, memberExpression, defaultValueExpression);
+            
+        PredicateExpression = newExpression;
+        OnFieldChanged?.Invoke(newExpression);
+    }
+
+    private MemberExpression GetMemberExpression()
+    {
+        return PredicateExpression switch
+        {
+            BinaryExpression binary => (MemberExpression)binary.Left,
+            MethodCallExpression methodCall => methodCall.Method.Name switch
+            {
+                // case "StartsWith":
+                // case "EndsWith":
+                "Like" => (MemberExpression)methodCall.Arguments[1],
+                _ => throw new NotSupportedException($"Method {methodCall.Method.Name} is not supported")
+            },
+            _ => throw new NotSupportedException($"Expression type {PredicateExpression.NodeType} is not supported")
+        };
+    }
+
+    private Expression GetDefaultValueExpression(PropertyInfo property)
+    {
+        return property.PropertyType switch
+        {
+            Type type when
+                type == typeof(int)
+                || type == typeof(long)
+                || type == typeof(string)
+                || type == typeof(bool) => Expression.Constant(property.PropertyType.GetDefaultValue(), property.PropertyType),
+            Type type when
+                type == typeof(DateTime) => DateTimeExpression.New(DateTime.UtcNow),
+            _ => throw new Exception("Unsupported property type")
+        };
     }
 }

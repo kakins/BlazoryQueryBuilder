@@ -3,9 +3,9 @@
 @using BlazorQueryBuilder.ExpressionVisitors.Extensions
 <MudStack Spacing="5">
     <Predicate Expression="@GetLeft()"
-               ParameterExpression="@ParameterExpression"
-               OnChange="@ChangeLeft"
-               OnRemove="@RemoveLeft">
+    ParameterExpression="@ParameterExpression"
+    OnChange="@ChangeLeft"
+    OnRemove="@RemoveLeft">
     </Predicate>
     <div>
         <MudSelect T="string" Label="Operator" Value="@PredicateExpression.NodeType.ToString()" ValueChanged="ChangeOperator">
@@ -16,9 +16,9 @@
         </MudSelect>
     </div>
     <Predicate Expression="@GetRight()"
-               ParameterExpression="@ParameterExpression"
-               OnChange="@ChangeRight"
-               OnRemove="@RemoveRight">
+    ParameterExpression="@ParameterExpression"
+    OnChange="@ChangeRight"
+    OnRemove="@RemoveRight">
     </Predicate>
 </MudStack>
 
@@ -31,7 +31,7 @@
     };
 
     [Parameter]
-    public Action<BinaryExpression> OnChange { get; set; }
+    public Action<Expression> OnChange { get; set; }
 
     [Parameter]
     public BinaryExpression PredicateExpression { get; set; }
@@ -43,14 +43,14 @@
     {
     }
 
-    private BinaryExpression GetLeft()
+    private Expression GetLeft()
     {
-        return (BinaryExpression)PredicateExpression.Left;
+        return PredicateExpression.Left;
     }
 
-    private BinaryExpression GetRight()
+    private Expression GetRight()
     {
-        return (BinaryExpression)PredicateExpression.Right;
+        return PredicateExpression.Right;
     }
 
     private void ChangeLeft(Expression left)
@@ -75,13 +75,11 @@
 
     private void RemoveLeft()
     {
-        var newBinary = PredicateExpression.Right.Copy();
-        OnChange((BinaryExpression)newBinary);
+        OnChange(PredicateExpression.Right.Copy());
     }
 
     private void RemoveRight()
     {
-        var newBinary = PredicateExpression.Left.Copy();
-        OnChange((BinaryExpression)newBinary);
+        OnChange(PredicateExpression.Left.Copy());
     }
 }

@@ -5,7 +5,7 @@ namespace BlazorQueryBuilder.Tests.Util
 {
     public static class ExpressionExtensions
     {
-        public static IEnumerable<string> GetMemberExpressionMembers(this MemberExpression memberExpression)
+        public static IEnumerable<string> GetMemberNames(this MemberExpression memberExpression)
         {
             var members = new List<string>();
             var currentExpression = memberExpression;
