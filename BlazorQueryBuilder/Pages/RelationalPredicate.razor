@@ -22,15 +22,15 @@
             <MudStack Spacing="2">
                 <MudStack Row>
                     <RelationalPredicateField 
-                        ParameterExpression="ParameterExpression"
-                        PredicateExpression="PredicateExpression"
-                        OnNavigatePathChanged="OnNavigationPathChanged"
-                        OnFieldChanged="OnFieldChanged">
+                    ParameterExpression="ParameterExpression"
+                    PredicateExpression="PredicateExpression"
+                    OnNavigatePathChanged="OnNavigationPathChanged"
+                    OnFieldChanged="OnFieldChanged">
                     </RelationalPredicateField>
 
                     <RelationalOperators @ref="_relationalOperators"
-                        PredicateExpression="PredicateExpression"
-                        OnChange="@OnOperatorChanged">
+                    PredicateExpression="PredicateExpression"
+                    OnChange="@OnOperatorChanged">
                     </RelationalOperators>
 
                     @if (PredicateExpression is BinaryExpression binaryExpression)
@@ -54,24 +54,6 @@
                     }
                     @if (PredicateExpression is MethodCallExpression methodCallExpression)
                     {
-                        if (new[] { "StartsWith", "EndsWith" }.Contains(methodCallExpression.Method.Name))
-                        {
-                            @switch (((MemberExpression)methodCallExpression.Object).Member.DeclaringType)
-                            {
-                                case Type intType when intType == typeof(int):
-                                    <MudTextField Label="Value" T="int" Value="@((int)((ConstantExpression)methodCallExpression.Arguments[0]).Value)" ValueChanged="@OnValueChanged" />
-                                    break;
-                                case Type stringType when stringType == typeof(string):
-                                    <MudTextField Label="Value" T="string" Value="@((string)((ConstantExpression)methodCallExpression.Arguments[0]).Value)" ValueChanged="@OnValueChanged" />
-                                    break;
-                                case Type boolType when boolType == typeof(bool):
-                                    <MudCheckBox Label="Value" T="bool" Value="@((bool)((ConstantExpression)methodCallExpression.Arguments[0]).Value)" ValueChanged="@OnValueChanged" />
-                                    break;
-                                case Type dateTimeType when dateTimeType == typeof(DateTime):
-                                    <MudDatePicker Label="Value" Date="@(new DateTime((long)((ConstantExpression)methodCallExpression.Arguments[0]).Value))" DateChanged="@OnValueChanged" />
-                                    break;
-                            }
-                        }
 
                         // TODO: Unit test
                         if (methodCallExpression.Method.Name == "Like")
@@ -159,14 +141,19 @@
 
     private void UpdateValue(Expression expression)
     {
+        // TODO: Unit test
         if (PredicateExpression is BinaryExpression binaryExpression)
         {
             UpdateExpression(binaryExpression.ReplaceRight(expression));
         }
+        // TODO: Unit test
         else if (PredicateExpression is MethodCallExpression methodCallExpression)
         {
-            // TODO: Handle method call
-            // UpdateExpression(methodCallExpression.ReplaceArgument(expression));
+            if (methodCallExpression.Method.Name == "Like")
+            {
+                var updated = methodCallExpression.Update(methodCallExpression.Object, new[] { methodCallExpression.Arguments[0], methodCallExpression.Arguments[1], expression});
+                UpdateExpression(updated);
+            }
         }
     }
 

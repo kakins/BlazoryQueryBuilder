@@ -38,8 +38,8 @@
             // support specific method calls
             var propertyMember = methodCallExpression.Method.Name switch
             {
-                "StartsWith" => (MemberExpression)methodCallExpression.Object,
-                "EndsWith" => (MemberExpression)methodCallExpression.Object,
+                // "StartsWith" => (MemberExpression)methodCallExpression.Object,
+                // "EndsWith" => (MemberExpression)methodCallExpression.Object,
                 "Like" => (MemberExpression)methodCallExpression.Arguments[1],
                 _ => throw new NotSupportedException($"Method {methodCallExpression.Method.Name} is not supported")
             };
@@ -100,6 +100,7 @@
             PredicateExpression = newBinaryExpression;
             OnFieldChanged?.Invoke(newBinaryExpression);
         }
+        // TODO: Handle and unit test
         else if (PredicateExpression is MethodCallExpression methodCallExpression)
         {
         }

@@ -95,11 +95,12 @@
 
         if (op is MethodCallOperator methodCall)
         {
+            // TODO: Unit test Like and Not like
             if (methodCall.MethodInfo.Name == "Like")
             {
                 var method = methodCall.MethodInfo;
                 var newMethodCallExpression = Expression.Call(null, method, Expression.Constant(EF.Functions), _memberAccessExpression, Expression.Constant(_memberAccessExpression.Type.GetDefaultValue(), _memberAccessExpression.Type));
-                OnChange?.Invoke(newMethodCallExpression);
+                OnChange?.Invoke(methodCall.IsNegated ? Expression.Not(newMethodCallExpression) : newMethodCallExpression);
             }
         }
     }
@@ -270,7 +271,7 @@
 
     public class EfLikeOperator : MethodCallOperator
     {
-        public override string DisplayText => "Like";
+        public override string DisplayText => IsNegated ? "Not like" : "Like";
 
         public EfLikeOperator(bool isNegated = false)
             : base(typeof(DbFunctionsExtensions).GetMethod("Like", new[] { typeof(DbFunctions), typeof(string), typeof(string) }), isNegated)
