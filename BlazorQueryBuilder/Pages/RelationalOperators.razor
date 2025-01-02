@@ -112,14 +112,6 @@
             : string.Empty;
     }
 
-    // TODO: Verify that this method is needed for MethodOperator
-    private string SelectedOperatorToString(MethodCallOperator op)
-    {
-        return op != null
-            ? _operators.Single(o => o == op).DisplayText
-            : string.Empty;
-    }
-
     public void UpdateExpression(Expression predicateExpression)
     {
         PredicateExpression = predicateExpression;
