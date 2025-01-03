@@ -5,7 +5,7 @@
 @using MudBlazor
 @using System.Reflection
 
-<MudSelect T="ExpressionOperator" Label="Operator" Value="_operator" ValueChanged="OperatorChanged" ToStringFunc="SelectedOperatorToString">
+<MudSelect T="ExpressionOperator" Label="Operator" Value="_operator" ValueChanged="OperatorChanged" ToStringFunc="@(o => o.DisplayText)">
     @foreach (var item in _operators)
     {
         <MudSelectItem Value="@item">@item.DisplayText</MudSelectItem>
@@ -29,25 +29,27 @@
         InitializeOperators();
     }
 
+    public void UpdateExpression(Expression predicateExpression)
+    {
+        PredicateExpression = predicateExpression;
+        InitializeOperators();
+    }
+
     private void InitializeOperators()
     {
-        if (PredicateExpression is BinaryExpression binaryExpression)
+        switch (PredicateExpression)
         {
-            InitializeBinaryExpression(binaryExpression);
-        }
-        else if (PredicateExpression is MethodCallExpression methodCallExpression)
-        {
-            InitializeMethodCallExpression(methodCallExpression);
-        }
-        else if (PredicateExpression is UnaryExpression unaryExpression
-            && unaryExpression.NodeType == ExpressionType.Not
-            && unaryExpression.Operand is MethodCallExpression notMethodCallExpression)
-        {
-            InitializeMethodCallExpression(notMethodCallExpression, true);
-        }
-        else 
-        {
-            throw new NotSupportedException($"Expression type {PredicateExpression.NodeType} is not supported");
+            case BinaryExpression binaryExpression:
+                InitializeBinaryExpression(binaryExpression);
+                break;
+            case MethodCallExpression methodCallExpression:
+                InitializeMethodCallExpression(methodCallExpression);
+                break;
+            case UnaryExpression { NodeType: ExpressionType.Not, Operand: MethodCallExpression notMethodCallExpression }:
+                InitializeMethodCallExpression(notMethodCallExpression, true);
+                break;
+            default:
+                throw new NotSupportedException($"Expression type {PredicateExpression.NodeType} is not supported");
         }
     }
 
@@ -85,35 +87,19 @@
     {
         _operator = op;
 
-        if (op is BinaryOperator)
+        switch (op)
         {
-            var newBinaryExpression = Expression.MakeBinary(op.ExpressionType, _memberAccessExpression, Expression.Constant(_memberAccessExpression.Type.GetDefaultValue()));
-            OnChange?.Invoke(newBinaryExpression);
-        }
+            case BinaryOperator:
+                var newBinaryExpression = Expression.MakeBinary(op.ExpressionType, _memberAccessExpression, Expression.Constant(_memberAccessExpression.Type.GetDefaultValue()));
+                OnChange?.Invoke(newBinaryExpression);
+                break;
 
-        if (op is MethodCallOperator methodCall)
-        {
-            // TODO: Unit test Like and Not like
-            if (methodCall.MethodInfo.Name == "Like")
-            {
+            case MethodCallOperator methodCall when methodCall.MethodInfo.Name == "Like":
                 var method = methodCall.MethodInfo;
                 var newMethodCallExpression = Expression.Call(null, method, Expression.Constant(EF.Functions), _memberAccessExpression, Expression.Constant(_memberAccessExpression.Type.GetDefaultValue(), _memberAccessExpression.Type));
                 OnChange?.Invoke(methodCall.IsNegated ? Expression.Not(newMethodCallExpression) : newMethodCallExpression);
-            }
+                break;
         }
-    }
-
-    private string SelectedOperatorToString(ExpressionOperator op)
-    {
-        return op != null 
-            ? _operators.Single(o => o == op).DisplayText
-            : string.Empty;
-    }
-
-    public void UpdateExpression(Expression predicateExpression)
-    {
-        PredicateExpression = predicateExpression;
-        InitializeOperators();
     }
 
     public static List<ExpressionOperator> GetOperators(Type operandType)
