@@ -33,7 +33,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
         [Theory]
         [MemberData(nameof(OperandTypeData))]
-        public async Task Initializes_operator_options_for_operand_type(Type type, LambdaExpression lambdaExpression)
+        public async Task Initializes_options(Type type, LambdaExpression lambdaExpression)
         {
             // Arrange
             var operators = RelationalOperators.GetOperators(type);
@@ -57,7 +57,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
         [Theory]
         [MemberData(nameof(OperatorData))]
-        public async Task Initializes_selected_operator(LambdaExpression lambdaExpression, ExpressionOperator expectedOperator)
+        public async Task Initializes_selected_operator(Type type, LambdaExpression lambdaExpression, ExpressionOperator expectedOperator)
         {
             // Arrange
             var component = RenderComponent<RelationalOperators>(parameters =>
@@ -87,21 +87,21 @@ namespace BlazorQueryBuilder.Tests.Pages
             // Act
             var select = component.FindComponent<MudSelect<ExpressionOperator>>();
             MudSelectItem<ExpressionOperator> selectedOperator = null;
-            await component.InvokeAsync(async () =>
-            {
-                await select.Instance.OpenMenu();
+                await component.InvokeAsync(async () =>
+                {
+                    await select.Instance.OpenMenu();
                 var items = select.Instance.Items;
                 selectedOperator = items.Single(i => i.Value is NotEqualsOperator);
-                await select.Instance.SelectOption(selectedOperator.Value);
-            });
+                });
 
-            // Assert
+                // Assert
             selectedOperator.Value.Should().BeOfType<NotEqualsOperator>();
             select.Instance.Text.Should().Be(selectedOperator.Value.DisplayText);
-        }
+            }
 
-        [Fact]
-        public async Task Updates_operator_options_for_operand_type()
+        [Theory]
+        [MemberData(nameof(OperatorData))]
+        public async Task Updates_options(Type type, LambdaExpression newLambdaExpression, ExpressionOperator op)
         {
             // Arrange
             var lambdaExpression = (Expression<Func<Person, bool>>)(p => p.FirstName == "John");
@@ -111,7 +111,6 @@ namespace BlazorQueryBuilder.Tests.Pages
             });
 
             // Act
-            var newLambdaExpression = (Expression<Func<Person, bool>>)(p => p.NumberOfChildren == 2);
             component.Instance.UpdateExpression(newLambdaExpression.Body);
             var select = component.FindComponent<MudSelect<ExpressionOperator>>();
             var selectItems = Enumerable.Empty<ExpressionOperator>();
@@ -122,8 +121,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             });
 
             // Assert
-            var operators = RelationalOperators.GetOperators(typeof(int));
-            selectItems.Should().BeEquivalentTo(operators);
+            selectItems.Should().BeEquivalentTo(RelationalOperators.GetOperators(type));
             component.Instance.PredicateExpression.Should().BeEquivalentTo(newLambdaExpression.Body);
         }
 
@@ -136,28 +134,28 @@ namespace BlazorQueryBuilder.Tests.Pages
                 { typeof(bool), p => p.IsAlive == true  }
             };
 
-        public static TheoryData<Expression<Func<Person, bool>>, ExpressionOperator> OperatorData()
+        public static TheoryData<Type, Expression<Func<Person, bool>>, ExpressionOperator> OperatorData()
         {
             return new() 
             {
-                { p => p.FirstName == "John", new EqualsOperator() },
-                { p => p.FirstName != "John", new NotEqualsOperator() },
-                { p => EF.Functions.Like(p.FirstName, "%Alice%"), new EfLikeOperator() },
-                { p => !EF.Functions.Like(p.FirstName, "%Alice%"), new EfLikeOperator(true) },
-                { p => p.NumberOfChildren == 2, new EqualsOperator() },
-                { p => p.NumberOfChildren != 2, new NotEqualsOperator() },
-                { p => p.NumberOfChildren < 2, new LessThanOperator() },
-                { p => p.NumberOfChildren > 2, new GreaterThanOperator() },
-                { p => p.NumberOfChildren >= 2, new GreaterThanOrEqualOperator() },
-                { p => p.NumberOfChildren <= 2, new LessThanOrEqualOperator() },
-                { p => p.Created == DateTime.UtcNow, new EqualsOperator() },
-                { p => p.Created != DateTime.UtcNow, new NotEqualsOperator() },
-                { p => p.Created > DateTime.UtcNow, new GreaterThanOperator() },
-                { p => p.Created < DateTime.UtcNow, new LessThanOperator() },
-                { p => p.Created >= DateTime.UtcNow, new GreaterThanOrEqualOperator() },
-                { p => p.Created <= DateTime.UtcNow, new LessThanOrEqualOperator() },
-                { p => p.IsAlive == true, new EqualsOperator() },
-                { p => p.IsAlive != true, new NotEqualsOperator() },
+                { typeof(string), p => p.FirstName == "John", new EqualsOperator() },
+                { typeof(string), p => p.FirstName != "John", new NotEqualsOperator() },
+                { typeof(string), p => EF.Functions.Like(p.FirstName, "%Alice%"), new EfLikeOperator() },
+                { typeof(string), p => !EF.Functions.Like(p.FirstName, "%Alice%"), new EfLikeOperator(true) },
+                { typeof(int), p => p.NumberOfChildren == 2, new EqualsOperator() },
+                { typeof(int), p => p.NumberOfChildren != 2, new NotEqualsOperator() },
+                { typeof(int), p => p.NumberOfChildren < 2, new LessThanOperator() },
+                { typeof(int), p => p.NumberOfChildren > 2, new GreaterThanOperator() },
+                { typeof(int), p => p.NumberOfChildren >= 2, new GreaterThanOrEqualOperator() },
+                { typeof(int), p => p.NumberOfChildren <= 2, new LessThanOrEqualOperator() },
+                { typeof(DateTime), p => p.Created == DateTime.UtcNow, new EqualsOperator() },
+                { typeof(DateTime), p => p.Created != DateTime.UtcNow, new NotEqualsOperator() },
+                { typeof(DateTime), p => p.Created > DateTime.UtcNow, new GreaterThanOperator() },
+                { typeof(DateTime), p => p.Created < DateTime.UtcNow, new LessThanOperator() },
+                { typeof(DateTime), p => p.Created >= DateTime.UtcNow, new GreaterThanOrEqualOperator() },
+                { typeof(DateTime), p => p.Created <= DateTime.UtcNow, new LessThanOrEqualOperator() },
+                { typeof(bool), p => p.IsAlive == true, new EqualsOperator() },
+                { typeof(bool), p => p.IsAlive != true, new NotEqualsOperator() },
             };
         }
 
