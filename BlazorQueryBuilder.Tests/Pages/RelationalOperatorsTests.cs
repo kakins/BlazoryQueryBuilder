@@ -2,6 +2,7 @@
 using BlazorQueryBuilder.Tests.Util;
 using BlazoryQueryBuilder.Shared.Models;
 using BlazoryQueryBuilder.Shared.Services;
+using BlazoryQueryBuilder.Shared.Util;
 using Bunit;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -174,7 +175,9 @@ namespace BlazorQueryBuilder.Tests.Pages
         public static TheoryData<Expression<Func<Person, bool>>, ExpressionType> UpdateMethodCallOperatorData() => new()
         {
             { p => EF.Functions.Like(p.FirstName, "%Alice%"), ExpressionType.Not },
-            { p => !EF.Functions.Like(p.FirstName, "%Alice%"), ExpressionType.Call }
+            { p => !EF.Functions.Like(p.FirstName, "%Alice%"), ExpressionType.Call },
+            { p => new[] {"Alice", "Bob" }.Contains(p.FirstName), ExpressionType.Not },
+            { p => !new[] {"Alice", "Bob" }.Contains(p.FirstName), ExpressionType.Call }
         };
 
         public static TheoryData<Type, Expression<Func<Person, bool>>, ExpressionOperator> OperatorData() => new()
@@ -197,6 +200,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             { typeof(DateTime), p => p.Created <= DateTime.UtcNow, new LessThanOrEqualOperator() },
             { typeof(bool), p => p.IsAlive == true, new EqualsOperator() },
             { typeof(bool), p => p.IsAlive != true, new NotEqualsOperator() },
+            { typeof(string), p => new[] {"Alice, Bob" }.Contains(p.FirstName), new InListOperator<string>() }
         };
 
         [Fact]
@@ -222,6 +226,36 @@ namespace BlazorQueryBuilder.Tests.Pages
 
             var query1 = dbContext.Persons.Where(like).Select(p => p.FirstName).ToList();
             var query2 = dbContext.Persons.Where(notlike).Select(p => p.FirstName).ToList();
+        }
+
+        [Fact]
+        public async Task TestInListCall()
+        {
+            Expression<Func<Person, bool>> inListLambda = p => new[] { "Alice", "Bob" }.Contains(p.FirstName);
+            Expression<Func<Person, bool>> notInListLambda = p => !new[] { "Alice", "Bob" }.Contains(p.FirstName);
+
+            var values = new[] { "Alice", "Bob" };
+            var parameter = Expression.Parameter(typeof(Person), "p");
+            var property = Expression.Property(parameter, "FirstName");
+            var method = EnumerableMethodInfo.Contains<string>();
+            var list = Expression.Constant(values);
+
+            var methodCall = Expression.Call(null, method, list, property);
+
+            var inList = Expression.Lambda<Func<Person, bool>>(methodCall, parameter);
+
+            var notMethodCall = Expression.Not(methodCall);
+            var notInList = Expression.Lambda<Func<Person, bool>>(notMethodCall, parameter);
+
+            var options = EfHelpers.CreateEfInMemoryContextOptions<MyDbContext>("TestDb");
+            var dbContext = new MyDbContext(options);
+            await dbContext.SeedDatabase();
+
+            inListLambda.Should().BeEquivalentTo(inList);
+            notInListLambda.Should().BeEquivalentTo(notInList);
+
+            var query1 = dbContext.Persons.Where(inList).Select(p => p.FirstName).ToList();
+            var query2 = dbContext.Persons.Where(notInList).Select(p => p.FirstName).ToList();
         }
     }
 }
