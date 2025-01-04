@@ -200,7 +200,10 @@ namespace BlazorQueryBuilder.Tests.Pages
             { typeof(DateTime), p => p.Created <= DateTime.UtcNow, new LessThanOrEqualOperator() },
             { typeof(bool), p => p.IsAlive == true, new EqualsOperator() },
             { typeof(bool), p => p.IsAlive != true, new NotEqualsOperator() },
-            { typeof(string), p => new[] {"Alice, Bob" }.Contains(p.FirstName), new InListOperator<string>() }
+            { typeof(string), p => new[] {"Alice, Bob" }.Contains(p.FirstName), new InListOperator<string>() },
+            { typeof(string), p => !new[] {"Alice, Bob" }.Contains(p.FirstName), new InListOperator<string>(true) },
+            { typeof(int), p => new[] {1, 2 }.Contains(p.NumberOfChildren), new InListOperator<int>() },
+            { typeof(int), p => !new[] {1, 2 }.Contains(p.NumberOfChildren), new InListOperator<int>(true) }
         };
 
         [Fact]
