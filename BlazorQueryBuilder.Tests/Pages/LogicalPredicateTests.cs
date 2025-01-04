@@ -5,6 +5,7 @@ using Bunit;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using MudBlazor;
 using MudBlazor.Services;
 using System;
@@ -175,21 +176,21 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Removes_left_expression(LambdaExpression lambdaExpression)
         {
             // Arrange
-            Expression remainingExpression = null;
+            var onChange = new Mock<Action<Expression>>();
             var component = RenderComponent<LogicalPredicate>(parameters =>
             {
                 parameters
                     .Add(p => p.PredicateExpression, lambdaExpression.Body as BinaryExpression)
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChange, expression => { remainingExpression = expression; });
+                    .Add(p => p.OnChange, onChange.Object );
             });
 
             // Act
             var leftPredicate = component.FindComponents<RelationalPredicate>()[0];
             await leftPredicate.InvokeAsync(leftPredicate.Instance.OnRemove.Invoke);
-            
+
             // Assert
-            remainingExpression.Should().Be(component.Instance.PredicateExpression.Right);
+            onChange.Verify(o => o.Invoke(component.Instance.PredicateExpression.Right), Times.Once);
         }
 
         [Theory]
@@ -197,13 +198,13 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Removes_right_expression(LambdaExpression lambdaExpression)
         {
             // Arrange
-            Expression remainingExpression = null;
+            var onChange = new Mock<Action<Expression>>();
             var component = RenderComponent<LogicalPredicate>(parameters =>
             {
                 parameters
                     .Add(p => p.PredicateExpression, lambdaExpression.Body as BinaryExpression)
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChange, expression => { remainingExpression = expression; });
+                    .Add(p => p.OnChange, onChange.Object);
             });
 
             // Act
@@ -211,7 +212,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             await rightPredicate.InvokeAsync(rightPredicate.Instance.OnRemove.Invoke);
 
             // Assert
-            remainingExpression.Should().Be(component.Instance.PredicateExpression.Left);
+            onChange.Verify(o => o.Invoke(component.Instance.PredicateExpression.Left), Times.Once);
         }
 
         public static TheoryData<string, Expression<Func<Person, bool>>> LogicalPredicateOperatorData => new()

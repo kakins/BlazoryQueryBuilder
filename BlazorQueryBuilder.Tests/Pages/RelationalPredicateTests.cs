@@ -8,6 +8,7 @@ using Bunit;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using MudBlazor;
 using MudBlazor.Services;
 using System;
@@ -147,10 +148,11 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var predicateExpression = _predicateExpression;
+            var onChange = new Mock<Action<Expression>>();
             var component = CreateComponent(
                 _predicateExpression, 
                 _predicateParameter,
-                onChange: expression => { predicateExpression = expression; });
+                onChange: onChange.Object);
 
             // Act
             var updatedExpression = GetLambdaExpression<Person>(person => person.PersonId != "1").Body;
@@ -161,7 +163,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             });
 
             // Assert
-            predicateExpression.Should().BeEquivalentTo(updatedExpression);
+            onChange.Verify(o => o.Invoke(updatedExpression), Times.Once);
         }
 
         [Fact]

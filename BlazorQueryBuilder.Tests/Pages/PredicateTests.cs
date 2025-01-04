@@ -5,6 +5,7 @@ using Bunit;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using MudBlazor;
 using MudBlazor.Services;
 using System;
@@ -73,13 +74,13 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             Expression<Func<Person, bool>> lambdaExpression = person => person.PersonId == "1" && person.PersonId == "2";
-            bool updated = false;
+            var onChange = new Mock<Action<Expression>>();
             var component = RenderComponent<BlazorQueryBuilder.Pages.Predicate>(parameters =>
             {
                 parameters
                     .Add(p => p.PredicateExpression, lambdaExpression.Body as BinaryExpression)
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChange, _ => { updated = true;  });
+                    .Add(p => p.OnChange, onChange.Object);
             });
 
             // Act
@@ -90,7 +91,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             });
 
             // Assert
-            updated.Should().BeTrue();
+            onChange.Verify(o => o.Invoke(lambdaExpression.Body), Times.Once);
         }
 
         [Fact]
@@ -98,13 +99,13 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             Expression<Func<Person, bool>> lambdaExpression = person => person.PersonId == "1";
-            bool updated = false;
+            var onChange = new Mock<Action<Expression>>();
             var component = RenderComponent<BlazorQueryBuilder.Pages.Predicate>(parameters =>
             {
                 parameters
                     .Add(p => p.PredicateExpression, lambdaExpression.Body)
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChange, _ => { updated = true; });
+                    .Add(p => p.OnChange, onChange.Object);
             });
 
             // Act
@@ -115,7 +116,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             });
 
             // Assert
-            updated.Should().BeTrue();
+            onChange.Verify(o => o.Invoke(lambdaExpression.Body), Times.Once);
         }
 
         public static TheoryData<Expression<Func<Address, bool>>> RelationalPredicateTestData =>

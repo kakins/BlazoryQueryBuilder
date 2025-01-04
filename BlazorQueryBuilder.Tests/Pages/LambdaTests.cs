@@ -6,6 +6,7 @@ using Bunit;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using MudBlazor;
 using MudBlazor.Services;
 using System;
@@ -53,15 +54,13 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Updates_parent_component_when_lambda_body_changes(LambdaExpression lambdaExpression)
         {
             // Arrange
+            var onChanged = new Mock<Action<Expression>>();
             var component = RenderComponent<LambdaComponent>(parameters =>
             {
                 parameters
                     .Add(p => p.Lambda, lambdaExpression)
                     .Add(p => p.Parameter, lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChanged, expression => 
-                    {
-                        lambdaExpression = lambdaExpression.ReplaceBody(expression);
-                    });
+                    .Add(p => p.OnChanged, onChanged.Object);
             });
 
             // Act
@@ -73,7 +72,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             });
 
             // Assert
-            lambdaExpression.Should().BeEquivalentTo(updatedLambdaExpression);
+            onChanged.Verify(o => o.Invoke(updatedLambdaExpression.Body), Times.Once);
         }
 
         [Theory]
