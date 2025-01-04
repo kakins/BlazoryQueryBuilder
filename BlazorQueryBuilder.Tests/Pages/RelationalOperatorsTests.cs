@@ -207,7 +207,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         };
 
         [Fact]
-        public async Task TestMethodCall()
+        public async Task MethodCallLike()
         {
             Expression<Func<Person, bool>> expression = p => EF.Functions.Like(p.FirstName, "%Alice%");
 
@@ -232,7 +232,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         [Fact]
-        public async Task TestInListCall()
+        public async Task MethodCallContains()
         {
             Expression<Func<Person, bool>> inListLambda = p => new[] { "Alice", "Bob" }.Contains(p.FirstName);
             Expression<Func<Person, bool>> notInListLambda = p => !new[] { "Alice", "Bob" }.Contains(p.FirstName);
