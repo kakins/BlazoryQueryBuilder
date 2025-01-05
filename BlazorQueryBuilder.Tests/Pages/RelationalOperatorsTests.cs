@@ -126,13 +126,12 @@ namespace BlazorQueryBuilder.Tests.Pages
             });
 
             // Assert
-            var constantValue = (ConstantExpression)updatedExpression.Right;
-            constantValue.Value.Should().Be("John");
+            updatedExpression.Right.As<ConstantExpression>().Value.Should().Be("John");
         }
 
         [Theory]
         [MemberData(nameof(UpdateMethodCallOperatorData))]
-        public async Task Updates_selected_method_call_operator(LambdaExpression lambdaExpression, ExpressionType updatedExpressionType, MethodCallOperator op)
+        public async Task Updates_selected_method_call_operator(LambdaExpression lambdaExpression, MethodCallOperator op)
         {
             var onChange = new Mock<Action<Expression>>();
             var component = RenderComponent<RelationalOperators>(parameters =>
@@ -204,12 +203,12 @@ namespace BlazorQueryBuilder.Tests.Pages
             { typeof(bool), p => p.IsAlive == true  }
         };
 
-        public static TheoryData<Expression<Func<Person, bool>>, ExpressionType, MethodCallOperator> UpdateMethodCallOperatorData() => new()
+        public static TheoryData<Expression<Func<Person, bool>>, MethodCallOperator> UpdateMethodCallOperatorData() => new()
         {
-            { p => EF.Functions.Like(p.FirstName, "%Alice%"), ExpressionType.Not, new EfLikeOperator() },
-            { p => !EF.Functions.Like(p.FirstName, "%Alice%"), ExpressionType.Call, new EfLikeOperator(true) },
-            { p => new[] {"Alice", "Bob" }.Contains(p.FirstName), ExpressionType.Not, new InListOperator<string>() },
-            { p => !new[] {"Alice", "Bob" }.Contains(p.FirstName), ExpressionType.Call, new InListOperator<string>(true) }
+            { p => EF.Functions.Like(p.FirstName, "%Alice%"), new EfLikeOperator() },
+            { p => ! EF.Functions.Like(p.FirstName, "%Alice%"), new EfLikeOperator(true) },
+            { p => new[] {"Alice", "Bob" }.Contains(p.FirstName), new InListOperator<string>() },
+            { p => ! new[] { "Alice", "Bob" }.Contains(p.FirstName), new InListOperator < string >(true) }
         };
 
         public static TheoryData<Type, Expression<Func<Person, bool>>, ExpressionOperator> OperatorData() => new()

@@ -58,14 +58,14 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<BlazorQueryBuilder.Pages.Predicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.PredicateExpression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
 
             // Assert
             var logicalPredicate = component.FindComponent<LogicalPredicate>();
-            logicalPredicate.Instance.PredicateExpression.Should().Be(lambdaExpression.Body as BinaryExpression);
+            logicalPredicate.Instance.PredicateExpression.Should().Be(lambdaExpression.Body.As<BinaryExpression>());
             logicalPredicate.Instance.ParameterExpression.Should().Be(lambdaExpression.Parameters[0]);
         }
 
@@ -78,7 +78,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<BlazorQueryBuilder.Pages.Predicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.PredicateExpression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, onChange.Object);
             });
@@ -87,7 +87,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var logicalPredicate = component.FindComponent<LogicalPredicate>();
             await logicalPredicate.InvokeAsync(() =>
             {
-                logicalPredicate.Instance.OnChange.Invoke(lambdaExpression.Body as BinaryExpression);
+                logicalPredicate.Instance.OnChange.Invoke(lambdaExpression.Body.As<BinaryExpression>());
             });
 
             // Assert

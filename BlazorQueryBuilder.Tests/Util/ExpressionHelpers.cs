@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace BlazorQueryBuilder.Tests.Util
 {
-    public static class ExpressionExtensions
+    public static class ExpressionHelpers
     {
         public static IEnumerable<string> GetMemberNames(this MemberExpression memberExpression)
         {
@@ -17,5 +18,7 @@ namespace BlazorQueryBuilder.Tests.Util
             members.Reverse();
             return members;
         }
+
+        public static LambdaExpression CreateLambda<T>(Expression<Func<T, bool>> lambdaExpression) => lambdaExpression;
     }
 }

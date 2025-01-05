@@ -34,7 +34,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
             RenderComponent<MudPopoverProvider>();
 
-            _lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
+            _lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.PersonId == "1");
             _predicateParameter = _lambdaExpression.Parameters[0];
             _predicateExpression = _lambdaExpression.Body;
         }
@@ -83,7 +83,6 @@ namespace BlazorQueryBuilder.Tests.Pages
 
             // Act
             var fieldSelect = component.FindInputByLabel<MudSelect<string>, string>("Field");
-
             foreach (var property in fields)
             {
                 await component.InvokeAsync(async () =>
@@ -96,23 +95,30 @@ namespace BlazorQueryBuilder.Tests.Pages
             // Assert
             // Verify the operand member expression matches the property selections
             // Changing fields will always return a new binary expression
-            var memberExpression = ((BinaryExpression)predicateExpression).Left as MemberExpression;
-            memberExpression.GetMemberNames().Should().BeEquivalentTo(fields);
-            fieldSelect.Instance.Value.Should().Be(fields.Last());
+            predicateExpression
+                .As<BinaryExpression>()
+                .Left
+                .As<MemberExpression>()
+                .GetMemberNames()
+                .Should().BeEquivalentTo(fields);
+            fieldSelect
+                .Instance.Value
+                .Should()
+                .Be(fields.Last());
         }
 
         [Fact]
         public async Task Selects_first_property_of_navigation_field()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression<Address>(address => address.AddressId == 1);
-            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression);
+            var lambdaExpression = ExpressionHelpers.CreateLambda<Address>(address => address.AddressId == 1);
+            var predicateExpression = lambdaExpression.Body.As<BinaryExpression>();
             var predicateParameter = lambdaExpression.Parameters[0];
 
             var component = CreateComponent(
                 predicateExpression,
                 predicateParameter,
-                onChange: expression => { predicateExpression = expression as BinaryExpression; });
+                onChange: expression => { predicateExpression = expression.As<BinaryExpression>(); });
 
             // Act
             var fieldSelect = component.FindInputByLabel<MudSelect<string>, string>("Field");
@@ -124,7 +130,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
             // Assert
             var newMemberName = nameof(Address.Person.PersonId);
-            var memberExpression = ((MemberExpression)predicateExpression.Left);
+            var memberExpression = predicateExpression.Left.As<MemberExpression>();
             memberExpression.Member.DeclaringType.Should().Be(typeof(Person));
             memberExpression.Member.Name.Should().Be(newMemberName);
             fieldSelect.Instance.Value.Should().Be(newMemberName);
@@ -163,8 +169,8 @@ namespace BlazorQueryBuilder.Tests.Pages
 
         public static TheoryData<LambdaExpression, List<string>> SelectedFieldTestData()
         {
-            var binaryLambdaExpression = GetLambdaExpression<Address>(address => address.AddressId == 1);
-            var methodCallLambdaExpression = GetLambdaExpression<Address>(address => EF.Functions.Like(address.City, "%Metropolis%"));
+            var binaryLambdaExpression = ExpressionHelpers.CreateLambda<Address>(address => address.AddressId == 1);
+            var methodCallLambdaExpression = ExpressionHelpers.CreateLambda<Address>(address => EF.Functions.Like(address.City, "%Metropolis%"));
             
             return new TheoryData<LambdaExpression, List<string>>() 
             { 
@@ -176,8 +182,5 @@ namespace BlazorQueryBuilder.Tests.Pages
                 { methodCallLambdaExpression, [nameof(Address.Utilities), nameof(List <Utility>.Count)] }
             };
         }
-
-        private static LambdaExpression GetLambdaExpression<T>(Expression<Func<T, bool>> lambdaExpression) => lambdaExpression;
-        private static T GetLambdaBodyExpression<T>(LambdaExpression lambdaExpression) where T : Expression => lambdaExpression.Body as T;
     }
 }

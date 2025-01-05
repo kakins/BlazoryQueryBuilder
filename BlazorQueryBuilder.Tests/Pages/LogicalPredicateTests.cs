@@ -16,7 +16,6 @@ using Xunit;
 
 namespace BlazorQueryBuilder.Tests.Pages
 {
-
     public class LogicalPredicateTests : TestContext
     {
         private Expression<Func<Person, bool>> _lambdaExpression;
@@ -45,13 +44,13 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<LogicalPredicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.PredicateExpression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
 
             // Assert
-            component.Instance.PredicateExpression.Should().BeEquivalentTo(lambdaExpression.Body as BinaryExpression);
+            component.Instance.PredicateExpression.Should().BeEquivalentTo(lambdaExpression.Body.As<BinaryExpression>());
             component.Instance.ParameterExpression.Should().BeEquivalentTo(lambdaExpression.Parameters[0]);
         }
 
@@ -66,7 +65,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<LogicalPredicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.PredicateExpression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
@@ -87,7 +86,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<LogicalPredicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.PredicateExpression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
@@ -105,7 +104,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<LogicalPredicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.PredicateExpression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
@@ -127,7 +126,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<LogicalPredicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.PredicateExpression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
@@ -135,7 +134,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             // Act
             var leftPredicate = component.FindComponents<RelationalPredicate>()[0];
             Expression<Func<Person, bool>> newLeftLambda = person => person.PersonId == "3";
-            var newLeftBinaryExpression = newLeftLambda.Body as BinaryExpression;
+            var newLeftBinaryExpression = newLeftLambda.Body.As<BinaryExpression>();
             await leftPredicate.InvokeAsync(() =>
             {
                 leftPredicate.Instance.OnChange.Invoke(newLeftBinaryExpression);
@@ -153,15 +152,15 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<LogicalPredicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.PredicateExpression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
 
             // Act
-            var rightPredicate = component.FindComponents<RelationalPredicate>()[1];
             Expression<Func<Person, bool>> newRightLambda = person => person.PersonId == "3";
-            var newRightExpression = newRightLambda.Body as BinaryExpression;
+            var rightPredicate = component.FindComponents<RelationalPredicate>()[1];
+            var newRightExpression = newRightLambda.Body.As<BinaryExpression>();
             await rightPredicate.InvokeAsync(() =>
             {
                 rightPredicate.Instance.OnChange.Invoke(newRightExpression);
@@ -180,7 +179,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<LogicalPredicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.PredicateExpression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, onChange.Object );
             });
@@ -202,7 +201,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<LogicalPredicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.PredicateExpression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, onChange.Object);
             });

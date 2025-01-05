@@ -34,7 +34,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
             RenderComponent<MudPopoverProvider>();
 
-            _lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
+            _lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.PersonId == "1");
             _predicateParameter = _lambdaExpression.Parameters[0];
             _predicateExpression = _lambdaExpression.Body;
         }
@@ -43,7 +43,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Initializes_int_value()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression<Person>(person => person.NumberOfChildren == 4);
+            var lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.NumberOfChildren == 4);
             var predicateExpression = lambdaExpression.Body;
 
             // Act
@@ -58,8 +58,8 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Updates_right_operand_to_int_value()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression<Person>(person => person.NumberOfChildren == 4);
-            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression);
+            var lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.NumberOfChildren == 4);
+            var predicateExpression = lambdaExpression.Body.As<BinaryExpression>();
             var onValueChanged = new Mock<Action<Expression>>();
             
             var component = CreateComponent(
@@ -82,7 +82,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Initializes_string_value()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
+            var lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.PersonId == "1");
             var predicateExpression = lambdaExpression.Body;
 
             // Act
@@ -97,8 +97,8 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Updates_right_operand_to_string_value()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
-            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression);
+            var lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.PersonId == "1");
+            var predicateExpression = lambdaExpression.Body.As<BinaryExpression>();
             var onValueChanged = new Mock<Action<Expression>>();
 
             var component = CreateComponent(
@@ -121,8 +121,8 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Initializes_date_value()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression<Person>(person => person.Created == System.DateTime.MinValue);
-            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression).ReplaceRight(Expression.Constant(System.DateTime.Now));
+            var lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.Created == DateTime.MinValue);
+            var predicateExpression = lambdaExpression.Body.As<BinaryExpression>().ReplaceRight(Expression.Constant(DateTime.Now));
 
             // Act
             var component = CreateComponent(predicateExpression, lambdaExpression.Parameters[0]);
@@ -131,15 +131,15 @@ namespace BlazorQueryBuilder.Tests.Pages
             var valueInput = component
                 .FindComponents<MudDatePicker>()
                 .FirstOrDefault(p => p.Instance.Label == "Value"); ;
-            valueInput.Instance.Date.Should().BeCloseTo(System.DateTime.Now, TimeSpan.FromSeconds(1));
+            valueInput.Instance.Date.Should().BeCloseTo(DateTime.Now, TimeSpan.FromSeconds(1));
         }
 
         [Fact]
         public async Task Updates_right_operand_to_date_value()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression<Person>(person => person.Created == System.DateTime.MinValue);
-            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression).ReplaceRight(Expression.Constant(System.DateTime.Now));
+            var lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.Created == DateTime.MinValue);
+            var predicateExpression = lambdaExpression.Body.As<BinaryExpression>().ReplaceRight(Expression.Constant(DateTime.Now));
             var onValueChanged = new Mock<Action<Expression>>();
 
             var component = CreateComponent(
@@ -148,7 +148,7 @@ namespace BlazorQueryBuilder.Tests.Pages
                 onValueChanged: onValueChanged.Object);
 
             // Act
-            var dateTime = System.DateTime.Now.AddDays(1);
+            var dateTime = DateTime.Now.AddDays(1);
             var dateValueInput = component
                 .FindComponents<MudDatePicker>()
                 .FirstOrDefault(p => p.Instance.Label == "Value");
@@ -165,7 +165,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Initializes_bool_value()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression<Person>(person => person.IsAlive == true);
+            var lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.IsAlive == true);
             var predicateExpression = lambdaExpression.Body;
 
             // Act
@@ -180,8 +180,8 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Updates_right_operand_to_bool_value()
         {
             // Arrange
-            var lambdaExpression = GetLambdaExpression<Person>(person => person.IsAlive == true);
-            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression);
+            var lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.IsAlive == true);
+            var predicateExpression = lambdaExpression.Body.As<BinaryExpression>();
             var onValueChanged = new Mock<Action<Expression>>();
 
             var component = CreateComponent(
@@ -218,10 +218,5 @@ namespace BlazorQueryBuilder.Tests.Pages
                     .Add(p => p.OnValueChanged, onValueChanged);
             });
         }
-
-        private LambdaExpression GetLambdaExpression<T>(Expression<Func<T, bool>> lambdaExpression) => lambdaExpression;
-        
-        private T GetLambdaBodyExpression<T>(LambdaExpression lambdaExpression) where T : Expression => lambdaExpression.Body as T;
-
     }
 }
