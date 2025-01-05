@@ -167,170 +167,6 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         [Fact]
-        public async Task Initializes_int_value()
-        {
-            // Arrange
-            var lambdaExpression = GetLambdaExpression<Person>(person => person.NumberOfChildren == 4);
-            var predicateExpression = lambdaExpression.Body;
-
-            // Act
-            var component = CreateComponent(predicateExpression, lambdaExpression.Parameters[0]);
-
-            // Assert
-            var valueInput = component.FindInputByLabel<MudTextField<int>, int>("Value");
-            valueInput.Instance.Value.Should().Be(4);
-        }
-
-        [Fact]
-        public async Task Updates_right_operand_to_int_value()
-        {
-            // Arrange
-            var lambdaExpression = GetLambdaExpression<Person>(person => person.NumberOfChildren == 4);
-            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression);
-
-            var component = CreateComponent(
-                predicateExpression, 
-                lambdaExpression.Parameters[0], 
-                updatedExpression => { predicateExpression = updatedExpression as BinaryExpression; });
-
-            // Act
-            var valueInput = component.FindInputByLabel<MudTextField<int>, int>("Value");
-            await component.InvokeAsync(() =>
-            {
-                valueInput.Instance.SetText("5");
-            });
-
-            // Assert
-            var rightOperand = predicateExpression.Right as ConstantExpression;
-            rightOperand.Value.Should().Be(5);
-        }
-
-        [Fact]
-        public async Task Initializes_string_value()
-        {
-            // Arrange
-            var lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
-            var predicateExpression = lambdaExpression.Body;
-
-            // Act
-            var component = CreateComponent(predicateExpression, lambdaExpression.Parameters[0]);
-
-            // Assert
-            var valueInput = component.FindInputByLabel<MudTextField<string>, string>("Value");
-            valueInput.Instance.Value.Should().Be("1");
-        }
-
-        [Fact]
-        public async Task Updates_right_operand_to_string_value()
-        {
-            // Arrange
-            var lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
-            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression);
-
-            var component = CreateComponent(
-                predicateExpression,
-                lambdaExpression.Parameters[0],
-                onChange: updatedExpression => { predicateExpression = updatedExpression as BinaryExpression; });
-
-            // Act
-            var valueInput = component.FindInputByLabel<MudTextField<string>, string>("Value");
-            await component.InvokeAsync(() =>
-            {
-                valueInput.Instance.SetText("2");
-            });
-
-            // Assert
-            var rightOperand = predicateExpression.Right as ConstantExpression;
-            rightOperand.Value.Should().Be("2");
-        }
-
-        [Fact]
-        public async Task Initializes_date_value()
-        {
-            // Arrange
-            var lambdaExpression = GetLambdaExpression<Person>(person => person.Created == DateTime.MinValue);
-            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression).ReplaceRight(Expression.Constant(DateTime.Now));
-
-            // Act
-            var component = CreateComponent(predicateExpression, lambdaExpression.Parameters[0]);
-
-            // Assert
-            var valueInput = component
-                .FindComponents<MudDatePicker>()
-                .FirstOrDefault(p => p.Instance.Label == "Value"); ;
-            valueInput.Instance.Date.Should().BeCloseTo(DateTime.Now, TimeSpan.FromSeconds(1));
-        }
-
-        [Fact]
-        public async Task Updates_right_operand_to_date_value()
-        {
-            // Arrange
-            var lambdaExpression = GetLambdaExpression<Person>(person => person.Created == DateTime.MinValue);
-            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression).ReplaceRight(Expression.Constant(DateTime.Now));
-
-            var component = CreateComponent(
-                predicateExpression, 
-                lambdaExpression.Parameters[0],
-                onChange: updatedExpression => { predicateExpression = updatedExpression as BinaryExpression; });
-
-            // Act
-            var dateTime = DateTime.Now.AddDays(1);
-            var dateValueInput = component
-                .FindComponents<MudDatePicker>()
-                .FirstOrDefault(p => p.Instance.Label == "Value");
-            await component.InvokeAsync(async () =>
-            {
-                await dateValueInput.Instance.DateChanged.InvokeAsync(dateTime);
-            });
-
-            // Assert
-            var rightOperand = predicateExpression.Right as ConstantExpression;
-            rightOperand.Value.Should().Be(dateTime);
-        }
-
-        [Fact]
-        public async Task Initializes_bool_value()
-        {
-            // Arrange
-            var lambdaExpression = GetLambdaExpression<Person>(person => person.IsAlive == true);
-            var predicateExpression = lambdaExpression.Body;
-
-            // Act
-            var component = CreateComponent(predicateExpression, lambdaExpression.Parameters[0]);   
-
-            // Assert
-            var valueInput = component.FindComponents<MudSelect<bool>>().FirstOrDefault(c => c.Instance.Label == "Value"); ;
-            valueInput.Instance.Value.Should().BeTrue();
-        }
-
-        [Fact]
-        public async Task Updates_right_operand_to_bool_value()
-        {
-            // Arrange
-            var lambdaExpression = GetLambdaExpression<Person>(person => person.IsAlive == true);
-            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression);
-
-            var component = CreateComponent(
-                predicateExpression, 
-                lambdaExpression.Parameters[0], 
-                onChange: updatedExpression => { predicateExpression = updatedExpression as BinaryExpression; });
-
-            // Act
-            var valueInput = component
-                .FindComponents<MudSelect<bool>>()
-                .FirstOrDefault(c => c.Instance.Label == "Value");
-            
-            await component.InvokeAsync(async () =>
-            {
-                await valueInput.Instance.ValueChanged.InvokeAsync(false);
-            });
-
-            // Assert
-            var rightOperand = predicateExpression.Right as ConstantExpression;
-            rightOperand.Value.Should().Be(false);
-        }
-
-        [Fact]
         public async Task Updates_operators_on_value_change()
         {
             // Arrange
@@ -340,16 +176,22 @@ namespace BlazorQueryBuilder.Tests.Pages
                 lambdaExpression.Parameters[0]);
 
             // Act
-            var valueInput = component.FindInputByLabel<MudTextField<string>, string>("Value");
+            var updatedExpression = lambdaExpression.Body
+                .As<BinaryExpression>()
+                .ReplaceRight(Expression.Constant("2"));
+            var value = component.FindComponent<RelationalValue>();
             await component.InvokeAsync(() =>
             {
-                valueInput.Instance.SetText("2");
+                value.Instance.OnValueChanged(updatedExpression);
             });
 
             // Assert
-            var updatedExpression = GetLambdaExpression<Person>(person => person.PersonId == "2").Body;
-            var operators = component.FindComponent<RelationalOperators>();
-            operators.Instance.PredicateExpression.Should().BeEquivalentTo(updatedExpression);
+            component
+                .FindComponent<RelationalOperators>()
+                .Instance
+                .PredicateExpression
+                .Should()
+                .BeEquivalentTo(updatedExpression);
         }
 
         [Theory]
