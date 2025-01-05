@@ -249,7 +249,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = GetLambdaExpression<Person>(person => person.Created == DateTime.MinValue);
-            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression).ReplaceRight(DateTimeExpression.New(DateTime.Now));
+            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression).ReplaceRight(Expression.Constant(DateTime.Now));
 
             // Act
             var component = CreateComponent(predicateExpression, lambdaExpression.Parameters[0]);
@@ -266,7 +266,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = GetLambdaExpression<Person>(person => person.Created == DateTime.MinValue);
-            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression).ReplaceRight(DateTimeExpression.New(DateTime.Now));
+            var predicateExpression = GetLambdaBodyExpression<BinaryExpression>(lambdaExpression).ReplaceRight(Expression.Constant(DateTime.Now));
 
             var component = CreateComponent(
                 predicateExpression, 
@@ -284,9 +284,8 @@ namespace BlazorQueryBuilder.Tests.Pages
             });
 
             // Assert
-            var rightOperand = predicateExpression.Right as NewExpression;
-            var rightOperandConstant = rightOperand.Arguments[0] as ConstantExpression;
-            rightOperandConstant.Value.Should().Be(dateTime.Ticks);
+            var rightOperand = predicateExpression.Right as ConstantExpression;
+            rightOperand.Value.Should().Be(dateTime);
         }
 
         [Fact]
