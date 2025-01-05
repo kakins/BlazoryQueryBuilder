@@ -98,7 +98,10 @@
                 var newBinaryExpression = Expression.MakeBinary(
                     binaryType: op.ExpressionType, 
                     left: _memberAccessExpression, 
-                    right: Expression.Constant(_memberAccessExpression.Type.GetDefaultValue()));
+                    // Perserve the right binary constant value for BinaryOperators
+                    right: op is BinaryOperator
+                        ? _valueExpression
+                        : Expression.Constant(_memberAccessExpression.Type.GetDefaultValue()));
                 OnChange?.Invoke(newBinaryExpression);
                 break;
 

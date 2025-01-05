@@ -103,6 +103,33 @@ namespace BlazorQueryBuilder.Tests.Pages
             onChange.Verify(o => o(It.IsAny<BinaryExpression>()), Times.Once);
         }
 
+        [Fact]
+        public async Task Preserves_binary_constant_value_for_updated_binary_operator()
+        {
+            // Arrange
+            var lambdaExpression = (Expression<Func<Person, bool>>)(p => p.FirstName == "John");
+            BinaryExpression updatedExpression = null;
+            var component = RenderComponent<RelationalOperators>(parameters =>
+            {
+                parameters.Add(p => p.PredicateExpression, lambdaExpression.Body);
+                parameters.Add(p => p.OnChange, (exp) => updatedExpression = (BinaryExpression)exp);
+            });
+
+            // Act
+            var select = component.FindComponent<MudSelect<ExpressionOperator>>();
+            var selectedOperator = await component.InvokeAsync(async () =>
+            {
+                await select.Instance.OpenMenu();
+                var notEquals = select.Instance.Items.Single(i => i.Value is NotEqualsOperator);
+                await select.Instance.SelectOption(notEquals.Value);
+                return notEquals;
+            });
+
+            // Assert
+            var constantValue = (ConstantExpression)updatedExpression.Right;
+            constantValue.Value.Should().Be("John");
+        }
+
         [Theory]
         [MemberData(nameof(UpdateMethodCallOperatorData))]
         public async Task Updates_selected_method_call_operator(LambdaExpression lambdaExpression, ExpressionType updatedExpressionType, MethodCallOperator op)

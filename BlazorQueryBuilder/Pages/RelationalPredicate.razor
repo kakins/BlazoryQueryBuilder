@@ -24,15 +24,15 @@
                 <MudGrid>
                     <MudItem xs="12" sm="4">
                         <RelationalPredicateField ParameterExpression="ParameterExpression"
-                                                  PredicateExpression="PredicateExpression"
-                                                  OnNavigatePathChanged="OnNavigationPathChanged"
-                                                  OnFieldChanged="OnFieldChanged">
+                        PredicateExpression="PredicateExpression"
+                        OnNavigatePathChanged="AddToNavigatePath"
+                        OnFieldChanged="UpdateField">
                         </RelationalPredicateField>
                     </MudItem>
                     <MudItem xs="12" sm="4">
                         <RelationalOperators @ref="_relationalOperators"
-                                             PredicateExpression="PredicateExpression"
-                                             OnChange="@OnOperatorChanged">
+                        PredicateExpression="PredicateExpression"
+                        OnChange="@UpdateOperator">
                         </RelationalOperators>
                     </MudItem>
                     <MudItem xs="12" sm="4">
@@ -53,7 +53,7 @@
                                         <MudSelectItem Value="false">False</MudSelectItem>
                                     </MudSelect>
                                     break;
-                                 case Type dateTimeType when dateTimeType == typeof(DateTime) && binaryExpression.Right is ConstantExpression dateTimeContant:
+                                case Type dateTimeType when dateTimeType == typeof(DateTime) && binaryExpression.Right is ConstantExpression dateTimeContant:
                                     <MudDatePicker Label="Value" Date="@((DateTime)dateTimeContant.Value)" DateChanged="@UpdateValue" />
                                     break;
                             }
@@ -80,7 +80,7 @@
                                                 <MudChipSet T="string" Size="Size.Small">
                                                     @foreach (var item in ((IEnumerable<string>)((ConstantExpression)methodCallExpression.Arguments[0]).Value))
                                                     {
-                                                        <MudChip T="string" Color="Color.Default" Variant="Variant.Text" OnClose="@OnListItemRemoved" Text="@item" />
+                                                        <MudChip T="string" Color="Color.Default" Variant="Variant.Text" OnClose="@RemoveListItem" Text="@item" />
                                                     }
                                                 </MudChipSet>
                                             </MudStack>
@@ -93,9 +93,9 @@
                     <MudItem xs="12" sm="4">
                         <div>
                             <MudStack Row Spacing="2">
-                                <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.AndAlso))">And</MudButton>
-                                <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.OrElse))">Or</MudButton>
-                                <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Delete" OnClick="Remove"></MudIconButton>
+                                <MudButton Variant="Variant.Filled" OnClick="@(() => AddPredicate(ExpressionType.AndAlso))">And</MudButton>
+                                <MudButton Variant="Variant.Filled" OnClick="@(() => AddPredicate(ExpressionType.OrElse))">Or</MudButton>
+                                <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Delete" OnClick="RemovePredicate"></MudIconButton>
                             </MudStack>
                         </div>
                     </MudItem>
@@ -115,7 +115,7 @@
         <MudTextField Label="Value" T="string" @bind-Text="_listItemInputValue" />
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="px-10" OnClick="@OnListItemAdded">Ok</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="px-10" OnClick="@AddListItem">Ok</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -151,7 +151,7 @@
         _showListItemDialog = true;
     }
 
-    private void OnListItemAdded()
+    private void AddListItem()
     {
         if (string.IsNullOrWhiteSpace(_listItemInputValue))
         {
@@ -165,20 +165,20 @@
         UpdateValue(items);
     }
 
-    private void OnListItemRemoved(MudChip<string> item)
+    private void RemoveListItem(MudChip<string> item)
     {
         var stringArray = ((IEnumerable<string>)((ConstantExpression)((MethodCallExpression)PredicateExpression).Arguments[0]).Value).ToList();
         stringArray.Remove(item.Text);
         UpdateValue(stringArray);
     }
 
-    private void OnNavigationPathChanged(string propertyName)
+    private void AddToNavigatePath(string propertyName)
     {
         _navigationPath.Add(propertyName);
         StateHasChanged();
     }
 
-    private void OnFieldChanged(Expression expression)
+    private void UpdateField(Expression expression)
     {
         _relationalOperators.UpdateExpression(expression);
 
@@ -200,7 +200,9 @@
         // TODO: Unit test
         if (PredicateExpression is BinaryExpression binaryExpression)
         {
-            UpdateExpression(binaryExpression.ReplaceRight(expression));
+            var updated = binaryExpression.ReplaceRight(expression);
+            UpdateExpression(updated);
+            _relationalOperators.UpdateExpression(updated);
         }
         // TODO: Unit test
         else if (PredicateExpression is MethodCallExpression methodCallExpression)
@@ -209,28 +211,30 @@
             {
                 var updated = methodCallExpression.Update(methodCallExpression.Object, new[] { methodCallExpression.Arguments[0], methodCallExpression.Arguments[1], expression });
                 UpdateExpression(updated);
+                _relationalOperators.UpdateExpression(updated);
             }
             if (methodCallExpression.Method.Name == "Contains")
             {
                 var updated = methodCallExpression.Update(methodCallExpression.Object, new[] { expression, methodCallExpression.Arguments[1] });
                 UpdateExpression(updated);
+                _relationalOperators.UpdateExpression(updated);
             }
         }
     }
 
-    private void OnOperatorChanged(Expression expression)
+    private void UpdateOperator(Expression expression)
     {
         UpdateExpression(expression);
     }
 
-    private void UpdateExpression(Expression expression)
+    private void UpdateExpression(Expression predicateExpression)
     {
-        PredicateExpression = expression;
-        OnChange(expression);
+        PredicateExpression = predicateExpression;
+        OnChange(predicateExpression);
         StateHasChanged();
     }
 
-    private void Add(ExpressionType binaryExpressionType)
+    private void AddPredicate(ExpressionType binaryExpressionType)
     {
         var memberAccess = Expression.MakeMemberAccess(ParameterExpression, ParameterExpression.Type.GetProperties().First());
 
@@ -250,7 +254,7 @@
         OnChange(newLogicalExpression);
     }
 
-    private void Remove()
+    private void RemovePredicate()
     {
         OnRemove();
     }

@@ -331,6 +331,28 @@ namespace BlazorQueryBuilder.Tests.Pages
             rightOperand.Value.Should().Be(false);
         }
 
+        [Fact]
+        public async Task Updates_operators_on_value_change()
+        {
+            // Arrange
+            var lambdaExpression = GetLambdaExpression<Person>(person => person.PersonId == "1");
+            var component = CreateComponent(
+                lambdaExpression.Body,
+                lambdaExpression.Parameters[0]);
+
+            // Act
+            var valueInput = component.FindInputByLabel<MudTextField<string>, string>("Value");
+            await component.InvokeAsync(() =>
+            {
+                valueInput.Instance.SetText("2");
+            });
+
+            // Assert
+            var updatedExpression = GetLambdaExpression<Person>(person => person.PersonId == "2").Body;
+            var operators = component.FindComponent<RelationalOperators>();
+            operators.Instance.PredicateExpression.Should().BeEquivalentTo(updatedExpression);
+        }
+
         [Theory]
         [MemberData(nameof(AddPredicateData))]
         public async Task Adds_predicate_expression(string buttonText, LambdaExpression lambdaExpression)
