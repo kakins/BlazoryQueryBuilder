@@ -300,7 +300,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = CreateComponent(predicateExpression, lambdaExpression.Parameters[0]);   
 
             // Assert
-            var valueInput = component.FindComponents<MudCheckBox<bool>>().FirstOrDefault(c => c.Instance.Label == "Value"); ;
+            var valueInput = component.FindComponents<MudSelect<bool>>().FirstOrDefault(c => c.Instance.Label == "Value"); ;
             valueInput.Instance.Value.Should().BeTrue();
         }
 
@@ -318,7 +318,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
             // Act
             var valueInput = component
-                .FindComponents<MudCheckBox<bool>>()
+                .FindComponents<MudSelect<bool>>()
                 .FirstOrDefault(c => c.Instance.Label == "Value");
             
             await component.InvokeAsync(async () =>
