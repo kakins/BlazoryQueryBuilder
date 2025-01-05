@@ -84,7 +84,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<RelationalOperators>(parameters =>
             {
                 parameters.Add(p => p.PredicateExpression, lambdaExpression.Body);
-                parameters.Add(p => p.OnChange, onChange.Object);
+                parameters.Add(p => p.OnOperatedUpdated, onChange.Object);
             });
 
             // Act
@@ -112,7 +112,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<RelationalOperators>(parameters =>
             {
                 parameters.Add(p => p.PredicateExpression, lambdaExpression.Body);
-                parameters.Add(p => p.OnChange, (exp) => updatedExpression = (BinaryExpression)exp);
+                parameters.Add(p => p.OnOperatedUpdated, (exp) => updatedExpression = (BinaryExpression)exp);
             });
 
             // Act
@@ -137,7 +137,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<RelationalOperators>(parameters =>
             {
                 parameters.Add(p => p.PredicateExpression, lambdaExpression.Body);
-                parameters.Add(p => p.OnChange, onChange.Object);
+                parameters.Add(p => p.OnOperatedUpdated, onChange.Object);
             });
 
             // Act

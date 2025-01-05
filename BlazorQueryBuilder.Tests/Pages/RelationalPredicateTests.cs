@@ -158,7 +158,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             var operators = component.FindComponent<RelationalOperators>();
             await component.InvokeAsync(() =>
             {
-                operators.Instance.OnChange(updatedExpression);
+                operators.Instance.OnOperatedUpdated(updatedExpression);
             });
 
             // Assert

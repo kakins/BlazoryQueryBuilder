@@ -27,13 +27,13 @@
                             ParameterExpression="ParameterExpression"
                             PredicateExpression="PredicateExpression"
                             OnNavigatePathChanged="AddToNavigatePath"
-                            OnFieldChanged="UpdateField">
+                            OnFieldChanged="OnFieldChanged">
                         </RelationalPredicateField>
                     </MudItem>
                     <MudItem xs="12" sm="4">
                         <RelationalOperators @ref="_relationalOperators"
                             PredicateExpression="PredicateExpression"
-                            OnChange="@UpdateOperator">
+                            OnOperatedUpdated="@OnOperatedUpdated">
                         </RelationalOperators>
                     </MudItem>
                     <MudItem xs="12" sm="4">
@@ -57,8 +57,6 @@
     </MudExpansionPanel>
 </MudExpansionPanels>
 
-
-
 @code {
     [Parameter]
     public Action<Expression> OnChange { get; set; }
@@ -75,10 +73,6 @@
     private RelationalOperators _relationalOperators;
     private List<string> _navigationPath = new();
 
-    private string _listItemInputValue;
-    private bool _showListItemDialog;
-    private DialogOptions _listItemDialogOptions = new DialogOptions { CloseButton = true };
-
     protected override void OnInitialized()
     {
         _navigationPath.Add(ParameterExpression.Type.Name);
@@ -86,7 +80,7 @@
         base.OnInitialized();
     }
 
-    private void UpdateField(Expression expression)
+    private void OnFieldChanged(Expression expression)
     {
         _relationalOperators.UpdateExpression(expression);
         UpdateExpression(expression);
@@ -98,7 +92,7 @@
         StateHasChanged();
     }
 
-    private void UpdateOperator(Expression expression)
+    private void OnOperatedUpdated(Expression expression)
     {
         UpdateExpression(expression);
     }

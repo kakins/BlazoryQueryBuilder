@@ -17,7 +17,7 @@
     public Expression PredicateExpression { get; set; }
 
     [Parameter]
-    public Action<Expression> OnChange { get; set; }
+    public Action<Expression> OnOperatedUpdated { get; set; }
 
     private ExpressionOperator _operator { get; set; }
     private List<ExpressionOperator> _operators = new();
@@ -102,7 +102,7 @@
                     right: op is BinaryOperator
                         ? _valueExpression
                         : Expression.Constant(_memberAccessExpression.Type.GetDefaultValue()));
-                OnChange?.Invoke(newBinaryExpression);
+                OnOperatedUpdated?.Invoke(newBinaryExpression);
                 break;
 
             case MethodCallOperator methodCall when methodCall.MethodInfo.Name == "Like":
@@ -127,7 +127,7 @@
 
         void UpdateMethodCallExpression(bool isNegated, MethodCallExpression expression)
         { 
-            OnChange?.Invoke(isNegated ? Expression.Not(expression) : expression);
+            OnOperatedUpdated?.Invoke(isNegated ? Expression.Not(expression) : expression);
         }
     }
 }
