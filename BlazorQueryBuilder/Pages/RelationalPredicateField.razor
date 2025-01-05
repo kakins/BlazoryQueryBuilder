@@ -115,7 +115,7 @@
                 || type == typeof(string)
                 || type == typeof(bool) => Expression.Constant(property.PropertyType.GetDefaultValue(), property.PropertyType),
             Type type when
-                type == typeof(DateTime) => DateTimeExpression.New(DateTime.UtcNow),
+                type == typeof(DateTime) => Expression.Constant(DateTime.UtcNow),
             _ => throw new Exception("Unsupported property type")
         };
     }

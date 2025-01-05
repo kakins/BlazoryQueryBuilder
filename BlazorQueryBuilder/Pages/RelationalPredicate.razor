@@ -42,31 +42,30 @@
                             @switch (binaryExpression.Left.Type)
                             {
                                 case Type intType when intType == typeof(int) && binaryExpression.Right is ConstantExpression intConstant:
-                                    <MudTextField Label="Value" T="int" Value="@((int)intConstant.Value)" ValueChanged="@OnValueChanged" />
+                                    <MudTextField Label="Value" T="int" Value="@((int)intConstant.Value)" ValueChanged="@UpdateValue" />
                                     break;
                                 case Type stringType when stringType == typeof(string) && binaryExpression.Right is ConstantExpression stringConstant:
-                                    <MudTextField Label="Value" T="string" Value="@(stringConstant.Value?.ToString())" ValueChanged="@OnValueChanged" />
+                                    <MudTextField Label="Value" T="string" Value="@(stringConstant.Value?.ToString())" ValueChanged="@UpdateValue" />
                                     break;
                                 case Type boolType when boolType == typeof(bool) && binaryExpression.Right is ConstantExpression boolConstant:
-                                    <MudSelect Label="Value" T="bool" Value="@((bool)boolConstant.Value)" ValueChanged="@OnValueChanged">
+                                    <MudSelect Label="Value" T="bool" Value="@((bool)boolConstant.Value)" ValueChanged="@UpdateValue">
                                         <MudSelectItem Value="true">True</MudSelectItem>
                                         <MudSelectItem Value="false">False</MudSelectItem>
                                     </MudSelect>
                                     break;
-                                case Type dateTimeType when dateTimeType == typeof(DateTime) && binaryExpression.Right is NewExpression newDateTime:
-                                    <MudDatePicker Label="Value" Date="@(new DateTime((long)((ConstantExpression)newDateTime.Arguments[0]).Value))" DateChanged="@OnValueChanged" />
+                                 case Type dateTimeType when dateTimeType == typeof(DateTime) && binaryExpression.Right is ConstantExpression dateTimeContant:
+                                    <MudDatePicker Label="Value" Date="@((DateTime)dateTimeContant.Value)" DateChanged="@UpdateValue" />
                                     break;
                             }
                         }
                         @if (PredicateExpression is MethodCallExpression methodCallExpression)
                         {
-
                             if (methodCallExpression.Method.Name == "Like")
                             {
                                 @switch (((MemberExpression)methodCallExpression.Arguments[1]).Type)
                                 {
-                                    case Type intType when intType == typeof(int):
-                                        <MudNumericField Label="Value" T="int" Value="@((int)((ConstantExpression)methodCallExpression.Arguments[2]).Value)" ValueChanged="@OnValueChanged" />
+                                    case Type intType when intType == typeof(string):
+                                        <MudTextField Label="Value" T="string" Value="@((string)((ConstantExpression)methodCallExpression.Arguments[2]).Value)" ValueChanged="UpdateValue" />
                                         break;
                                 }
                             }
@@ -90,7 +89,6 @@
                                 }
                             }
                         }
-
                     </MudItem>
                     <MudItem xs="12" sm="4">
                         <div>
@@ -187,17 +185,11 @@
         UpdateExpression(expression);
     }
 
-    private void OnValueChanged(int intValue) => UpdateValue(intValue);
-
-    private void OnValueChanged(string stringValue) => UpdateValue(stringValue);
-
-    private void OnValueChanged(bool boolValue) => UpdateValue(boolValue);
-
-    private void OnValueChanged(DateTime? dateTime)
+    private void UpdateValue(DateTime? dateTime)
     {
         if (dateTime.HasValue)
         {
-            UpdateValue((Expression)DateTimeExpression.New(dateTime.Value));
+            UpdateValue(dateTime.Value);
         }
     }
 
