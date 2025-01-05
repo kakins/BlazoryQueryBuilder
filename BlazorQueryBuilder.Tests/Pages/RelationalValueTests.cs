@@ -44,10 +44,9 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.NumberOfChildren == 4);
-            var predicateExpression = lambdaExpression.Body;
 
             // Act
-            var component = CreateComponent(predicateExpression, lambdaExpression.Parameters[0]);
+            var component = CreateComponent(lambdaExpression.Body, lambdaExpression.Parameters[0]);
 
             // Assert
             var valueInput = component.FindInputByLabel<MudTextField<int>, int>("Value");
@@ -59,11 +58,10 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.NumberOfChildren == 4);
-            var predicateExpression = lambdaExpression.Body.As<BinaryExpression>();
             var onValueChanged = new Mock<Action<Expression>>();
             
             var component = CreateComponent(
-                predicateExpression,
+                lambdaExpression.Body.As<BinaryExpression>(),
                 lambdaExpression.Parameters[0],
                 onValueChanged.Object);
 
@@ -83,10 +81,9 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.PersonId == "1");
-            var predicateExpression = lambdaExpression.Body;
 
             // Act
-            var component = CreateComponent(predicateExpression, lambdaExpression.Parameters[0]);
+            var component = CreateComponent(lambdaExpression.Body, lambdaExpression.Parameters[0]);
 
             // Assert
             var valueInput = component.FindInputByLabel<MudTextField<string>, string>("Value");
@@ -98,11 +95,10 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.PersonId == "1");
-            var predicateExpression = lambdaExpression.Body.As<BinaryExpression>();
             var onValueChanged = new Mock<Action<Expression>>();
 
             var component = CreateComponent(
-                predicateExpression,
+                lambdaExpression.Body.As<BinaryExpression>(),
                 lambdaExpression.Parameters[0],
                 onValueChanged: onValueChanged.Object);
 
@@ -138,7 +134,7 @@ namespace BlazorQueryBuilder.Tests.Pages
         public async Task Updates_right_operand_to_date_value()
         {
             // Arrange
-            var lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.Created == DateTime.MinValue);
+            var lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.Created == DateTime.Now);
             var predicateExpression = lambdaExpression.Body.As<BinaryExpression>().ReplaceRight(Expression.Constant(DateTime.Now));
             var onValueChanged = new Mock<Action<Expression>>();
 
@@ -166,10 +162,9 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.IsAlive == true);
-            var predicateExpression = lambdaExpression.Body;
 
             // Act
-            var component = CreateComponent(predicateExpression, lambdaExpression.Parameters[0]);
+            var component = CreateComponent(lambdaExpression.Body, lambdaExpression.Parameters[0]);
 
             // Assert
             var valueInput = component.FindComponents<MudSelect<bool>>().FirstOrDefault(c => c.Instance.Label == "Value"); ;
@@ -181,11 +176,10 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             var lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.IsAlive == true);
-            var predicateExpression = lambdaExpression.Body.As<BinaryExpression>();
             var onValueChanged = new Mock<Action<Expression>>();
 
             var component = CreateComponent(
-                predicateExpression,
+                lambdaExpression.Body.As<BinaryExpression>(),
                 lambdaExpression.Parameters[0],
                 onValueChanged: onValueChanged.Object);
 
