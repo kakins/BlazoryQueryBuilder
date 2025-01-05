@@ -21,70 +21,105 @@
         </TitleContent>
         <ChildContent>
             <MudStack Spacing="2">
-                <MudStack Row>
-                    <RelationalPredicateField ParameterExpression="ParameterExpression"
-                                              PredicateExpression="PredicateExpression"
-                                              OnNavigatePathChanged="OnNavigationPathChanged"
-                                              OnFieldChanged="OnFieldChanged">
-                    </RelationalPredicateField>
-
-                    <RelationalOperators @ref="_relationalOperators"
-                                         PredicateExpression="PredicateExpression"
-                                         OnChange="@OnOperatorChanged">
-                    </RelationalOperators>
-
-                    @* TODO: Move to separate component and test *@
-                    @if (PredicateExpression is BinaryExpression binaryExpression)
-                    {
-
-                        @switch (binaryExpression.Left.Type)
+                <MudGrid>
+                    <MudItem xs="12" sm="4">
+                        <RelationalPredicateField ParameterExpression="ParameterExpression"
+                                                  PredicateExpression="PredicateExpression"
+                                                  OnNavigatePathChanged="OnNavigationPathChanged"
+                                                  OnFieldChanged="OnFieldChanged">
+                        </RelationalPredicateField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <RelationalOperators @ref="_relationalOperators"
+                                             PredicateExpression="PredicateExpression"
+                                             OnChange="@OnOperatorChanged">
+                        </RelationalOperators>
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        @* TODO: Move to separate component and test *@
+                        @if (PredicateExpression is BinaryExpression binaryExpression)
                         {
-                            case Type intType when intType == typeof(int) && binaryExpression.Right is ConstantExpression intConstant:
-                                <MudTextField Label="Value" T="int" Value="@((int)intConstant.Value)" ValueChanged="@OnValueChanged" />
-                                break;
-                            case Type stringType when stringType == typeof(string) && binaryExpression.Right is ConstantExpression stringConstant:
-                                <MudTextField Label="Value" T="string" Value="@(stringConstant.Value?.ToString())" ValueChanged="@OnValueChanged" />
-                                break;
-                            case Type boolType when boolType == typeof(bool) && binaryExpression.Right is ConstantExpression boolConstant:
-                                <MudCheckBox Label="Value" T="bool" Value="@((bool)boolConstant.Value)" ValueChanged="@OnValueChanged" />
-                                break;
-                            case Type dateTimeType when dateTimeType == typeof(DateTime) && binaryExpression.Right is NewExpression newDateTime:
-                                <MudDatePicker Label="Value" Date="@(new DateTime((long)((ConstantExpression)newDateTime.Arguments[0]).Value))" DateChanged="@OnValueChanged" />
-                                break;
-                        }
-                    }
-                    @if (PredicateExpression is MethodCallExpression methodCallExpression)
-                    {
-
-                        if (methodCallExpression.Method.Name == "Like")
-                        {
-                            @switch (((MemberExpression)methodCallExpression.Arguments[1]).Type)
+                            @switch (binaryExpression.Left.Type)
                             {
-                                case Type intType when intType == typeof(int):
-                                    <MudTextField Label="Value" T="int" Value="@((int)((ConstantExpression)methodCallExpression.Arguments[2]).Value)" ValueChanged="@OnValueChanged" />
+                                case Type intType when intType == typeof(int) && binaryExpression.Right is ConstantExpression intConstant:
+                                    <MudTextField Label="Value" T="int" Value="@((int)intConstant.Value)" ValueChanged="@OnValueChanged" />
                                     break;
-                                case Type stringType when stringType == typeof(string):
-                                    <MudTextField Label="Value" T="string" Value="@((string)((ConstantExpression)methodCallExpression.Arguments[2]).Value)" ValueChanged="@OnValueChanged" />
+                                case Type stringType when stringType == typeof(string) && binaryExpression.Right is ConstantExpression stringConstant:
+                                    <MudTextField Label="Value" T="string" Value="@(stringConstant.Value?.ToString())" ValueChanged="@OnValueChanged" />
                                     break;
-                                case Type boolType when boolType == typeof(bool):
-                                    <MudCheckBox Label="Value" T="bool" Value="@((bool)((ConstantExpression)methodCallExpression.Arguments[2]).Value)" ValueChanged="@OnValueChanged" />
+                                case Type boolType when boolType == typeof(bool) && binaryExpression.Right is ConstantExpression boolConstant:
+                                    <MudSelect Label="Value" T="bool" Value="@((bool)boolConstant.Value)" ValueChanged="@OnValueChanged">
+                                        <MudSelectItem Value="true">True</MudSelectItem>
+                                        <MudSelectItem Value="false">False</MudSelectItem>
+                                    </MudSelect>
                                     break;
-                                case Type dateTimeType when dateTimeType == typeof(DateTime):
-                                    <MudDatePicker Label="Value" Date="@(new DateTime((long)((ConstantExpression)methodCallExpression.Arguments[2]).Value))" DateChanged="@OnValueChanged" />
+                                case Type dateTimeType when dateTimeType == typeof(DateTime) && binaryExpression.Right is NewExpression newDateTime:
+                                    <MudDatePicker Label="Value" Date="@(new DateTime((long)((ConstantExpression)newDateTime.Arguments[0]).Value))" DateChanged="@OnValueChanged" />
                                     break;
                             }
                         }
-                    }
-                    <MudStack Row Spacing="2">
-                        <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.AndAlso))">And</MudButton>
-                        <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.OrElse))">Or</MudButton>
-                        <MudButton Variant="Variant.Filled" OnClick="Remove">Remove</MudButton>
-                    </MudStack>
-                </MudStack>
+                        @if (PredicateExpression is MethodCallExpression methodCallExpression)
+                        {
+
+                            if (methodCallExpression.Method.Name == "Like")
+                            {
+                                @switch (((MemberExpression)methodCallExpression.Arguments[1]).Type)
+                                {
+                                    case Type intType when intType == typeof(int):
+                                        <MudNumericField Label="Value" T="int" Value="@((int)((ConstantExpression)methodCallExpression.Arguments[2]).Value)" ValueChanged="@OnValueChanged" />
+                                        break;
+                                }
+                            }
+                            if (methodCallExpression.Method.Name == "Contains")
+                            {
+                                @switch (((MemberExpression)methodCallExpression.Arguments[1]).Type)
+                                {
+                                    case Type stringType when stringType == typeof(string):
+                                        <MudStack>
+                                            <MudStack>
+                                                <MudChip T="string" OnClick="@OpenDialog" Size="Size.Small" Text="Add value" Icon="@Icons.Material.Filled.Add" />
+                                                <MudChipSet T="string" Size="Size.Small">
+                                                    @foreach (var item in ((IEnumerable<string>)((ConstantExpression)methodCallExpression.Arguments[0]).Value))
+                                                    {
+                                                        <MudChip T="string" Color="Color.Default" Variant="Variant.Text" OnClose="@OnListItemRemoved" Text="@item" />
+                                                    }
+                                                </MudChipSet>
+                                            </MudStack>
+                                        </MudStack>
+                                        break;
+                                }
+                            }
+                        }
+
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <div>
+                            <MudStack Row Spacing="2">
+                                <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.AndAlso))">And</MudButton>
+                                <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.OrElse))">Or</MudButton>
+                                <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Delete" OnClick="Remove"></MudIconButton>
+                            </MudStack>
+                        </div>
+                    </MudItem>
+                </MudGrid>
             </MudStack>
         </ChildContent>
     </MudExpansionPanel>
 </MudExpansionPanels>
+
+<MudDialog @bind-Visible="_showListItemDialog" Options="_listItemDialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            Add list value
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField Label="Value" T="string" @bind-Text="_listItemInputValue" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="px-10" OnClick="@OnListItemAdded">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
     [Parameter]
@@ -102,11 +137,41 @@
     private RelationalOperators _relationalOperators;
     private List<string> _navigationPath = new();
 
+    private string _listItemInputValue;
+    private bool _showListItemDialog;
+    private DialogOptions _listItemDialogOptions = new DialogOptions { CloseButton = true };
+
     protected override void OnInitialized()
     {
         _navigationPath.Add(ParameterExpression.Type.Name);
 
         base.OnInitialized();
+    }
+
+    private void OpenDialog()
+    {
+        _showListItemDialog = true;
+    }
+
+    private void OnListItemAdded()
+    {
+        if (string.IsNullOrWhiteSpace(_listItemInputValue))
+        {
+            return;
+        }
+
+        var items = ((IEnumerable<string>)((ConstantExpression)((MethodCallExpression)PredicateExpression).Arguments[0]).Value).ToList();
+        items.Add(_listItemInputValue);
+        _showListItemDialog = false;
+        _listItemInputValue = string.Empty;
+        UpdateValue(items);
+    }
+
+    private void OnListItemRemoved(MudChip<string> item)
+    {
+        var stringArray = ((IEnumerable<string>)((ConstantExpression)((MethodCallExpression)PredicateExpression).Arguments[0]).Value).ToList();
+        stringArray.Remove(item.Text);
+        UpdateValue(stringArray);
     }
 
     private void OnNavigationPathChanged(string propertyName)
@@ -153,6 +218,11 @@
                 var updated = methodCallExpression.Update(methodCallExpression.Object, new[] { methodCallExpression.Arguments[0], methodCallExpression.Arguments[1], expression });
                 UpdateExpression(updated);
             }
+            if (methodCallExpression.Method.Name == "Contains")
+            {
+                var updated = methodCallExpression.Update(methodCallExpression.Object, new[] { expression, methodCallExpression.Arguments[1] });
+                UpdateExpression(updated);
+            }
         }
     }
 
@@ -171,12 +241,12 @@
     private void Add(ExpressionType binaryExpressionType)
     {
         var memberAccess = Expression.MakeMemberAccess(ParameterExpression, ParameterExpression.Type.GetProperties().First());
-        
+
         var addedExpressionOperator = RelationalOperators
             .GetOperators(memberAccess.Type)
             .OfType<BinaryOperator>()
             .First();
-        
+
         var addedExpressionConstant = Expression.Constant(memberAccess.Type.GetDefaultValue(), memberAccess.Type);
         var addedExpression = Expression.MakeBinary(addedExpressionOperator.ExpressionType, memberAccess, addedExpressionConstant);
 

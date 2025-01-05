@@ -95,15 +95,36 @@
         switch (op)
         {
             case BinaryOperator:
-                var newBinaryExpression = Expression.MakeBinary(op.ExpressionType, _memberAccessExpression, Expression.Constant(_memberAccessExpression.Type.GetDefaultValue()));
+                var newBinaryExpression = Expression.MakeBinary(
+                    binaryType: op.ExpressionType, 
+                    left: _memberAccessExpression, 
+                    right: Expression.Constant(_memberAccessExpression.Type.GetDefaultValue()));
                 OnChange?.Invoke(newBinaryExpression);
                 break;
 
             case MethodCallOperator methodCall when methodCall.MethodInfo.Name == "Like":
-                var method = methodCall.MethodInfo;
-                var newMethodCallExpression = Expression.Call(null, method, Expression.Constant(EF.Functions), _memberAccessExpression, Expression.Constant(_memberAccessExpression.Type.GetDefaultValue(), _memberAccessExpression.Type));
-                OnChange?.Invoke(methodCall.IsNegated ? Expression.Not(newMethodCallExpression) : newMethodCallExpression);
+                var likeMethodCallExpression = Expression.Call(
+                    instance: null, 
+                    method: methodCall.MethodInfo, 
+                    arg0: Expression.Constant(EF.Functions), 
+                    arg1: _memberAccessExpression, 
+                    arg2: Expression.Constant(_memberAccessExpression.Type.GetDefaultValue(), _memberAccessExpression.Type));
+                UpdateMethodCallExpression(methodCall.IsNegated, likeMethodCallExpression);
                 break;
+
+            case MethodCallOperator methodCall when methodCall.MethodInfo.Name == "Contains":
+                var containsMethodCallExpression = Expression.Call(
+                    instance: null, 
+                    method: methodCall.MethodInfo, 
+                    arg0: Expression.Constant(Array.CreateInstance(_memberAccessExpression.Type, 0)),
+                    arg1: _memberAccessExpression);
+                UpdateMethodCallExpression(methodCall.IsNegated, containsMethodCallExpression);
+                break;
+        }
+
+        void UpdateMethodCallExpression(bool isNegated, MethodCallExpression expression)
+        { 
+            OnChange?.Invoke(isNegated ? Expression.Not(expression) : expression);
         }
     }
 }

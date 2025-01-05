@@ -105,7 +105,7 @@ namespace BlazorQueryBuilder.Tests.Pages
 
         [Theory]
         [MemberData(nameof(UpdateMethodCallOperatorData))]
-        public async Task Updates_selected_method_call_operator(LambdaExpression lambdaExpression, ExpressionType updatedExpressionType)
+        public async Task Updates_selected_method_call_operator(LambdaExpression lambdaExpression, ExpressionType updatedExpressionType, MethodCallOperator op)
         {
             var onChange = new Mock<Action<Expression>>();
             var component = RenderComponent<RelationalOperators>(parameters =>
@@ -113,29 +113,34 @@ namespace BlazorQueryBuilder.Tests.Pages
                 parameters.Add(p => p.PredicateExpression, lambdaExpression.Body);
                 parameters.Add(p => p.OnChange, onChange.Object);
             });
-            var isNegated = updatedExpressionType == ExpressionType.Not;
 
             // Act
             var select = component.FindComponent<MudSelect<ExpressionOperator>>();
-
             var selectedOperator = await component.InvokeAsync(async () =>
             {
                 await select.Instance.OpenMenu();
-                var selectItem = select.Instance.Items.Single(i => i.Value is EfLikeOperator op && op.IsNegated == isNegated);
-                await select.Instance.SelectOption(selectItem.Value);
+                // Select the negated inverse of the current operator
+                var selectItem = select
+                    .Instance
+                    .Items
+                    .Select(i => i.Value)
+                    .OfType<MethodCallOperator>()
+                    .Single(i => i.GetType() == op.GetType() && op.IsNegated != i.IsNegated);
+                await select.Instance.SelectOption(selectItem);
                 return selectItem;
             });
 
             // Assert
-            selectedOperator.Value.Should().BeOfType<EfLikeOperator>();
-            select.Instance.Text.Should().Be(selectedOperator.Value.DisplayText);
-            if (isNegated)
+            selectedOperator.Should().BeAssignableTo(op.GetType());
+            select.Instance.Text.Should().Be(selectedOperator.DisplayText);
+            // The updated expression should be the selected negated inverse 
+            if (op.IsNegated)
             {
-                onChange.Verify(o => o(It.Is<UnaryExpression>(e => e.NodeType == ExpressionType.Not)), Times.Once);
+                onChange.Verify(o => o(It.IsAny<MethodCallExpression>()), Times.Once);
             }
             else
             {
-                onChange.Verify(o => o(It.IsAny<MethodCallExpression>()), Times.Once);
+                onChange.Verify(o => o(It.Is<UnaryExpression>(e => e.NodeType == ExpressionType.Not)), Times.Once);
             }
         }
 
@@ -172,12 +177,12 @@ namespace BlazorQueryBuilder.Tests.Pages
             { typeof(bool), p => p.IsAlive == true  }
         };
 
-        public static TheoryData<Expression<Func<Person, bool>>, ExpressionType> UpdateMethodCallOperatorData() => new()
+        public static TheoryData<Expression<Func<Person, bool>>, ExpressionType, MethodCallOperator> UpdateMethodCallOperatorData() => new()
         {
-            { p => EF.Functions.Like(p.FirstName, "%Alice%"), ExpressionType.Not },
-            { p => !EF.Functions.Like(p.FirstName, "%Alice%"), ExpressionType.Call },
-            { p => new[] {"Alice", "Bob" }.Contains(p.FirstName), ExpressionType.Not },
-            { p => !new[] {"Alice", "Bob" }.Contains(p.FirstName), ExpressionType.Call }
+            { p => EF.Functions.Like(p.FirstName, "%Alice%"), ExpressionType.Not, new EfLikeOperator() },
+            { p => !EF.Functions.Like(p.FirstName, "%Alice%"), ExpressionType.Call, new EfLikeOperator(true) },
+            { p => new[] {"Alice", "Bob" }.Contains(p.FirstName), ExpressionType.Not, new InListOperator<string>() },
+            { p => !new[] {"Alice", "Bob" }.Contains(p.FirstName), ExpressionType.Call, new InListOperator<string>(true) }
         };
 
         public static TheoryData<Type, Expression<Func<Person, bool>>, ExpressionOperator> OperatorData() => new()

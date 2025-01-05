@@ -33,17 +33,9 @@
     {
         if (PredicateExpression is MethodCallExpression methodCallExpression)
         {
-            // support specific method calls
             var propertyMember = methodCallExpression.Method.Name switch
             {
-                // p.FirstName.StartsWith("Alice")
-                // "StartsWith" => (MemberExpression)methodCallExpression.Object,
-
-                // p.FirstName.EndsWith("Alice")
-                // "EndsWith" => (MemberExpression)methodCallExpression.Object,
-
-                // EF.Functions.Like(p.FirstName, "%Alice%")
-                "Like" => (MemberExpression)methodCallExpression.Arguments[1],
+                "Like" or "Contains" => (MemberExpression)methodCallExpression.Arguments[1],
                 _ => throw new NotSupportedException($"Method {methodCallExpression.Method.Name} is not supported")
             };
 
@@ -106,9 +98,7 @@
             BinaryExpression binary => (MemberExpression)binary.Left,
             MethodCallExpression methodCall => methodCall.Method.Name switch
             {
-                // case "StartsWith":
-                // case "EndsWith":
-                "Like" => (MemberExpression)methodCall.Arguments[1],
+                "Like" or "Contains" => (MemberExpression)methodCall.Arguments[1],
                 _ => throw new NotSupportedException($"Method {methodCall.Method.Name} is not supported")
             },
             _ => throw new NotSupportedException($"Expression type {PredicateExpression.NodeType} is not supported")
