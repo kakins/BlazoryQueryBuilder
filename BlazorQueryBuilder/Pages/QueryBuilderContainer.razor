@@ -36,21 +36,18 @@
 
 <MudStack Spacing="5"> 
     <MudStack Spacing="10">
-        @if (_state is New)
-        {
-            <MudStack Spacing="2">
-                <MudItem xs="12">
-                    <MudText Typo="Typo.h5">FROM</MudText>
-                    <MudSelect T="Type" Label="Entity" ValueChanged="OnEntitySelect">
-                        @foreach (var entity in _entities)
-                        {
-                            <MudSelectItem Value="@entity.ClrType">@entity.ClrType.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudItem>
-            </MudStack>
-        }
-        <div>
+        <MudStack Spacing="2">
+            <MudItem xs="12">
+                <MudText Typo="Typo.h5">FROM</MudText>
+                <MudSelect T="Type" Label="Entity" ValueChanged="OnEntitySelect">
+                    @foreach (var entity in _entities)
+                    {
+                        <MudSelectItem Value="@entity.ClrType">@entity.ClrType.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        </MudStack>
+        <div @key="_queryBuilderKey">
             @CreateQueryBuilder()
         </div>
     </MudStack>
@@ -59,6 +56,7 @@
 @code {
     Type SelectedEntityType;
 
+    private int _queryBuilderKey = 0; // Unique key to force re-render
     private string _selectedQuery;
     private IReadOnlyList<IEntityType> _entities = Array.Empty<IEntityType>();
     private IEnumerable<string> _queries = new[] 
@@ -72,12 +70,9 @@
 
     RenderFragment CreateQueryBuilder() => builder =>
     {
-        _state = _state.DisplayBuilder(() =>
-        {
-            builder.OpenComponent(0, typeof(QueryBuilder<,>).MakeGenericType(typeof(TDbContext), SelectedEntityType));
-            builder.AddAttribute(1, "Expression", Expression);
-            builder.CloseComponent();
-        });
+        builder.OpenComponent(0, typeof(QueryBuilder<,>).MakeGenericType(typeof(TDbContext), SelectedEntityType));
+        builder.AddAttribute(1, "Expression", Expression);
+        builder.CloseComponent();
     };
 
     private string Expression { get; set; } = string.Empty;
@@ -115,18 +110,18 @@
 
     public void LoadQuery()
     {
-        _state = new Loaded();
         // TODO: move entity type selection to dialog
         string entityType = nameof(Person);
         Expression = _selectedQuery;
         SelectEntity(typeof(Person));
         _showLoadQueryDialog = false;
+        _queryBuilderKey++;
     }
 
     public void NewQuery()
     {
-        _state = new New();
         SelectEntity(_entities.FirstOrDefault()?.ClrType);
         Expression = string.Empty;
+        _queryBuilderKey++;
     }
 }
