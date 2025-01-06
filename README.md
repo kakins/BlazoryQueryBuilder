@@ -1,12 +1,12 @@
 # BlazoryQueryBuilder
-Dynamic query builder using Blazor and Entity Framework
+A MudBlazor-based dynamic query builder for Entity Framework.
+   
+This is a work in progress.  
 
-This is a work in progress.
-
-- Point the application at a database
-- Read the database entities
-- Dynamically build simple EF query expressions in the UI using Blazor components (MudBlazor)
+- Point the application at a database and read the database entities
+- Dynamically build simple EF query expressions in the UI
 - Pass the query expression to EF to execute the query and view results
 
-![image](https://github.com/user-attachments/assets/af2adc59-81c8-40e6-a619-438eebb1b5e4)
-![image](https://github.com/user-attachments/assets/1075d678-bcb5-4bbd-96dd-edac58fc6bbd)
+![image](https://github.com/user-attachments/assets/99237ad4-7dd6-44e7-8a5d-b5bc9363bf6d)
+![image](https://github.com/user-attachments/assets/19d75f92-ee97-45ad-9749-b4c69624d5ca)
+
