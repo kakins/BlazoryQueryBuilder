@@ -26,12 +26,10 @@
 
     protected override void OnInitialized()
     {
-        InitializeOperators();
     }
 
-    public void UpdateExpression(Expression predicateExpression)
+    protected override void OnParametersSet()
     {
-        PredicateExpression = predicateExpression;
         InitializeOperators();
     }
 
@@ -102,6 +100,7 @@
                     right: op is BinaryOperator
                         ? _valueExpression
                         : Expression.Constant(_memberAccessExpression.Type.GetDefaultValue()));
+                PredicateExpression = newBinaryExpression;
                 OnOperatedUpdated?.Invoke(newBinaryExpression);
                 break;
 
@@ -126,7 +125,8 @@
         }
 
         void UpdateMethodCallExpression(bool isNegated, MethodCallExpression expression)
-        { 
+        {
+            PredicateExpression = expression;
             OnOperatedUpdated?.Invoke(isNegated ? Expression.Not(expression) : expression);
         }
     }

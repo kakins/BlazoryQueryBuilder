@@ -170,30 +170,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             }
         }
 
-        [Theory]
-        [MemberData(nameof(OperatorData))]
-        public async Task Updates_operator_options_for_updated_expression(Type type, LambdaExpression newLambdaExpression, ExpressionOperator op)
-        {
-            // Arrange
-            var lambdaExpression = (Expression<Func<Person, bool>>)(p => p.FirstName == "John");
-            var component = base.RenderComponent<RelationalOperators>(parameters =>
-            {
-                parameters.Add(p => p.PredicateExpression, lambdaExpression.Body);
-            });
 
-            // Act
-            component.Instance.UpdateExpression(newLambdaExpression.Body);
-            var select = component.FindComponent<MudSelect<ExpressionOperator>>();
-            var selectItems = await component.InvokeAsync(async () =>
-            {
-                await select.Instance.OpenMenu();
-                return select.Instance.Items.Select(i => i.Value);
-            });
-
-            // Assert
-            selectItems.Should().BeEquivalentTo(RelationalOperators.GetOperators(type));
-            component.Instance.PredicateExpression.Should().BeEquivalentTo(newLambdaExpression.Body);
-        }
 
         public static TheoryData<Type, Expression<Func<Person, bool>>> OperandTypeData => new()
         {

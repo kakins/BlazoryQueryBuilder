@@ -24,22 +24,22 @@
                 <MudGrid>
                     <MudItem xs="12" sm="4">
                         <RelationalPredicateField 
-                            ParameterExpression="ParameterExpression"
-                            PredicateExpression="PredicateExpression"
-                            OnNavigatePathChanged="AddToNavigatePath"
-                            OnFieldChanged="OnFieldChanged">
+                        ParameterExpression="ParameterExpression"
+                        PredicateExpression="PredicateExpression"
+                        OnNavigatePathChanged="AddToNavigatePath"
+                        OnFieldChanged="OnFieldChanged">
                         </RelationalPredicateField>
                     </MudItem>
                     <MudItem xs="12" sm="4">
                         <RelationalOperators @ref="_relationalOperators"
-                            PredicateExpression="PredicateExpression"
-                            OnOperatedUpdated="@OnOperatedUpdated">
+                        PredicateExpression="PredicateExpression"
+                        OnOperatedUpdated="@OnOperatedUpdated">
                         </RelationalOperators>
                     </MudItem>
                     <MudItem xs="12" sm="4">
                         <RelationalValue ParameterExpression="ParameterExpression"
-                            PredicateExpression="PredicateExpression"
-                            OnValueChanged="OnValueChanged">
+                        PredicateExpression="PredicateExpression"
+                        OnValueChanged="OnValueChanged">
                         </RelationalValue>
                     </MudItem>
                     <MudItem xs="12" sm="4">
@@ -82,7 +82,6 @@
 
     private void OnFieldChanged(Expression expression)
     {
-        _relationalOperators.UpdateExpression(expression);
         UpdateExpression(expression);
     }
 
@@ -100,14 +99,12 @@
     private void OnValueChanged(Expression expression)
     {
         UpdateExpression(expression);
-        _relationalOperators.UpdateExpression(expression);
     }
 
     private void UpdateExpression(Expression predicateExpression)
     {
         PredicateExpression = predicateExpression;
         OnChange(predicateExpression);
-        StateHasChanged();
     }
 
     private void AddPredicate(ExpressionType binaryExpressionType)

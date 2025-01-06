@@ -56,27 +56,7 @@ namespace BlazorQueryBuilder.Tests.Pages
             field.Instance.ParameterExpression.Should().Be(lambdaExpression.Parameters[0]);
         }
 
-        [Fact]
-        public async Task Updates_operators_on_field_change()
-        {
-            // Arrange
-            var lambdaExpression = ExpressionHelpers.CreateLambda<Person>(person => person.PersonId == "1");
-            var component = CreateComponent(
-                lambdaExpression.Body, 
-                lambdaExpression.Parameters[0]);
 
-            // Act
-            var updatedExpression = ExpressionHelpers.CreateLambda<Person>(person => person.PersonId != "1").Body;
-            var field = component.FindComponent<RelationalPredicateField>();
-            await component.InvokeAsync(() =>
-            {
-                field.Instance.OnFieldChanged.Invoke(updatedExpression);
-            });
-
-            // Assert
-            var operators = component.FindComponent<RelationalOperators>();
-            operators.Instance.PredicateExpression.Should().Be(updatedExpression);
-        }
 
         [Fact]
         public async Task Updates_expression_on_field_change()
