@@ -24,9 +24,10 @@
 }
 @if (PredicateExpression is MethodCallExpression methodCallExpression)
 {
+    var memberType = ((MemberExpression)methodCallExpression.Arguments[1]).Type;
     if (methodCallExpression.Method.Name == "Like")
     {
-        @switch (((MemberExpression)methodCallExpression.Arguments[1]).Type)
+        @switch (memberType)
         {
             case Type intType when intType == typeof(string):
                 <MudTextField Label="Value" T="string" Value="@((string)((ConstantExpression)methodCallExpression.Arguments[2]).Value)" ValueChanged="UpdateValue" />
@@ -35,7 +36,7 @@
     }
     if (methodCallExpression.Method.Name == "Contains")
     {
-        @switch (((MemberExpression)methodCallExpression.Arguments[1]).Type)
+        @switch (memberType)
         {
             case Type stringType when stringType == typeof(string):
                 <MudStack>

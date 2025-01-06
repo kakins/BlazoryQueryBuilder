@@ -15,11 +15,7 @@
     case ExpressionType.LessThan:
     case ExpressionType.LessThanOrEqual:
     case ExpressionType.Call:
-    @* TODO: Handle and unit test Not condition*@
-    @* Separate component? *@
-    case ExpressionType.Not 
-       when PredicateExpression is UnaryExpression unaryExpression
-        && unaryExpression.Operand is MethodCallExpression:
+    case ExpressionType.Not when PredicateExpression is UnaryExpression unaryExpression && unaryExpression.Operand is MethodCallExpression:
         <RelationalPredicate PredicateExpression="PredicateExpression"
                              ParameterExpression="@ParameterExpression"
                              OnChange="@Change"
