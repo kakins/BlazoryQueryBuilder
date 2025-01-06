@@ -24,50 +24,9 @@
 }
 @if (PredicateExpression is MethodCallExpression methodCallExpression)
 {
-    var memberType = ((MemberExpression)methodCallExpression.Arguments[1]).Type;
-    if (methodCallExpression.Method.Name == "Like")
-    {
-        @switch (memberType)
-        {
-            case Type intType when intType == typeof(string):
-                <MudTextField Label="Value" T="string" Value="@((string)((ConstantExpression)methodCallExpression.Arguments[2]).Value)" ValueChanged="UpdateValue" />
-                break;
-        }
-    }
-    if (methodCallExpression.Method.Name == "Contains")
-    {
-        @switch (memberType)
-        {
-            case Type stringType when stringType == typeof(string):
-                <MudStack>
-                    <MudStack>
-                        <MudChip T="string" OnClick="@OpenDialog" Size="Size.Small" Text="Add value" Icon="@Icons.Material.Filled.Add" />
-                        <MudChipSet T="string" Size="Size.Small">
-                            @foreach (var item in ((IEnumerable<string>)((ConstantExpression)methodCallExpression.Arguments[0]).Value))
-                            {
-                                <MudChip T="string" Color="Color.Default" Variant="Variant.Text" OnClose="@RemoveListItem" Text="@item" />
-                            }
-                        </MudChipSet>
-                    </MudStack>
-                </MudStack>
-                break;
-        }
-    }
+    <RelationalValueMethod OnUpdateValue="UpdateValue" MethodCallExpression="methodCallExpression"></RelationalValueMethod>
 }
 
-<MudDialog @bind-Visible="_showListItemDialog" Options="_listItemDialogOptions">
-    <TitleContent>
-        <MudText Typo="Typo.h6">
-            Add list value
-        </MudText>
-    </TitleContent>
-    <DialogContent>
-        <MudTextField Label="Value" T="string" @bind-Text="_listItemInputValue" />
-    </DialogContent>
-    <DialogActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="px-10" OnClick="@AddListItem">Ok</MudButton>
-    </DialogActions>
-</MudDialog>
 
 @code {
 
@@ -79,36 +38,6 @@
 
     [Parameter]
     public Action<Expression> OnValueChanged { get; set; }
-
-    private string _listItemInputValue;
-    private bool _showListItemDialog;
-    private DialogOptions _listItemDialogOptions = new DialogOptions { CloseButton = true };
-
-    private void AddListItem()
-    {
-        if (string.IsNullOrWhiteSpace(_listItemInputValue))
-        {
-            return;
-        }
-
-        var items = ((IEnumerable<string>)((ConstantExpression)((MethodCallExpression)PredicateExpression).Arguments[0]).Value).ToList();
-        items.Add(_listItemInputValue);
-        _showListItemDialog = false;
-        _listItemInputValue = string.Empty;
-        UpdateValue(items);
-    }
-
-    private void RemoveListItem(MudChip<string> item)
-    {
-        var stringArray = ((IEnumerable<string>)((ConstantExpression)((MethodCallExpression)PredicateExpression).Arguments[0]).Value).ToList();
-        stringArray.Remove(item.Text);
-        UpdateValue(stringArray);
-    }
-
-    private void OpenDialog()
-    {
-        _showListItemDialog = true;
-    }
 
     private void UpdateValue(DateTime? dateTime)
     {
