@@ -17,8 +17,8 @@
 <MudStack Spacing="10">
     <div>
         <MudText Typo="Typo.h5">SELECT</MudText>
-        <MudSelect Label="Fields" T="PropertyInfo" @bind-SelectedValues="SelectedProperties" MultiSelection="true">
-            @foreach (var property in typeof(TEntity).GetProperties())
+        <MudSelect Label="Fields" T="PropertyInfo" @bind-SelectedValues="SelectedProperties" MultiSelection="true" SelectAll="true">
+            @foreach (var property in _properties)
             {
                 <MudSelectItem T="PropertyInfo" Value="property">
                     @property.Name
@@ -30,8 +30,8 @@
     <div>
         <MudText Typo="Typo.h5" GutterBottom="true">WHERE</MudText>
         <LambdaComponent OnChanged="@OnChanged"
-                         Lambda="@QueryBuilderService.Lambda"
-                         Parameter="@QueryBuilderService.Parameter">
+        Lambda="@QueryBuilderService.Lambda"
+        Parameter="@QueryBuilderService.Parameter">
         </LambdaComponent>
     </div>
 
@@ -62,10 +62,13 @@
 
     private List<TEntity> _data = new List<TEntity>();
     private Expression<Func<TEntity, bool>> Predicate => (Expression<Func<TEntity, bool>>)QueryBuilderService.Lambda;
+    private IEnumerable<PropertyInfo> _properties = Enumerable.Empty<PropertyInfo>();
     private IEnumerable<PropertyInfo> SelectedProperties = new List<PropertyInfo>();
 
     protected override Task OnInitializedAsync()
     {
+        _properties = typeof(TEntity).GetProperties();
+        SelectedProperties = _properties.ToList();
         return base.OnInitializedAsync();
     }
 

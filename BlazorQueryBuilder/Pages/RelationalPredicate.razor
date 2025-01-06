@@ -23,23 +23,22 @@
             <MudStack Spacing="2">
                 <MudGrid>
                     <MudItem xs="12" sm="4">
-                        <RelationalPredicateField 
-                        ParameterExpression="ParameterExpression"
-                        PredicateExpression="PredicateExpression"
-                        OnNavigatePathChanged="AddToNavigatePath"
-                        OnFieldChanged="OnFieldChanged">
+                        <RelationalPredicateField ParameterExpression="ParameterExpression"
+                                                  PredicateExpression="PredicateExpression"
+                                                  OnNavigatePathChanged="AddToNavigatePath"
+                                                  OnFieldChanged="OnFieldChanged">
                         </RelationalPredicateField>
                     </MudItem>
                     <MudItem xs="12" sm="4">
                         <RelationalOperators @ref="_relationalOperators"
-                        PredicateExpression="PredicateExpression"
-                        OnOperatedUpdated="@OnOperatedUpdated">
+                                             PredicateExpression="PredicateExpression"
+                                             OnOperatedUpdated="@OnOperatedUpdated">
                         </RelationalOperators>
                     </MudItem>
                     <MudItem xs="12" sm="4">
                         <RelationalValue ParameterExpression="ParameterExpression"
-                        PredicateExpression="PredicateExpression"
-                        OnValueChanged="OnValueChanged">
+                                         PredicateExpression="PredicateExpression"
+                                         OnValueChanged="OnValueChanged">
                         </RelationalValue>
                     </MudItem>
                     <MudItem xs="12" sm="4">
