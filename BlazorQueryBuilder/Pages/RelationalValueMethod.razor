@@ -1,0 +1,36 @@
+﻿@using System.Linq.Expressions
+@using System.Collections.Generic;
+
+@if (MethodCallExpression.Method.Name == "Like")
+{
+    <MudTextField Label="Value" T="string" Value="@((string)((ConstantExpression)MethodCallExpression.Arguments[2]).Value)" ValueChanged="UpdateValue" />
+}
+@if (MethodCallExpression.Method.Name == "Contains")
+{
+    @switch (_memberType)
+    {
+        case Type stringType when stringType == typeof(string):
+            <RelationValueInList T="string" MethodCallExpression="MethodCallExpression" OnUpdateValue="UpdateValue" OnUpdateValues="UpdateValue" />
+            break;
+        case Type intType when intType == typeof(int):
+            <RelationValueInList T="int" MethodCallExpression="MethodCallExpression" OnUpdateValue="UpdateValue" OnUpdateValues="UpdateValue" />
+            break;
+    }
+}
+
+@code {
+    [Parameter]
+    public MethodCallExpression MethodCallExpression { get; set; }
+
+    [Parameter]
+    public Action<Expression> OnUpdateValue { get; set; }
+
+    private Type _memberType;
+
+    protected override void OnParametersSet()
+    {
+        _memberType = ((MemberExpression)MethodCallExpression.Arguments[1]).Type;
+    }
+
+    private void UpdateValue<T>(T value) => OnUpdateValue.Invoke(Expression.Constant(value, typeof(T)));
+}

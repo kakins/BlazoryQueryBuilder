@@ -4,11 +4,12 @@
 @using BlazoryQueryBuilder.Shared.Extensions
 @using BlazoryQueryBuilder.Shared.Services
 @using BlazoryQueryBuilder.Shared.Util
+@using static BlazorQueryBuilder.Pages.RelationalOperators
 
 <MudExpansionPanels>
     <MudExpansionPanel Expanded="true">
         <TitleContent>
-            <MudStack Row AlignItems="AlignItems.Center"> 
+            <MudStack Row AlignItems="AlignItems.Center">
                 <MudChipSet T="string" Color="Color.Tertiary" Variant="Variant.Text" Label="true" AllClosable>
                     @foreach (var path in _navigationPath)
                     {
@@ -20,37 +21,36 @@
         </TitleContent>
         <ChildContent>
             <MudStack Spacing="2">
-                <MudStack Row>
-                    <MudSelect Label="Field" T="string" ValueChanged="OnFieldChanged" Value="_selectedPropertyName">
-                        @foreach (PropertyInfo property in _selectedPropertyType.GetProperties())
-                        {
-                            <MudSelectItem Value="@property.Name" style="@(@property.PropertyType.IsClass ? "font-weight: bold" : "")">
-                                @property.Name.ToString()
-                            </MudSelectItem>
-                        }
-                    </MudSelect>
-                    <RelationalOperators @ref="_relationalOperators" OnChange="@OnOperatorChanged" ExpressionType="@PredicateExpression.NodeType" OperandType="PredicateExpression.Left.Type"></RelationalOperators>
-                    @switch (PredicateExpression.Left.Type)
-                    {
-                        case Type intType when intType == typeof(int) && PredicateExpression.Right is ConstantExpression intConstant:
-                            <MudTextField Label="Value" T="int" Value="@((int)intConstant.Value)" ValueChanged="@OnValueChanged" />
-                            break;
-                        case Type stringType when stringType == typeof(string) && PredicateExpression.Right is ConstantExpression stringConstant:
-                            <MudTextField Label="Value" T="string" Value="@(stringConstant.Value?.ToString())" ValueChanged="@OnValueChanged" />
-                            break;
-                        case Type boolType when boolType == typeof(bool) && PredicateExpression.Right is ConstantExpression boolConstant:
-                            <MudCheckBox Label="Value" T="bool" Value="@((bool)boolConstant.Value)" ValueChanged="@OnValueChanged" />
-                            break;
-                        case Type dateTimeType when dateTimeType == typeof(DateTime) && PredicateExpression.Right is NewExpression newDateTime:
-                            <MudDatePicker Label="Value" Date="@(new DateTime((long)((ConstantExpression)newDateTime.Arguments[0]).Value))" DateChanged="@OnValueChanged" />
-                            break;
-                    }
-                    <MudStack Row Spacing="2">
-                        <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.AndAlso))">And</MudButton>
-                        <MudButton Variant="Variant.Filled" OnClick="@(() => Add(ExpressionType.OrElse))">Or</MudButton>
-                        <MudButton Variant="Variant.Filled" OnClick="Remove">Remove</MudButton>
-                    </MudStack>
-                </MudStack>
+                <MudGrid>
+                    <MudItem xs="12" sm="4">
+                        <RelationalPredicateField ParameterExpression="ParameterExpression"
+                                                  PredicateExpression="PredicateExpression"
+                                                  OnNavigatePathChanged="AddToNavigatePath"
+                                                  OnFieldChanged="OnFieldChanged">
+                        </RelationalPredicateField>
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <RelationalOperators @ref="_relationalOperators"
+                                             PredicateExpression="PredicateExpression"
+                                             OnOperatedUpdated="@OnOperatedUpdated">
+                        </RelationalOperators>
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <RelationalValue ParameterExpression="ParameterExpression"
+                                         PredicateExpression="PredicateExpression"
+                                         OnValueChanged="OnValueChanged">
+                        </RelationalValue>
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <div>
+                            <MudStack Row Spacing="2">
+                                <MudButton Variant="Variant.Filled" OnClick="@(() => AddPredicate(ExpressionType.AndAlso))">And</MudButton>
+                                <MudButton Variant="Variant.Filled" OnClick="@(() => AddPredicate(ExpressionType.OrElse))">Or</MudButton>
+                                <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Delete" OnClick="RemovePredicate"></MudIconButton>
+                            </MudStack>
+                        </div>
+                    </MudItem>
+                </MudGrid>
             </MudStack>
         </ChildContent>
     </MudExpansionPanel>
@@ -58,7 +58,7 @@
 
 @code {
     [Parameter]
-    public Action<BinaryExpression> OnChange { get; set; }
+    public Action<Expression> OnChange { get; set; }
 
     [Parameter]
     public Action OnRemove { get; set; }
@@ -67,106 +67,66 @@
     public ParameterExpression ParameterExpression { get; set; }
 
     [Parameter]
-    public BinaryExpression PredicateExpression { get; set; }
+    public Expression PredicateExpression { get; set; }
 
     private RelationalOperators _relationalOperators;
-    private Type _selectedPropertyType;
-    private string _selectedPropertyName;
     private List<string> _navigationPath = new();
 
     protected override void OnInitialized()
     {
-        var leftOperand = (MemberExpression)PredicateExpression.Left;
-        _selectedPropertyType = leftOperand.Member.DeclaringType;
-        _selectedPropertyName = leftOperand.Member.Name;
         _navigationPath.Add(ParameterExpression.Type.Name);
+
         base.OnInitialized();
     }
 
-    private void OnFieldChanged(string propertyName)
+    private void OnFieldChanged(Expression expression)
     {
-        var leftOperandExpression = (MemberExpression)PredicateExpression.Left;
-        var selectedProperty = _selectedPropertyType.GetProperty(propertyName);
-
-        if (selectedProperty.PropertyType.IsClass && selectedProperty.PropertyType != typeof(string))
-        {
-            var navigationPropertyExpression = leftOperandExpression.ChangePropertyAccess(_selectedPropertyType, propertyName);
-            _selectedPropertyType = navigationPropertyExpression.Type;
-
-            selectedProperty = navigationPropertyExpression.Type.GetProperties().First();
-            _selectedPropertyName = selectedProperty.Name;
-
-            leftOperandExpression = Expression.MakeMemberAccess(
-                navigationPropertyExpression,
-                selectedProperty);
-
-            _navigationPath.Add(propertyName);
-        }
-        else
-        {
-            _selectedPropertyName = propertyName;
-            leftOperandExpression = leftOperandExpression.ChangePropertyAccess(_selectedPropertyType, propertyName);
-        }
-
-        Expression rightOperandExpression = selectedProperty.PropertyType switch
-        {
-            Type type when 
-                type == typeof(int)
-                || type == typeof(long)
-                || type == typeof(string)
-                || type == typeof(bool) => Expression.Constant(selectedProperty.PropertyType.GetDefaultValue(), selectedProperty.PropertyType),
-            Type type when
-                type == typeof(DateTime) => DateTimeExpression.New(DateTime.UtcNow),
-            _ => throw new Exception("Unsupported property type")
-        };
-
-        _relationalOperators.SetOperand(selectedProperty.PropertyType);
-        UpdateExpression(Expression.MakeBinary(_relationalOperators.ExpressionType, leftOperandExpression, rightOperandExpression));
+        UpdateExpression(expression);
     }
 
-    private void OnValueChanged(int intValue) => UpdateRightOperandConstant(intValue);
-
-    private void OnValueChanged(string stringValue) => UpdateRightOperandConstant(stringValue);
-
-    private void OnValueChanged(bool boolValue) => UpdateRightOperandConstant(boolValue);
-
-    private void OnValueChanged(DateTime? dateTime)
+    private void AddToNavigatePath(string propertyName)
     {
-        if (dateTime.HasValue)
-        {
-            UpdateRightOperand(DateTimeExpression.New(dateTime.Value));
-        }
-    }
-
-    private void UpdateRightOperandConstant<T>(T value) => UpdateRightOperand(Expression.Constant(value, typeof(T)));
-
-    private void UpdateRightOperand(Expression expression) => UpdateExpression(PredicateExpression.ReplaceRight(expression));
-
-    private void OnOperatorChanged(ExpressionType expressionType) => UpdateExpression(PredicateExpression.ReplaceType(expressionType));
-
-    private void UpdateExpression(BinaryExpression expression)
-    {
-        PredicateExpression = expression;
-        OnChange(expression);
+        _navigationPath.Add(propertyName);
         StateHasChanged();
     }
 
-    private void Add(ExpressionType expressionType)
+    private void OnOperatedUpdated(Expression expression)
     {
-        var leftOperand = Expression.MakeMemberAccess(ParameterExpression, ParameterExpression.Type.GetProperties().First());
-        
-        var rightOperandConstant = Expression.Constant(leftOperand.Type.GetDefaultValue(), leftOperand.Type);
-        var rightOperand = Expression.MakeBinary(PredicateExpression.NodeType, leftOperand, rightOperandConstant);
-
-        var expression = Expression.MakeBinary(
-            expressionType,
-            PredicateExpression.Copy(),
-            rightOperand);
-
-        OnChange(expression);
+        UpdateExpression(expression);
     }
 
-    private void Remove()
+    private void OnValueChanged(Expression expression)
+    {
+        UpdateExpression(expression);
+    }
+
+    private void UpdateExpression(Expression predicateExpression)
+    {
+        PredicateExpression = predicateExpression;
+        OnChange(predicateExpression);
+    }
+
+    private void AddPredicate(ExpressionType binaryExpressionType)
+    {
+        var memberAccess = Expression.MakeMemberAccess(ParameterExpression, ParameterExpression.Type.GetProperties().First());
+
+        var addedExpressionOperator = RelationalOperators
+            .GetOperators(memberAccess.Type)
+            .OfType<BinaryOperator>()
+            .First();
+
+        var addedExpressionConstant = Expression.Constant(memberAccess.Type.GetDefaultValue(), memberAccess.Type);
+        var addedExpression = Expression.MakeBinary(addedExpressionOperator.ExpressionType, memberAccess, addedExpressionConstant);
+
+        var newLogicalExpression = Expression.MakeBinary(
+            binaryExpressionType,
+            PredicateExpression.Copy(),
+            addedExpression);
+
+        OnChange(newLogicalExpression);
+    }
+
+    private void RemovePredicate()
     {
         OnRemove();
     }

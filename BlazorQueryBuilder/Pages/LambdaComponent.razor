@@ -6,7 +6,7 @@
 
 <MudStack Row Spacing="4">
     <MudItem xs="8" lg="8">
-        <Predicate Expression="@GetBodyAsBinary()"
+        <Predicate PredicateExpression="@Lambda.Body"
                    ParameterExpression="@Parameter"
                    OnChange="@OnChangeBody">
         </Predicate>
@@ -43,14 +43,8 @@
         OnChanged(Lambda.Body);
     }
 
-    private BinaryExpression GetBodyAsBinary()
-    {
-        return Lambda.Body as BinaryExpression;
-    }
-
     private void OnChangeBody(Expression body)
     {
         OnChanged(body);
-        StateHasChanged();
     }
 }

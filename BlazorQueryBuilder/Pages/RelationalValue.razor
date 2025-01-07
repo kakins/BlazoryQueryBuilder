@@ -1,0 +1,75 @@
+﻿@using System.Linq.Expressions
+@using BlazorQueryBuilder.ExpressionVisitors.Extensions
+
+@if (PredicateExpression is BinaryExpression binaryExpression)
+{
+    @switch (binaryExpression.Left.Type)
+    {
+        case Type intType when intType == typeof(int) && binaryExpression.Right is ConstantExpression intConstant:
+            <MudTextField Label="Value" T="int" Value="@((int)intConstant.Value)" ValueChanged="@UpdateValue" />
+            break;
+        case Type stringType when stringType == typeof(string) && binaryExpression.Right is ConstantExpression stringConstant:
+            <MudTextField Label="Value" T="string" Value="@(stringConstant.Value?.ToString())" ValueChanged="@UpdateValue" />
+            break;
+        case Type boolType when boolType == typeof(bool) && binaryExpression.Right is ConstantExpression boolConstant:
+            <MudSelect Label="Value" T="bool" Value="@((bool)boolConstant.Value)" ValueChanged="@UpdateValue">
+                <MudSelectItem Value="true">True</MudSelectItem>
+                <MudSelectItem Value="false">False</MudSelectItem>
+            </MudSelect>
+            break;
+        case Type dateTimeType when dateTimeType == typeof(DateTime) && binaryExpression.Right is ConstantExpression dateTimeContant:
+            <MudDatePicker Label="Value" Date="@((DateTime)dateTimeContant.Value)" DateChanged="@UpdateValue" />
+            break;
+    }
+}
+@if (PredicateExpression is MethodCallExpression methodCallExpression)
+{
+    <RelationalValueMethod OnUpdateValue="UpdateValue" MethodCallExpression="methodCallExpression"></RelationalValueMethod>
+}
+
+
+@code {
+
+    [Parameter]
+    public ParameterExpression ParameterExpression { get; set; }
+
+    [Parameter]
+    public Expression PredicateExpression { get; set; }
+
+    [Parameter]
+    public Action<Expression> OnValueChanged { get; set; }
+
+    private void UpdateValue(DateTime? dateTime)
+    {
+        if (dateTime.HasValue)
+        {
+            UpdateValue(dateTime.Value);
+        }
+    }
+
+    private void UpdateValue<T>(T value) => UpdateValue((Expression)Expression.Constant(value, typeof(T)));
+
+    private void UpdateValue(Expression expression)
+    {
+        // TODO: Unit test
+        if (PredicateExpression is BinaryExpression binaryExpression)
+        {
+            var updated = binaryExpression.ReplaceRight(expression);
+            OnValueChanged(updated);
+        }
+        // TODO: Unit test
+        else if (PredicateExpression is MethodCallExpression methodCallExpression)
+        {
+            if (methodCallExpression.Method.Name == "Like")
+            {
+                var updated = methodCallExpression.Update(methodCallExpression.Object, new[] { methodCallExpression.Arguments[0], methodCallExpression.Arguments[1], expression });
+                OnValueChanged(updated);
+            }
+            if (methodCallExpression.Method.Name == "Contains")
+            {
+                var updated = methodCallExpression.Update(methodCallExpression.Object, new[] { expression, methodCallExpression.Arguments[1] });
+                OnValueChanged(updated);
+            }
+        }
+    }
+}

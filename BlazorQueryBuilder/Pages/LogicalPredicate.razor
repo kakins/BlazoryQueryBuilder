@@ -2,7 +2,7 @@
 @using BlazorQueryBuilder.ExpressionVisitors;
 @using BlazorQueryBuilder.ExpressionVisitors.Extensions
 <MudStack Spacing="5">
-    <Predicate Expression="@GetLeft()"
+    <Predicate PredicateExpression="PredicateExpression.Left"
                ParameterExpression="@ParameterExpression"
                OnChange="@ChangeLeft"
                OnRemove="@RemoveLeft">
@@ -15,7 +15,7 @@
             }
         </MudSelect>
     </div>
-    <Predicate Expression="@GetRight()"
+    <Predicate PredicateExpression="PredicateExpression.Right"
                ParameterExpression="@ParameterExpression"
                OnChange="@ChangeRight"
                OnRemove="@RemoveRight">
@@ -31,7 +31,7 @@
     };
 
     [Parameter]
-    public Action<BinaryExpression> OnChange { get; set; }
+    public Action<Expression> OnChange { get; set; }
 
     [Parameter]
     public BinaryExpression PredicateExpression { get; set; }
@@ -41,16 +41,6 @@
 
     protected override void OnInitialized()
     {
-    }
-
-    private BinaryExpression GetLeft()
-    {
-        return (BinaryExpression)PredicateExpression.Left;
-    }
-
-    private BinaryExpression GetRight()
-    {
-        return (BinaryExpression)PredicateExpression.Right;
     }
 
     private void ChangeLeft(Expression left)
@@ -75,13 +65,11 @@
 
     private void RemoveLeft()
     {
-        var newBinary = PredicateExpression.Right.Copy();
-        OnChange((BinaryExpression)newBinary);
+        OnChange(PredicateExpression.Right.Copy());
     }
 
     private void RemoveRight()
     {
-        var newBinary = PredicateExpression.Left.Copy();
-        OnChange((BinaryExpression)newBinary);
+        OnChange(PredicateExpression.Left.Copy());
     }
 }

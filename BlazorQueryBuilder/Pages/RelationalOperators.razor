@@ -1,86 +1,133 @@
 ﻿@using System.Linq.Expressions
+@using BlazorQueryBuilder.ExpressionVisitors.Extensions
+@using BlazoryQueryBuilder.Shared.Extensions
+@using Microsoft.EntityFrameworkCore
 @using MudBlazor
+@using System.Reflection
 
-<MudSelect T="string" Label="Operator" @bind-Value="SelectedOperator">
-    @foreach (var item in Operators)
+<MudSelect T="ExpressionOperator" Label="Operator" Value="_operator" ValueChanged="OperatorChanged" ToStringFunc="@(o => o.DisplayText)">
+    @foreach (var item in _operators)
     {
-        <MudSelectItem Value="@item.Key">@item.Value</MudSelectItem>
+        <MudSelectItem Value="@item">@item.DisplayText</MudSelectItem>
     }
 </MudSelect>
 
 @code {
-    Dictionary<string, string> Operators = new Dictionary<string, string>();
+    [Parameter]
+    public Expression PredicateExpression { get; set; }
 
     [Parameter]
-    public Action<ExpressionType> OnChange { get; set; }
+    public Action<Expression> OnOperatedUpdated { get; set; }
 
-    [Parameter]
-    public ExpressionType ExpressionType { get; set; }
-
-    [Parameter]
-    public Type OperandType { get; set; }
+    private ExpressionOperator _operator { get; set; }
+    private List<ExpressionOperator> _operators = new();
+    private Expression _valueExpression;
+    private MemberExpression _memberAccessExpression;
 
     protected override void OnInitialized()
     {
-        InitializeOperators();
     }
 
-    public void SetOperand(Type operandType)
+    protected override void OnParametersSet()
     {
-        OperandType = operandType;
         InitializeOperators();
-        ExpressionType = GetExpressionType(Operators.Keys.First());
     }
 
     private void InitializeOperators()
     {
-        Operators = OperandType switch
+        switch (PredicateExpression)
         {
-            Type type when type == typeof(int) => new()
-            {
-                {"Equal", "Equals"},
-                {"NotEqual", "Does not equal"},
-                {"LessThan", "Less than"},
-                {"GreaterThan", "Greater than"},
-            },
-            Type type when type == typeof(string) => new()
-            {
-                {"Equal", "Equals"},
-                {"NotEqual", "Does not equal"},
-                // {"Contains", "Contains"}, // method
-                // {"StartsWith", "Starts with"}, // method
-                // {"EndsWith", "Ends with"}, // method
-            },
-            Type type when type == typeof(bool) => new()
-            {
-                {"Equal", "Equals"},
-                {"NotEqual", "Does not equal"},
-            },
-            Type type when type == typeof(DateTime) => new()
-            {
-                {"Equal", "Equals"},
-                {"NotEqual", "Does not equal"},
-                {"LessThan", "Less than"},
-                {"GreaterThan", "Greater than"},
-            },
-            _ => new()
-            {
-                {"Equal", "Equals"},
-                {"NotEqual", "Does not equal"},
-            },
-        };
-    }
-
-    private string SelectedOperator
-    {
-        get => ExpressionType.ToString();
-        set
-        {
-            var expressionType = GetExpressionType(value);
-            ExpressionType = expressionType;
-            OnChange.Invoke(expressionType);
+            case BinaryExpression binaryExpression:
+                InitializeBinaryExpression(binaryExpression);
+                break;
+            case MethodCallExpression methodCallExpression:
+                InitializeMethodCallExpression(methodCallExpression);
+                break;
+            case UnaryExpression { NodeType: ExpressionType.Not, Operand: MethodCallExpression notMethodCallExpression }:
+                InitializeMethodCallExpression(notMethodCallExpression, true);
+                break;
+            default:
+                throw new NotSupportedException($"Expression type {PredicateExpression.NodeType} is not supported");
         }
     }
 
-    private ExpressionType GetExpressionType(string key) => (ExpressionType)Enum.Parse(typeof(ExpressionType), key);
+    private void InitializeBinaryExpression(BinaryExpression binaryExpression)
+    {
+        _operators = GetOperators(binaryExpression.Left.Type);
+        _operator = _operators.FirstOrDefault(o => o.ExpressionType == binaryExpression.NodeType) ?? _operators.First();
+        _valueExpression = binaryExpression.Right;
+        _memberAccessExpression = (MemberExpression)binaryExpression.Left;
+    }
+
+    private void InitializeMethodCallExpression(MethodCallExpression methodCallExpression, bool isNegated = false)
+    {
+        switch (methodCallExpression.Method.Name)
+        {
+            case "Like":
+                _operators = GetOperators(((MemberExpression)methodCallExpression.Arguments[1]).Type);
+                _memberAccessExpression = (MemberExpression)methodCallExpression.Arguments[1];
+                _valueExpression = methodCallExpression.Arguments[2];
+                break;
+            case "Contains":
+                _operators = GetOperators(((MemberExpression)methodCallExpression.Arguments[1]).Type);
+                _memberAccessExpression = (MemberExpression)methodCallExpression.Arguments[1];
+                _valueExpression = methodCallExpression.Arguments[0];
+                break;
+            default:
+                throw new NotSupportedException($"Method {methodCallExpression.Method.Name} is not supported");
+        }
+
+        _operator = _operators
+            .OfType<MethodCallOperator>()
+            .FirstOrDefault(o =>
+                o.ExpressionType == methodCallExpression.NodeType
+                && o.MethodInfo == methodCallExpression.Method
+                && o.IsNegated == isNegated)
+            ?? _operators.First();
+    }
+
+    private void OperatorChanged(ExpressionOperator op)
+    {
+        _operator = op;
+
+        switch (op)
+        {
+            case BinaryOperator:
+                var newBinaryExpression = Expression.MakeBinary(
+                    binaryType: op.ExpressionType, 
+                    left: _memberAccessExpression, 
+                    // Perserve the right binary constant value for BinaryOperators
+                    right: op is BinaryOperator
+                        ? _valueExpression
+                        : Expression.Constant(_memberAccessExpression.Type.GetDefaultValue()));
+                PredicateExpression = newBinaryExpression;
+                OnOperatedUpdated?.Invoke(newBinaryExpression);
+                break;
+
+            case MethodCallOperator methodCall when methodCall.MethodInfo.Name == "Like":
+                var likeMethodCallExpression = Expression.Call(
+                    instance: null, 
+                    method: methodCall.MethodInfo, 
+                    arg0: Expression.Constant(EF.Functions), 
+                    arg1: _memberAccessExpression, 
+                    arg2: Expression.Constant(_memberAccessExpression.Type.GetDefaultValue(), _memberAccessExpression.Type));
+                UpdateMethodCallExpression(methodCall.IsNegated, likeMethodCallExpression);
+                break;
+
+            case MethodCallOperator methodCall when methodCall.MethodInfo.Name == "Contains":
+                var containsMethodCallExpression = Expression.Call(
+                    instance: null, 
+                    method: methodCall.MethodInfo, 
+                    arg0: Expression.Constant(Array.CreateInstance(_memberAccessExpression.Type, 0)),
+                    arg1: _memberAccessExpression);
+                UpdateMethodCallExpression(methodCall.IsNegated, containsMethodCallExpression);
+                break;
+        }
+
+        void UpdateMethodCallExpression(bool isNegated, MethodCallExpression expression)
+        {
+            PredicateExpression = expression;
+            OnOperatedUpdated?.Invoke(isNegated ? Expression.Not(expression) : expression);
+        }
+    }
 }

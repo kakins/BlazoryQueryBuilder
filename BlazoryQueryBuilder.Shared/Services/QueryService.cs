@@ -31,6 +31,7 @@ namespace BlazoryQueryBuilder.Shared.Services
                 var options = ScriptOptions
                     .Default
                     .AddReferences(typeof(T).Assembly)
+                    // TODO: Replace hardcoded namespace with the namespace of the DbContext
                     .AddImports("BlazoryQueryBuilder.Shared.Models", "System");
 
                 Expression<Func<T, bool>> predicate = await CSharpScript.EvaluateAsync<Expression<Func<T, bool>>>(predicateExpression, options);

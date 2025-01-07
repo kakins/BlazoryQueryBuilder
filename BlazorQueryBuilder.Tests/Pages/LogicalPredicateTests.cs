@@ -3,7 +3,9 @@ using BlazoryQueryBuilder.Shared.Models;
 using BlazoryQueryBuilder.Shared.Services;
 using Bunit;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using MudBlazor;
 using MudBlazor.Services;
 using System;
@@ -14,7 +16,6 @@ using Xunit;
 
 namespace BlazorQueryBuilder.Tests.Pages
 {
-
     public class LogicalPredicateTests : TestContext
     {
         private Expression<Func<Person, bool>> _lambdaExpression;
@@ -33,8 +34,9 @@ namespace BlazorQueryBuilder.Tests.Pages
             _lambdaExpression = person => person.PersonId == "1" || person.PersonId == "2";
         }
 
-        [Fact]
-        public async Task Initializes_predicate()
+        [Theory]
+        [MemberData(nameof(LogicalPredicateData))]
+        public async Task Initializes_predicate(LambdaExpression lambdaExpression)
         {
             // Arrange
             
@@ -42,28 +44,29 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<LogicalPredicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.PredicateExpression, _lambdaExpression.Body as BinaryExpression)
-                    .Add(p => p.ParameterExpression, _lambdaExpression.Parameters[0])
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
+                    .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
 
             // Assert
-            component.Instance.PredicateExpression.Should().Be(_lambdaExpression.Body as BinaryExpression);
-            component.Instance.ParameterExpression.Should().Be(_lambdaExpression.Parameters[0]);
+            component.Instance.PredicateExpression.Should().BeEquivalentTo(lambdaExpression.Body.As<BinaryExpression>());
+            component.Instance.ParameterExpression.Should().BeEquivalentTo(lambdaExpression.Parameters[0]);
         }
 
-        [Fact]
-        public async Task Initializes_left_expression()
+        [Theory]
+        [MemberData(nameof(LogicalPredicateData))]
+        public async Task Initializes_lefts_expression(LambdaExpression lambdaExpression)
         {
             // Arrange
-            var leftBinaryExpression = ((BinaryExpression)_lambdaExpression.Body).Left;
+            var leftBinaryExpression = ((BinaryExpression)lambdaExpression.Body).Left;
             
             // Act
             var component = RenderComponent<LogicalPredicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.PredicateExpression, _lambdaExpression.Body as BinaryExpression)
-                    .Add(p => p.ParameterExpression, _lambdaExpression.Parameters[0])
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
+                    .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
 
@@ -72,18 +75,19 @@ namespace BlazorQueryBuilder.Tests.Pages
             leftPredicate.Instance.PredicateExpression.Should().Be(leftBinaryExpression);
         }
 
-        [Fact]
-        public async Task Initializes_right_expression()
+        [Theory]
+        [MemberData(nameof(LogicalPredicateData))]
+        public async Task Initializes_right_expression(LambdaExpression lambdaExpression)
         {
             // Arrange
-            var rightBinaryExpression = ((BinaryExpression)_lambdaExpression.Body).Right;
+            var rightBinaryExpression = ((BinaryExpression)lambdaExpression.Body).Right;
 
             // Act
             var component = RenderComponent<LogicalPredicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.PredicateExpression, _lambdaExpression.Body as BinaryExpression)
-                    .Add(p => p.ParameterExpression, _lambdaExpression.Parameters[0])
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
+                    .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
 
@@ -93,14 +97,14 @@ namespace BlazorQueryBuilder.Tests.Pages
         }
 
         [Theory]
-        [MemberData(nameof(LogicalPredicateTestData))]
+        [MemberData(nameof(LogicalPredicateOperatorData))]
         public async Task Initializes_operator(string logicalOperator, Expression<Func<Person, bool>> lambdaExpression)
         {
             // Act
             var component = RenderComponent<LogicalPredicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.PredicateExpression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
@@ -109,27 +113,28 @@ namespace BlazorQueryBuilder.Tests.Pages
             var logicalOperatorSelect = component
                 .FindComponents<MudSelect<string>>()
                 .Where(s => s.Instance.Label == "Operator")
-                .ToList()[1];
+                .ToList()[0];
 
             logicalOperatorSelect.Instance.Value.Should().Be(logicalOperator);
         }
 
-        [Fact]
-        public async Task Updates_left_expression()
+        [Theory]
+        [MemberData(nameof(LogicalPredicateData))]
+        public async Task Updates_left_expression(LambdaExpression lambdaExpression)
         {
             // Arrange
             var component = RenderComponent<LogicalPredicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.PredicateExpression, _lambdaExpression.Body as BinaryExpression)
-                    .Add(p => p.ParameterExpression, _lambdaExpression.Parameters[0])
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
+                    .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
 
             // Act
             var leftPredicate = component.FindComponents<RelationalPredicate>()[0];
             Expression<Func<Person, bool>> newLeftLambda = person => person.PersonId == "3";
-            var newLeftBinaryExpression = newLeftLambda.Body as BinaryExpression;
+            var newLeftBinaryExpression = newLeftLambda.Body.As<BinaryExpression>();
             await leftPredicate.InvokeAsync(() =>
             {
                 leftPredicate.Instance.OnChange.Invoke(newLeftBinaryExpression);
@@ -139,22 +144,23 @@ namespace BlazorQueryBuilder.Tests.Pages
             component.Instance.PredicateExpression.Left.Should().Be(newLeftBinaryExpression);
         }
 
-        [Fact]
-        public async Task Updates_right_expression()
+        [Theory]
+        [MemberData(nameof(LogicalPredicateData))]
+        public async Task Updates_right_expression(LambdaExpression lambdaExpression)
         {
             // Arrange
             var component = RenderComponent<LogicalPredicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.PredicateExpression, _lambdaExpression.Body as BinaryExpression)
-                    .Add(p => p.ParameterExpression, _lambdaExpression.Parameters[0])
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
+                    .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
 
             // Act
-            var rightPredicate = component.FindComponents<RelationalPredicate>()[1];
             Expression<Func<Person, bool>> newRightLambda = person => person.PersonId == "3";
-            var newRightExpression = newRightLambda.Body as BinaryExpression;
+            var rightPredicate = component.FindComponents<RelationalPredicate>()[1];
+            var newRightExpression = newRightLambda.Body.As<BinaryExpression>();
             await rightPredicate.InvokeAsync(() =>
             {
                 rightPredicate.Instance.OnChange.Invoke(newRightExpression);
@@ -164,39 +170,40 @@ namespace BlazorQueryBuilder.Tests.Pages
             component.Instance.PredicateExpression.Right.Should().Be(newRightExpression);
         }
 
-        [Fact]
-        public async Task Removes_left_expression()
+        [Theory]
+        [MemberData(nameof(LogicalPredicateData))]
+        public async Task Removes_left_expression(LambdaExpression lambdaExpression)
         {
             // Arrange
-            BinaryExpression remainingExpression = null;
+            var onChange = new Mock<Action<Expression>>();
             var component = RenderComponent<LogicalPredicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.PredicateExpression, _lambdaExpression.Body as BinaryExpression)
-                    .Add(p => p.ParameterExpression, _lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChange, expression => { remainingExpression = expression; });
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
+                    .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
+                    .Add(p => p.OnChange, onChange.Object );
             });
 
             // Act
             var leftPredicate = component.FindComponents<RelationalPredicate>()[0];
             await leftPredicate.InvokeAsync(leftPredicate.Instance.OnRemove.Invoke);
-            
+
             // Assert
-            remainingExpression.Should().Be(component.Instance.PredicateExpression.Right);
+            onChange.Verify(o => o.Invoke(component.Instance.PredicateExpression.Right), Times.Once);
         }
 
-        [Fact]
-        public async Task Removes_right_expression()
+        [Theory]
+        [MemberData(nameof(LogicalPredicateData))]
+        public async Task Removes_right_expression(LambdaExpression lambdaExpression)
         {
             // Arrange
-            Expression<Func<Person, bool>> lambdaExpression = person => person.PersonId == "1" || person.PersonId == "2";
-            BinaryExpression remainingExpression = null;
+            var onChange = new Mock<Action<Expression>>();
             var component = RenderComponent<LogicalPredicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.PredicateExpression, _lambdaExpression.Body as BinaryExpression)
-                    .Add(p => p.ParameterExpression, _lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChange, expression => { remainingExpression = expression; });
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
+                    .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
+                    .Add(p => p.OnChange, onChange.Object);
             });
 
             // Act
@@ -204,13 +211,20 @@ namespace BlazorQueryBuilder.Tests.Pages
             await rightPredicate.InvokeAsync(rightPredicate.Instance.OnRemove.Invoke);
 
             // Assert
-            remainingExpression.Should().Be(component.Instance.PredicateExpression.Left);
+            onChange.Verify(o => o.Invoke(component.Instance.PredicateExpression.Left), Times.Once);
         }
 
-        public static TheoryData<string, Expression<Func<Person, bool>>> LogicalPredicateTestData => new()
+        public static TheoryData<string, Expression<Func<Person, bool>>> LogicalPredicateOperatorData => new()
         {
             { "AndAlso", person => person.PersonId == "1" && person.PersonId == "2" },
             { "OrElse", person => person.PersonId == "1" || person.PersonId == "2" }
+        };
+
+        public static TheoryData<Expression<Func<Person, bool>>> LogicalPredicateData => new()
+        {
+            { person => person.PersonId == "1" && person.PersonId == "2" },
+            { person => person.PersonId == "1" && EF.Functions.Like(person.LastName, "%Alice%") },
+            { person => EF.Functions.Like(person.LastName, "%Alice%") && person.PersonId == "1" },
         };
     }
 }

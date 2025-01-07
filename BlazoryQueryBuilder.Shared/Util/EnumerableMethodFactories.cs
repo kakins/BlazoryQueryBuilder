@@ -27,5 +27,17 @@ namespace BlazoryQueryBuilder.Shared.Util
                     typeof(bool))
                 .MakeGenericMethod(typeof(TSource));
         }
+
+        public static MethodInfo Contains<TSource>()
+        {
+            var method = typeof(Enumerable)
+                .GetMethods(BindingFlags.Static | BindingFlags.Public)
+                .Where(m => m.Name == "Contains" && m.GetParameters().Length == 2)
+                .FirstOrDefault();
+
+            var methodGeneric = method.MakeGenericMethod(typeof(TSource));
+
+            return methodGeneric;
+        }
     }
 }

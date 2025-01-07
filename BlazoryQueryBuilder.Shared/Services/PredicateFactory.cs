@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -23,19 +22,6 @@ namespace BlazoryQueryBuilder.Shared.Services
             Expression<Func<T, bool>> expression = Expression.Lambda(binary, parameter) as Expression<Func<T, bool>>;
 
             return expression;
-        }
-
-        public static Expression<Func<T, bool>> GetPredicate<T>(string expression, Type type)
-        {
-            var config = new ParsingConfig { RenameParameterExpression = true };
-
-            var lambda = DynamicExpressionParser.ParseLambda(
-                config,
-                type,
-                typeof(bool),
-                expression) as Expression<Func<T, bool>>;
-
-            return lambda;
         }
     }
 }

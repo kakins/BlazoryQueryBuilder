@@ -1,0 +1,122 @@
+﻿@using System.Reflection
+@using System.Linq.Expressions
+@using BlazorQueryBuilder.ExpressionVisitors.Extensions
+@using BlazoryQueryBuilder.Shared.Extensions
+@using BlazoryQueryBuilder.Shared.Util
+
+<MudSelect Label="Field" T="string" ValueChanged="OnFieldSelected" Value="_selectedPropertyName">
+    @foreach (PropertyInfo property in _selectedPropertyType.GetProperties())
+    {
+        <MudSelectItem Value="@property.Name" style="@(@property.PropertyType.IsClass ? "font-weight: bold" : "")">
+            @property.Name.ToString()
+        </MudSelectItem>
+    }
+</MudSelect>
+
+@code {
+    [Parameter]
+    public ParameterExpression ParameterExpression { get; set; }
+
+    [Parameter]
+    public Expression PredicateExpression { get; set; }
+
+    [Parameter]
+    public Action<string> OnNavigatePathChanged { get; set; }
+
+    [Parameter]
+    public Action<Expression> OnFieldChanged { get; set; }
+
+    private Type _selectedPropertyType;
+    private string _selectedPropertyName;
+
+    protected override void OnInitialized()
+    {
+        if (PredicateExpression is MethodCallExpression methodCallExpression)
+        {
+            var propertyMember = methodCallExpression.Method.Name switch
+            {
+                "Like" or "Contains" => (MemberExpression)methodCallExpression.Arguments[1],
+                _ => throw new NotSupportedException($"Method {methodCallExpression.Method.Name} is not supported")
+            };
+
+            _selectedPropertyType = propertyMember.Member.DeclaringType;
+            _selectedPropertyName = propertyMember.Member.Name;
+        }
+        else if (PredicateExpression is BinaryExpression binaryExpression)
+        {
+            var propertyMember = (MemberExpression)binaryExpression.Left;
+            _selectedPropertyType = propertyMember.Member.DeclaringType;
+            _selectedPropertyName = propertyMember.Member.Name;
+        }
+
+        base.OnInitialized();
+    }
+
+    private void OnFieldSelected(string propertyName)
+    {
+        var memberExpression = GetMemberExpression();
+
+        var selectedProperty = _selectedPropertyType.GetProperty(propertyName);
+
+        if (selectedProperty.PropertyType.IsClass && selectedProperty.PropertyType != typeof(string))
+        {
+            var navigationPropertyExpression = memberExpression.ChangePropertyAccess(_selectedPropertyType, propertyName);
+            _selectedPropertyType = navigationPropertyExpression.Type;
+
+            selectedProperty = navigationPropertyExpression.Type.GetProperties().First();
+            _selectedPropertyName = selectedProperty.Name;
+
+            memberExpression = Expression.MakeMemberAccess(
+                navigationPropertyExpression,
+                selectedProperty);
+
+            OnNavigatePathChanged?.Invoke(propertyName);
+        }
+        else
+        {
+            _selectedPropertyName = propertyName;
+            memberExpression = memberExpression.ChangePropertyAccess(_selectedPropertyType, propertyName);
+        }
+
+        var defaultValueExpression = GetDefaultValueExpression(selectedProperty);
+
+        var newOperator = RelationalOperators
+            .GetOperators(selectedProperty.PropertyType)
+            .OfType<RelationalOperators.BinaryOperator>()
+            .First();
+
+        var newExpression = Expression.MakeBinary(newOperator.ExpressionType, memberExpression, defaultValueExpression);
+            
+        PredicateExpression = newExpression;
+        OnFieldChanged?.Invoke(newExpression);
+    }
+
+    private MemberExpression GetMemberExpression()
+    {
+        return PredicateExpression switch
+        {
+            BinaryExpression binary => (MemberExpression)binary.Left,
+            MethodCallExpression methodCall => methodCall.Method.Name switch
+            {
+                "Like" or "Contains" => (MemberExpression)methodCall.Arguments[1],
+                _ => throw new NotSupportedException($"Method {methodCall.Method.Name} is not supported")
+            },
+            _ => throw new NotSupportedException($"Expression type {PredicateExpression.NodeType} is not supported")
+        };
+    }
+
+    private Expression GetDefaultValueExpression(PropertyInfo property)
+    {
+        return property.PropertyType switch
+        {
+            Type type when
+                type == typeof(int)
+                || type == typeof(long)
+                || type == typeof(string)
+                || type == typeof(bool) => Expression.Constant(property.PropertyType.GetDefaultValue(), property.PropertyType),
+            Type type when
+                type == typeof(DateTime) => Expression.Constant(DateTime.UtcNow),
+            _ => throw new Exception("Unsupported property type")
+        };
+    }
+}

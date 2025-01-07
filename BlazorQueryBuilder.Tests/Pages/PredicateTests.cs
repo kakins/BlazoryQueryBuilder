@@ -3,7 +3,9 @@ using BlazoryQueryBuilder.Shared.Models;
 using BlazoryQueryBuilder.Shared.Services;
 using Bunit;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using MudBlazor;
 using MudBlazor.Services;
 using System;
@@ -29,21 +31,21 @@ namespace BlazorQueryBuilder.Tests.Pages
 
         [Theory]
         [MemberData(nameof(RelationalPredicateTestData))]
-        public async Task Initialiazes_relational_predicate(Expression<Func<Address, bool>> lambdaExpression)
+        public async Task Initializes_relational_predicate(Expression<Func<Address, bool>> lambdaExpression)
         {
             // Arrange
             // Act
             var component = RenderComponent<BlazorQueryBuilder.Pages.Predicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.Expression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body)
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
 
             // Assert
             var logicalPredicate = component.FindComponent<RelationalPredicate>();
-            logicalPredicate.Instance.PredicateExpression.Should().Be(lambdaExpression.Body as BinaryExpression);
+            logicalPredicate.Instance.PredicateExpression.Should().Be(lambdaExpression.Body);
             logicalPredicate.Instance.ParameterExpression.Should().Be(lambdaExpression.Parameters[0]);
         }
 
@@ -56,14 +58,14 @@ namespace BlazorQueryBuilder.Tests.Pages
             var component = RenderComponent<BlazorQueryBuilder.Pages.Predicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.Expression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
                     .Add(p => p.OnChange, _ => { });
             });
 
             // Assert
             var logicalPredicate = component.FindComponent<LogicalPredicate>();
-            logicalPredicate.Instance.PredicateExpression.Should().Be(lambdaExpression.Body as BinaryExpression);
+            logicalPredicate.Instance.PredicateExpression.Should().Be(lambdaExpression.Body.As<BinaryExpression>());
             logicalPredicate.Instance.ParameterExpression.Should().Be(lambdaExpression.Parameters[0]);
         }
 
@@ -72,24 +74,24 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             Expression<Func<Person, bool>> lambdaExpression = person => person.PersonId == "1" && person.PersonId == "2";
-            bool updated = false;
+            var onChange = new Mock<Action<Expression>>();
             var component = RenderComponent<BlazorQueryBuilder.Pages.Predicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.Expression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body.As<BinaryExpression>())
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChange, _ => { updated = true;  });
+                    .Add(p => p.OnChange, onChange.Object);
             });
 
             // Act
             var logicalPredicate = component.FindComponent<LogicalPredicate>();
             await logicalPredicate.InvokeAsync(() =>
             {
-                logicalPredicate.Instance.OnChange.Invoke(lambdaExpression.Body as BinaryExpression);
+                logicalPredicate.Instance.OnChange.Invoke(lambdaExpression.Body.As<BinaryExpression>());
             });
 
             // Assert
-            updated.Should().BeTrue();
+            onChange.Verify(o => o.Invoke(lambdaExpression.Body), Times.Once);
         }
 
         [Fact]
@@ -97,32 +99,36 @@ namespace BlazorQueryBuilder.Tests.Pages
         {
             // Arrange
             Expression<Func<Person, bool>> lambdaExpression = person => person.PersonId == "1";
-            bool updated = false;
+            var onChange = new Mock<Action<Expression>>();
             var component = RenderComponent<BlazorQueryBuilder.Pages.Predicate>(parameters =>
             {
                 parameters
-                    .Add(p => p.Expression, lambdaExpression.Body as BinaryExpression)
+                    .Add(p => p.PredicateExpression, lambdaExpression.Body)
                     .Add(p => p.ParameterExpression, lambdaExpression.Parameters[0])
-                    .Add(p => p.OnChange, _ => { updated = true; });
+                    .Add(p => p.OnChange, onChange.Object);
             });
 
             // Act
             var relationalPredicate = component.FindComponent<RelationalPredicate>();
             await relationalPredicate.InvokeAsync(() =>
             {
-                relationalPredicate.Instance.OnChange.Invoke(lambdaExpression.Body as BinaryExpression);
+                relationalPredicate.Instance.OnChange.Invoke(lambdaExpression.Body);
             });
 
             // Assert
-            updated.Should().BeTrue();
+            onChange.Verify(o => o.Invoke(lambdaExpression.Body), Times.Once);
         }
 
         public static TheoryData<Expression<Func<Address, bool>>> RelationalPredicateTestData =>
         [
-            person => person.AddressId == 1,
-            person => person.AddressId != 1,
-            person => person.AddressId > 1,
-            person => person.AddressId < 1
+            address => address.AddressId == 1,
+            address => address.AddressId != 1,
+            address => address.AddressId > 1,
+            address => address.AddressId >= 1,
+            address => address.AddressId < 1,
+            address => address.AddressId <= 1,
+            address => EF.Functions.Like(address.City, "%a%"),  
+            //address => address.City.StartsWith('a')
         ];
 
         public static TheoryData<Expression<Func<Person, bool>>> LogicalPredicateTestData =>

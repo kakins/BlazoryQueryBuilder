@@ -1,5 +1,5 @@
 ﻿@using System.Linq.Expressions
-@switch (Expression.NodeType)
+@switch (PredicateExpression.NodeType)
 {
     case ExpressionType.AndAlso:
     case ExpressionType.OrElse:
@@ -11,8 +11,12 @@
     case ExpressionType.Equal:
     case ExpressionType.NotEqual:
     case ExpressionType.GreaterThan:
+    case ExpressionType.GreaterThanOrEqual:
     case ExpressionType.LessThan:
-        <RelationalPredicate PredicateExpression="@GetBinaryExpression()"
+    case ExpressionType.LessThanOrEqual:
+    case ExpressionType.Call:
+    case ExpressionType.Not when PredicateExpression is UnaryExpression unaryExpression && unaryExpression.Operand is MethodCallExpression:
+        <RelationalPredicate PredicateExpression="PredicateExpression"
                              ParameterExpression="@ParameterExpression"
                              OnChange="@Change"
                              OnRemove="@Remove">
@@ -23,26 +27,25 @@
 @code {
 
     [Parameter]
-    public Expression Expression { get; set; }
+    public Expression PredicateExpression { get; set; }
 
     [Parameter]
     public ParameterExpression ParameterExpression { get; set; }
 
     [Parameter]
-    public Action<BinaryExpression> OnChange { get; set; }
+    public Action<Expression> OnChange { get; set; }
 
     [Parameter]
     public Action OnRemove { get; set; }
 
     private BinaryExpression GetBinaryExpression()
     {
-        return Expression as BinaryExpression;
+        return PredicateExpression as BinaryExpression;
     }
 
-    private void Change(BinaryExpression expression)
+    private void Change(Expression expression)
     {
         OnChange(expression);
-        StateHasChanged();
     }
 
     public void Remove()
