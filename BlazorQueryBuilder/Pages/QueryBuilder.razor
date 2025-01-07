@@ -17,7 +17,7 @@
 <MudStack Spacing="10">
     <div>
         <MudText Typo="Typo.h5">SELECT</MudText>
-        <MudSelect Label="Fields" T="PropertyInfo" @bind-SelectedValues="SelectedProperties" MultiSelection="true" SelectAll="true">
+        <MudSelect Label="Fields" T="PropertyInfo" @bind-SelectedValues="SelectedProperties" MultiSelection="true" SelectAll="true" ToStringFunc="@(prop => prop.Name)">
             @foreach (var property in _properties)
             {
                 <MudSelectItem T="PropertyInfo" Value="property">
